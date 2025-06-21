@@ -27,7 +27,7 @@ TEST_CASE("LoRaBasicLink sends and receives") {
     nodeA.sendPacket(0x02, (uint8_t*)"hello", 5, true);
 
     uint8_t from, buf[32];
-    int len = nodeB.receivePacket(&from, buf, sizeof(buf));
+    len = nodeB.receivePacket(&from, buf, sizeof(buf));
 
     REQUIRE(len == 5);
     REQUIRE(from == 0x01);
