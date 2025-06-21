@@ -20,7 +20,6 @@ public:
     }
 
     bool send(const uint8_t* data, size_t length) override {
-        std::cout << "[MockRadio] send() called with size: " << length << std::endl;
         Packet p;
         p.data.assign(data, data + length);
         _globalAir.push(p);
@@ -28,11 +27,9 @@ public:
     }
 
     int receive(uint8_t* buffer, size_t maxLength, unsigned long timeoutMs = 1000) override {
-        std::cout << "[MockRadio] receive() called with maxLength: " << maxLength << std::endl;
         if (_globalAir.empty()) return 0;
 
-        Packet p = _globalAir.front();
-        _globalAir.pop();
+        Packet p = _globalAir.back();
 
         if (p.data.size() > maxLength) return 0;
 
