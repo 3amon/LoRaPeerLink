@@ -21,6 +21,13 @@ TEST_CASE("LoRaBasicLink sends and receives") {
 
     MockRadio::clearChannel();
     MockRadio r1, r2;
+    r1.begin();
+    r2.begin();
+    r1.send(reinterpret_cast<const uint8_t*>("hello"), 5);
+    len = r2.receive(buffer, sizeof(buffer));
+    REQUIRE(len == 5);
+
+    MockRadio::clearChannel();
     LoRaBasicLink nodeA(&r1, 0x01, get_time_ms, sleep_ms);
     LoRaBasicLink nodeB(&r2, 0x02, get_time_ms, sleep_ms);
 
