@@ -9,7 +9,7 @@ uint32_t get_time_ms() { return mock_time; }
 void sleep_ms(uint32_t ms) { mock_time += ms; }
 
 #include <catch2/catch_test_macros.hpp>
-#include "LoRaBasicLink.h"
+#include "LoraSimpleLink.h"
 #include "MockRadio.h"
 
 uint32_t fakeTime = 0;
