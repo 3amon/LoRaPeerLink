@@ -21,4 +21,4 @@ jobs:
         make
 
     - name: Run Tests
-      run: ./build/tests/test_simple_link
+      run: ./build/tests/test_all

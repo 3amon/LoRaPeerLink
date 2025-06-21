@@ -2,7 +2,7 @@
 #include <thread>
 #include <chrono>
 #include <catch2/catch_test_macros.hpp>
-#include "LoraSimpleLink.h"
+#include "LoraBackoffLink.h"
 #include "MockRadio.h"
 
 uint32_t fakeTime = 0;
@@ -13,12 +13,12 @@ void realSleep(uint32_t ms) {
     std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-TEST_CASE("LoRaBasicLink sends and receives packets", "[LoRaBasicLink]") {
+TEST_CASE("LoRaBackoffLink sends and receives packets", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
 
     uint8_t msg[] = { 'h', 'i' };
     REQUIRE(linkA.sendPacket(2, msg, 2) == true);
@@ -32,12 +32,12 @@ TEST_CASE("LoRaBasicLink sends and receives packets", "[LoRaBasicLink]") {
     REQUIRE(src == 1);
 }
 
-TEST_CASE("LoRaBasicLink ignores packet with invalid CRC", "[LoRaBasicLink]") {
+TEST_CASE("LoRaBackoffLink ignores packet with invalid CRC", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
 
     // Manually corrupt message
     uint8_t corrupt[] = {2, 1, 0, 0, 1, 'x', 0x12, 0x34}; // wrong CRC
@@ -50,12 +50,12 @@ TEST_CASE("LoRaBasicLink ignores packet with invalid CRC", "[LoRaBasicLink]") {
 }
 
 
-TEST_CASE("LoRaBasicLink handles ACK request with concurrency", "[LoRaBasicLink]") {
+TEST_CASE("LoRaBackoffLink handles ACK request with concurrency", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, realSleep);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, realSleep);
+    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, realSleep);
+    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, realSleep);
 
     // Background thread to simulate receiver processing
     std::thread receiverThread([&]() {
@@ -71,12 +71,12 @@ TEST_CASE("LoRaBasicLink handles ACK request with concurrency", "[LoRaBasicLink]
     receiverThread.join();
 }
 
-TEST_CASE("LoRaBasicLink times out waiting for ACK", "[LoRaBasicLink]") {
+TEST_CASE("LoRaBackoffLink times out waiting for ACK", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
 
     fakeTime = 0;
     REQUIRE(linkA.sendPacket(2, (uint8_t*)"yo", 2, true) == false); // No ACK response
