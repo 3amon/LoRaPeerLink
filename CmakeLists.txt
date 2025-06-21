@@ -1,0 +1,14 @@
+cmake_minimum_required(VERSION 3.10)
+project(LoRaPeerLinkTest)
+
+set(CMAKE_CXX_STANDARD 17)
+
+include_directories(include lib/lora_peer_link/include)
+
+add_executable(test_link_layer
+    tests/test_link_layer.cpp
+)
+
+# Link Catch2 if not header-only
+find_package(Catch2 REQUIRED)
+target_link_libraries(test_link_layer Catch2::Catch2)
