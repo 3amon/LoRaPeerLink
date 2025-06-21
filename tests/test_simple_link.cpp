@@ -17,9 +17,6 @@ TEST_CASE("LoRaBasicLink sends and receives") {
     // Simulate sending
     link.send(reinterpret_cast<const uint8_t*>("hello"), 5);
 
-    // Simulate delivery to receiver
-    mock.deliverToRxBuffer(reinterpret_cast<const uint8_t*>("hello"), 5);
-
     // Now try receiving
     uint8_t buffer[10];
     size_t len = link.receive(buffer, sizeof(buffer));
