@@ -4,7 +4,6 @@
 #include "MockRadio.h"
 #include <thread>
 #include <chrono>
-#include <cstdint>
 
 extern uint32_t fakeTime;
 extern uint32_t getTimeMock();
