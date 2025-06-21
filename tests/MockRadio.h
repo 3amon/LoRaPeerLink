@@ -29,6 +29,7 @@ public:
     }
 
     int receive(uint8_t* buffer, size_t maxLength, unsigned long timeoutMs = 1000) override {
+        std::cout << "[MockRadio] receive() called with maxLength: " << maxLength << std::endl;
         if (_globalAir.empty()) return 0;
 
         Packet p = _globalAir.front();
