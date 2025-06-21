@@ -24,6 +24,10 @@ add_executable(test_simple_link
   tests/test_simple_link.cpp
 )
 
+set_target_properties(test_simple_link PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
 # Correctly link Catch2 target and include directory
 target_link_libraries(test_simple_link PRIVATE Catch2::Catch2WithMain)
 target_include_directories(test_simple_link PRIVATE ${catch2_SOURCE_DIR}/src)

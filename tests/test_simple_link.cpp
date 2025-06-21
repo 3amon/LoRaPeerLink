@@ -9,12 +9,12 @@ uint32_t get_time_ms() { return mock_time; }
 void sleep_ms(uint32_t ms) { mock_time += ms; }
 
 TEST_CASE("LoRaBasicLink sends and receives") {
-    MockRadio::clearChannel();
     MockRadio r1, r2;
+    MockRadio::clearChannel();
     LoRaBasicLink nodeA(&r1, 0x01, get_time_ms, sleep_ms);
     LoRaBasicLink nodeB(&r2, 0x02, get_time_ms, sleep_ms);
 
-    nodeA.sendPacket(0x02, (uint8_t*)"hello", 5, true);
+    nodeA.sendPacket(0x02, (uint8_t*)"hello", 5, false);
 
     uint8_t from, buf[32];
     int len = nodeB.receivePacket(&from, buf, sizeof(buf));
