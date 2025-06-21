@@ -49,7 +49,7 @@ TEST_CASE("LoRaBasicLink ignores packet with invalid CRC", "[LoRaBasicLink]") {
 
     // Manually corrupt message
     uint8_t corrupt[] = {2, 1, 0, 0, 1, 'x', 0x12, 0x34}; // wrong CRC
-    medium.transmit(corrupt);
+    radioA.send(corrupt, sizeof(corrupt));
 
     uint8_t src;
     uint8_t out[10];
