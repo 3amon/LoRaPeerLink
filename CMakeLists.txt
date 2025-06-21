@@ -23,6 +23,9 @@ add_executable(test_simple_link
   tests/test_simple_link.cpp
 )
 
+# Add this line to fix the include path
+target_include_directories(test_simple_link PRIVATE ${catch2_SOURCE_DIR}/src)
+
 # Link Catch2 test runner
 target_link_libraries(test_simple_link Catch2::Catch2WithMain)
 
