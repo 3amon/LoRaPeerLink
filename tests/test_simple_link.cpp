@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 
-#include "LoRaBasicLink.h"
+#include "LoraSimpleLink.h"
 #include "MockRadio.h"
 
 uint32_t mock_time = 0;
