@@ -20,6 +20,7 @@ public:
     }
 
     bool send(const uint8_t* data, size_t length) override {
+        std::cout << "[MockRadio] send() called with size: " << len << std::endl;
         Packet p;
         p.data.assign(data, data + length);
         _globalAir.push(p);
