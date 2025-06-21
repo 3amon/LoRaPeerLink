@@ -10,4 +10,4 @@ extern uint32_t getTimeMock();
 extern void sleepMock(uint32_t ms);
 extern void realSleep(uint32_t ms);
 
-#endif // TEST_UTILS_H
+#endif // TEST_UTILS_Hc
