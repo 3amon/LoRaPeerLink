@@ -3,6 +3,9 @@
 
 #define BUFFER_SIZE 256
 
+#include <cstdint>
+#include <cstddef>
+
 class IRadio {
 public:
     virtual ~IRadio() {}
