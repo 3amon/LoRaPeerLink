@@ -3,33 +3,32 @@ project(LoRaPeerLinkTest)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Pull Catch2 automatically
 include(FetchContent)
+
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.4.0  # Use the latest stable or desired tag
+  GIT_TAG v3.4.0  # Use the latest stable release
 )
+
 FetchContent_MakeAvailable(Catch2)
 
-# Include your project's headers
+# Include your own headers
 include_directories(
   include
   lib/lora_peer_link/include
 )
 
-# Define test executable
+# Test target
 add_executable(test_simple_link
   tests/test_simple_link.cpp
 )
 
-# Add this line to fix the include path
+# Correctly link Catch2 target and include directory
+target_link_libraries(test_simple_link PRIVATE Catch2::Catch2WithMain)
 target_include_directories(test_simple_link PRIVATE ${catch2_SOURCE_DIR}/src)
 
-# Link Catch2 test runner
-target_link_libraries(test_simple_link Catch2::Catch2WithMain)
-
-# Enable CTest integration (optional)
+# Optional CTest integration
 include(CTest)
 include(Catch)
 catch_discover_tests(test_simple_link)
