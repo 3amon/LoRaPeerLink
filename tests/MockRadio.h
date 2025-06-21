@@ -16,7 +16,6 @@ public:
     };
 
     bool begin() override {
-        _inbox = {};
         return true;
     }
 
@@ -50,7 +49,6 @@ public:
     }
 
 private:
-    std::queue<Packet> _inbox;
     static std::queue<Packet> _globalAir;  // shared by all nodes
 };
 
