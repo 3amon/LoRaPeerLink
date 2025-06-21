@@ -1,8 +1,6 @@
 #ifndef IRADIO_H
 #define IRADIO_H
 
-#include <Arduino.h>
-
 #define BUFFER_SIZE 256
 
 class IRadio {
