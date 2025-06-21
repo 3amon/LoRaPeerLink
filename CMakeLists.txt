@@ -23,6 +23,7 @@ include_directories(
 add_executable(test_all
   tests/test_simple_link.cpp
   tests/test_backoff_link.cpp
+  tests/TestUtils.cpp
   # Add other test_*.cpp files here as needed
 )
 
