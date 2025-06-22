@@ -8,27 +8,33 @@ include(FetchContent)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.4.0  # Use the latest stable release
+  GIT_TAG v3.4.0
 )
 
 FetchContent_MakeAvailable(Catch2)
 
-# Include your own headers
+# Include your headers
 include_directories(
   include
   lib/lora_peer_link/include
 )
 
-# Test target
-add_executable(test_simple_link
+# Single test executable with all suites
+add_executable(test_all
   tests/test_simple_link.cpp
+  tests/test_backoff_link.cpp
+  tests/TestUtils.cpp
+  # Add other test_*.cpp files here as needed
 )
 
-# Correctly link Catch2 target and include directory
-target_link_libraries(test_simple_link PRIVATE Catch2::Catch2WithMain)
-target_include_directories(test_simple_link PRIVATE ${catch2_SOURCE_DIR}/src)
+set_target_properties(test_all PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
 
-# Optional CTest integration
+target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
+target_include_directories(test_all PRIVATE ${catch2_SOURCE_DIR}/src)
+
+# Optional: Catch2 test discovery (for `ctest`)
 include(CTest)
 include(Catch)
-catch_discover_tests(test_simple_link)
+catch_discover_tests(test_all)
