@@ -577,6 +577,102 @@ tests/test_backoff_link.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.s
 .PHONY : tests/test_backoff_link.cpp.s
 
+tests/test_backoff_packet_framing.o: tests/test_backoff_packet_framing.cpp.o
+.PHONY : tests/test_backoff_packet_framing.o
+
+# target to build an object file
+tests/test_backoff_packet_framing.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o
+.PHONY : tests/test_backoff_packet_framing.cpp.o
+
+tests/test_backoff_packet_framing.i: tests/test_backoff_packet_framing.cpp.i
+.PHONY : tests/test_backoff_packet_framing.i
+
+# target to preprocess a source file
+tests/test_backoff_packet_framing.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.i
+.PHONY : tests/test_backoff_packet_framing.cpp.i
+
+tests/test_backoff_packet_framing.s: tests/test_backoff_packet_framing.cpp.s
+.PHONY : tests/test_backoff_packet_framing.s
+
+# target to generate assembly for a file
+tests/test_backoff_packet_framing.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.s
+.PHONY : tests/test_backoff_packet_framing.cpp.s
+
+tests/test_crc.o: tests/test_crc.cpp.o
+.PHONY : tests/test_crc.o
+
+# target to build an object file
+tests/test_crc.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_crc.cpp.o
+.PHONY : tests/test_crc.cpp.o
+
+tests/test_crc.i: tests/test_crc.cpp.i
+.PHONY : tests/test_crc.i
+
+# target to preprocess a source file
+tests/test_crc.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_crc.cpp.i
+.PHONY : tests/test_crc.cpp.i
+
+tests/test_crc.s: tests/test_crc.cpp.s
+.PHONY : tests/test_crc.s
+
+# target to generate assembly for a file
+tests/test_crc.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_crc.cpp.s
+.PHONY : tests/test_crc.cpp.s
+
+tests/test_mock_radio.o: tests/test_mock_radio.cpp.o
+.PHONY : tests/test_mock_radio.o
+
+# target to build an object file
+tests/test_mock_radio.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o
+.PHONY : tests/test_mock_radio.cpp.o
+
+tests/test_mock_radio.i: tests/test_mock_radio.cpp.i
+.PHONY : tests/test_mock_radio.i
+
+# target to preprocess a source file
+tests/test_mock_radio.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.i
+.PHONY : tests/test_mock_radio.cpp.i
+
+tests/test_mock_radio.s: tests/test_mock_radio.cpp.s
+.PHONY : tests/test_mock_radio.s
+
+# target to generate assembly for a file
+tests/test_mock_radio.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.s
+.PHONY : tests/test_mock_radio.cpp.s
+
+tests/test_packet_framing.o: tests/test_packet_framing.cpp.o
+.PHONY : tests/test_packet_framing.o
+
+# target to build an object file
+tests/test_packet_framing.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o
+.PHONY : tests/test_packet_framing.cpp.o
+
+tests/test_packet_framing.i: tests/test_packet_framing.cpp.i
+.PHONY : tests/test_packet_framing.i
+
+# target to preprocess a source file
+tests/test_packet_framing.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.i
+.PHONY : tests/test_packet_framing.cpp.i
+
+tests/test_packet_framing.s: tests/test_packet_framing.cpp.s
+.PHONY : tests/test_packet_framing.s
+
+# target to generate assembly for a file
+tests/test_packet_framing.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_all.dir/build.make CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.s
+.PHONY : tests/test_packet_framing.cpp.s
+
 tests/test_simple_link.o: tests/test_simple_link.cpp.o
 .PHONY : tests/test_simple_link.o
 
@@ -647,6 +743,18 @@ help:
 	@echo "... tests/test_backoff_link.o"
 	@echo "... tests/test_backoff_link.i"
 	@echo "... tests/test_backoff_link.s"
+	@echo "... tests/test_backoff_packet_framing.o"
+	@echo "... tests/test_backoff_packet_framing.i"
+	@echo "... tests/test_backoff_packet_framing.s"
+	@echo "... tests/test_crc.o"
+	@echo "... tests/test_crc.i"
+	@echo "... tests/test_crc.s"
+	@echo "... tests/test_mock_radio.o"
+	@echo "... tests/test_mock_radio.i"
+	@echo "... tests/test_mock_radio.s"
+	@echo "... tests/test_packet_framing.o"
+	@echo "... tests/test_packet_framing.i"
+	@echo "... tests/test_packet_framing.s"
 	@echo "... tests/test_simple_link.o"
 	@echo "... tests/test_simple_link.i"
 	@echo "... tests/test_simple_link.s"

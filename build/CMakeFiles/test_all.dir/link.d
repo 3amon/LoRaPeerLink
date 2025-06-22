@@ -4,6 +4,10 @@ tests/test_all: \
   /usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o \
   CMakeFiles/test_all.dir/tests/test_simple_link.cpp.o \
   CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.o \
+  CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o \
+  CMakeFiles/test_all.dir/tests/test_crc.cpp.o \
+  CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o \
+  CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o \
   CMakeFiles/test_all.dir/tests/TestUtils.cpp.o \
   _deps/catch2-build/src/libCatch2Main.a \
   _deps/catch2-build/src/libCatch2.a \
@@ -45,6 +49,14 @@ tests/test_all: \
 CMakeFiles/test_all.dir/tests/test_simple_link.cpp.o:
 
 CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.o:
+
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o:
+
+CMakeFiles/test_all.dir/tests/test_crc.cpp.o:
+
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o:
+
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o:
 
 CMakeFiles/test_all.dir/tests/TestUtils.cpp.o:
 

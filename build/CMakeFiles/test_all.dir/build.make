@@ -100,10 +100,66 @@ CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_backoff_link.cpp -o CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.s
 
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o: CMakeFiles/test_all.dir/flags.make
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o: /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_mock_radio.cpp
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o: CMakeFiles/test_all.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o -MF CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o.d -o CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o -c /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_mock_radio.cpp
+
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_mock_radio.cpp > CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.i
+
+CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_mock_radio.cpp -o CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.s
+
+CMakeFiles/test_all.dir/tests/test_crc.cpp.o: CMakeFiles/test_all.dir/flags.make
+CMakeFiles/test_all.dir/tests/test_crc.cpp.o: /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_crc.cpp
+CMakeFiles/test_all.dir/tests/test_crc.cpp.o: CMakeFiles/test_all.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/test_all.dir/tests/test_crc.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test_all.dir/tests/test_crc.cpp.o -MF CMakeFiles/test_all.dir/tests/test_crc.cpp.o.d -o CMakeFiles/test_all.dir/tests/test_crc.cpp.o -c /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_crc.cpp
+
+CMakeFiles/test_all.dir/tests/test_crc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test_all.dir/tests/test_crc.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_crc.cpp > CMakeFiles/test_all.dir/tests/test_crc.cpp.i
+
+CMakeFiles/test_all.dir/tests/test_crc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_all.dir/tests/test_crc.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_crc.cpp -o CMakeFiles/test_all.dir/tests/test_crc.cpp.s
+
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o: CMakeFiles/test_all.dir/flags.make
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o: /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_packet_framing.cpp
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o: CMakeFiles/test_all.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o -MF CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o.d -o CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o -c /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_packet_framing.cpp
+
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_packet_framing.cpp > CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.i
+
+CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_packet_framing.cpp -o CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.s
+
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o: CMakeFiles/test_all.dir/flags.make
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o: /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_backoff_packet_framing.cpp
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o: CMakeFiles/test_all.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o -MF CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o.d -o CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o -c /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_backoff_packet_framing.cpp
+
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_backoff_packet_framing.cpp > CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.i
+
+CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/test_backoff_packet_framing.cpp -o CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.s
+
 CMakeFiles/test_all.dir/tests/TestUtils.cpp.o: CMakeFiles/test_all.dir/flags.make
 CMakeFiles/test_all.dir/tests/TestUtils.cpp.o: /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/TestUtils.cpp
 CMakeFiles/test_all.dir/tests/TestUtils.cpp.o: CMakeFiles/test_all.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/test_all.dir/tests/TestUtils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/test_all.dir/tests/TestUtils.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/test_all.dir/tests/TestUtils.cpp.o -MF CMakeFiles/test_all.dir/tests/TestUtils.cpp.o.d -o CMakeFiles/test_all.dir/tests/TestUtils.cpp.o -c /home/runner/work/LoRaPeerLink/LoRaPeerLink/tests/TestUtils.cpp
 
 CMakeFiles/test_all.dir/tests/TestUtils.cpp.i: cmake_force
@@ -118,6 +174,10 @@ CMakeFiles/test_all.dir/tests/TestUtils.cpp.s: cmake_force
 test_all_OBJECTS = \
 "CMakeFiles/test_all.dir/tests/test_simple_link.cpp.o" \
 "CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.o" \
+"CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o" \
+"CMakeFiles/test_all.dir/tests/test_crc.cpp.o" \
+"CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o" \
+"CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o" \
 "CMakeFiles/test_all.dir/tests/TestUtils.cpp.o"
 
 # External object files for target test_all
@@ -125,13 +185,17 @@ test_all_EXTERNAL_OBJECTS =
 
 tests/test_all: CMakeFiles/test_all.dir/tests/test_simple_link.cpp.o
 tests/test_all: CMakeFiles/test_all.dir/tests/test_backoff_link.cpp.o
+tests/test_all: CMakeFiles/test_all.dir/tests/test_mock_radio.cpp.o
+tests/test_all: CMakeFiles/test_all.dir/tests/test_crc.cpp.o
+tests/test_all: CMakeFiles/test_all.dir/tests/test_packet_framing.cpp.o
+tests/test_all: CMakeFiles/test_all.dir/tests/test_backoff_packet_framing.cpp.o
 tests/test_all: CMakeFiles/test_all.dir/tests/TestUtils.cpp.o
 tests/test_all: CMakeFiles/test_all.dir/build.make
 tests/test_all: CMakeFiles/test_all.dir/compiler_depend.ts
 tests/test_all: _deps/catch2-build/src/libCatch2Main.a
 tests/test_all: _deps/catch2-build/src/libCatch2.a
 tests/test_all: CMakeFiles/test_all.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable tests/test_all"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable tests/test_all"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_all.dir/link.txt --verbose=$(VERBOSE)
 	/usr/local/bin/cmake -D TEST_TARGET=test_all -D TEST_EXECUTABLE=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/tests/test_all -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build -D TEST_SPEC= -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_LIST=test_all_TESTS -D TEST_REPORTER= -D TEST_OUTPUT_DIR= -D TEST_OUTPUT_PREFIX= -D TEST_OUTPUT_SUFFIX= -D TEST_DL_PATHS= -D CTEST_FILE=/home/runner/work/LoRaPeerLink/LoRaPeerLink/build/test_all_tests-b12d07c.cmake -P /home/runner/work/LoRaPeerLink/LoRaPeerLink/build/_deps/catch2-src/extras/CatchAddTests.cmake
 
