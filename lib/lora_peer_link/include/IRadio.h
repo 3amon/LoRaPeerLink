@@ -1,9 +1,10 @@
 #ifndef IRADIO_H
 #define IRADIO_H
 
-#include <Arduino.h>
-
 #define BUFFER_SIZE 256
+
+#include <cstdint>
+#include <cstddef>
 
 class IRadio {
 public:
