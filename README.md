@@ -6,6 +6,7 @@
 
 ## 🌐 Project Structure
 
+```
 LoRaPeerLink/
 ├── include/
 │ └── lora_peer_link/
@@ -23,7 +24,7 @@ LoRaPeerLink/
 │ └── test_backoff_link.cpp
 ├── CMakeLists.txt
 └── README.md
-
+```
 
 ---
 
