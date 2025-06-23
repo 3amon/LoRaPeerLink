@@ -2,7 +2,7 @@
 
 ## What Was Accomplished
 
-This implementation significantly expanded the unit testing framework for LoRaPeerLink from a basic 16 assertions across 8 test cases to a comprehensive **990 assertions across 32 test cases**.
+This implementation significantly expanded the unit testing framework for LoRaPeerLink from a basic 16 assertions across 8 test cases to a comprehensive **990 assertions across 30 test cases**.
 
 ### New Test Files Created
 
@@ -32,8 +32,8 @@ This implementation significantly expanded the unit testing framework for LoRaPe
 
 ### Enhanced Existing Test Files
 
-5. **test_simple_link.cpp** (253 lines, was ~76 lines)
-   - Added 7 new comprehensive test cases
+5. **test_simple_link.cpp** (221 lines, was ~76 lines)
+   - Added 6 new comprehensive test cases
    - Broadcast message handling
    - Maximum payload size validation
    - Sequence number behavior
@@ -41,8 +41,8 @@ This implementation significantly expanded the unit testing framework for LoRaPe
    - Wrong destination filtering
    - Empty payload handling
 
-6. **test_backoff_link.cpp** (296 lines, was ~75 lines)
-   - Added 8 new comprehensive test cases
+6. **test_backoff_link.cpp** (264 lines, was ~75 lines)
+   - Added 7 new comprehensive test cases
    - Retry mechanism testing
    - Backoff timing validation
    - Broadcast handling

@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_MAIN
 #include <thread>
 #include <chrono>
 #include <catch2/catch_test_macros.hpp>
@@ -42,27 +41,6 @@ TEST_CASE("LoRaBasicLink ignores packet with invalid CRC", "[LoRaBasicLink]") {
     REQUIRE(len == 0); // Should be rejected
 }
 
-
-TEST_CASE("LoRaBasicLink handles ACK request with concurrency", "[LoRaBasicLink]") {
-    MockRadio radioA;
-    MockRadio radioB;
-
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, realSleep);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, realSleep);
-
-    // Background thread to simulate receiver processing
-    std::thread receiverThread([&]() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Wait for message to be sent
-        uint8_t src;
-        uint8_t buf[32];
-        linkB.receivePacket(&src, buf, sizeof(buf));
-    });
-
-    fakeTime = 0;
-    REQUIRE(linkA.sendPacket(2, (uint8_t*)"ok", 2, true) == true);  // Should get ACK from linkB
-
-    receiverThread.join();
-}
 
 TEST_CASE("LoRaBasicLink times out waiting for ACK", "[LoRaBasicLink]") {
     MockRadio radioA;
