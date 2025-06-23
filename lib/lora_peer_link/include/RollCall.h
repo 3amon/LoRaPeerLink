@@ -100,6 +100,9 @@ private:
     sleep_ms_fn _sleep;
     random_fn _getRandom;
 
+    // Timing for periodic announcements
+    uint32_t _lastAnnouncementTime;
+
     // Mapping tables
     std::unordered_map<std::string, uint16_t> _nameToId;
     std::unordered_map<uint16_t, std::string> _idToName;
@@ -111,6 +114,7 @@ private:
     static constexpr const char* RESPONSE_PREFIX = "RESP|";
     static constexpr uint32_t COLLISION_BACKOFF_MS = 1000;
     static constexpr uint32_t DISCOVERY_TIMEOUT_MS = 1000;
+    static constexpr uint32_t PERIODIC_ANNOUNCE_INTERVAL_MS = 30000; // 30 seconds
     static constexpr int MAX_RETRIES = 3;
 
     /**
