@@ -1,11 +1,11 @@
-#include "LoraSimpleLink.h"
+#include "LoraBasicLink.h"
 #include <string.h>
 
 LoRaBasicLink::LoRaBasicLink(IRadio* radio, uint8_t localId, time_ms_fn getTime, sleep_ms_fn sleep)
     : _radio(radio), _localId(localId), _seqNum(0),
       _getTimeMs(getTime), _sleepMs(sleep) {}
 
-bool LoRaBasicLink::sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck) {
+bool LoRaBasicLink::sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck, int maxRetries) {
     if (len > MAX_PAYLOAD) return false;
 
     uint8_t buffer[BUFFER_SIZE];

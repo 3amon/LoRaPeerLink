@@ -28,9 +28,10 @@ add_executable(test_all
   tests/test_packet_framing.cpp
   tests/test_backoff_packet_framing.cpp
   tests/test_rollcall.cpp
+  tests/test_interface.cpp
   tests/TestUtils.cpp
   lib/lora_peer_link/src/RollCall.cpp
-  lib/lora_peer_link/src/LoraSimpleLink.cpp
+  lib/lora_peer_link/src/LoraBasicLink.cpp
   lib/lora_peer_link/src/LoraBackoffLink.cpp
   # Note: SemtechRadio.cpp excluded from tests as it requires external dependencies
   # Add other test_*.cpp files here as needed

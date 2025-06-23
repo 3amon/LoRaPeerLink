@@ -5,20 +5,21 @@
 #include <stddef.h>
 #include <string.h>
 #include "IRadio.h"
+#include "ILoRaLink.h"
 
 #define BROADCAST_ADDR 0xFF
 #define BUFFER_SIZE    256
 
-class LoRaBackoffLink {
+class LoRaBackoffLink : public ILoRaLink {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
 
     LoRaBackoffLink(IRadio* radio, uint8_t nodeId, time_ms_fn getTime, sleep_ms_fn sleep);
 
-    bool sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3);
+    bool sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3) override;
 
-    int receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen);
+    int receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen) override;
 
 private:
     IRadio* _radio;

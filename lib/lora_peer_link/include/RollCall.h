@@ -1,7 +1,7 @@
 #ifndef ROLLCALL_H
 #define ROLLCALL_H
 
-#include "LoraSimpleLink.h"
+#include "LoraBasicLink.h"
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
