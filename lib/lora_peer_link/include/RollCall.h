@@ -1,7 +1,7 @@
 #ifndef ROLLCALL_H
 #define ROLLCALL_H
 
-#include "LoraSimpleLink.h"
+#include "ILoRaLink.h"
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
@@ -11,7 +11,7 @@
  * RollCall - Node Naming + Discovery Layer
  * 
  * Maps human-readable node names (e.g., "sensor-1") to short 2-byte node IDs.
- * Supports decentralized name discovery and identity resolution over LoRaBasicLink.
+ * Supports decentralized name discovery and identity resolution over ILoRaLink.
  * 
  * Supported message types:
  * - HELLOIAM <name> AT <id> - broadcast introduction
@@ -26,13 +26,13 @@ public:
 
     /**
      * Constructor
-     * @param link Pointer to LoRaBasicLink for communication
+     * @param link Pointer to ILoRaLink for communication
      * @param nodeName Human-readable name for this node
      * @param getTime Function to get current time in milliseconds
      * @param sleep Function to sleep for specified milliseconds
      * @param getRandom Function to generate random uint16_t values (optional)
      */
-    RollCall(LoRaBasicLink* link, const std::string& nodeName, 
+    RollCall(ILoRaLink* link, const std::string& nodeName, 
              time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom = nullptr);
 
     /**
@@ -93,7 +93,7 @@ public:
     const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
 
 private:
-    LoRaBasicLink* _link;
+    ILoRaLink* _link;
     std::string _nodeName;
     uint16_t _nodeId;
     time_ms_fn _getTime;

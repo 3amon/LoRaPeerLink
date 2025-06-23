@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "RollCall.h"
+#include "LoraBasicLink.h"
 #include "TestUtils.h"
 
 // Simple deterministic random number generator for testing
