@@ -7,7 +7,7 @@ RollCall::RollCall(LoRaBasicLink* link, const std::string& nodeName,
                    time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
-      _defaultRng(std::random_device{}()) {
+      _lastAnnouncementTime(0), _defaultRng(std::random_device{}()) {
     
     if (!_getRandom) {
         // Use static function pointer instead of lambda
@@ -27,6 +27,9 @@ bool RollCall::begin() {
         return false;
     }
     
+    // Record the time of our initial announcement for periodic rebroadcasting
+    _lastAnnouncementTime = _getTime();
+    
     // Listen for potential collisions for a short period
     // But don't be too aggressive about consuming messages during startup
     uint32_t start = _getTime();
@@ -44,6 +47,13 @@ bool RollCall::begin() {
 }
 
 bool RollCall::processMessages(uint32_t timeoutMs) {
+    // Check if it's time for periodic announcement
+    uint32_t currentTime = _getTime();
+    if (currentTime - _lastAnnouncementTime >= PERIODIC_ANNOUNCE_INTERVAL_MS) {
+        broadcastHelloIam();
+        _lastAnnouncementTime = currentTime;
+    }
+    
     uint8_t srcId8;
     uint8_t buffer[MAX_PAYLOAD]; // Use the constant from LoRaBasicLink
     
