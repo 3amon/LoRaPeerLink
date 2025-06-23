@@ -14,13 +14,14 @@
 #define CRC_SIZE       2
 #define MAX_PAYLOAD    (BUFFER_SIZE - HEADER_SIZE - CRC_SIZE)
 
-#define FLAG_ACK         0x01
-#define FLAG_ACK_REQUEST 0x02
-
 class LoRaBasicLink : public ILoRaLink {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
+
+    // Constants for this implementation
+    static constexpr uint8_t FLAG_ACK = 0x01;
+    static constexpr uint8_t FLAG_ACK_REQUEST = 0x02;
 
     LoRaBasicLink(IRadio* radio, uint8_t localId, time_ms_fn getTime, sleep_ms_fn sleep)
         : _radio(radio), _localId(localId), _seqNum(0),
