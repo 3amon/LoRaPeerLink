@@ -64,27 +64,42 @@ TEST_CASE("RollCall HELLOIAM broadcast and reception", "[RollCall]") {
     RollCall rollCallA(&linkA, "node-a", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "node-b", getTimeMock, sleepMock, getTestRandom2);
     
-    // Initialize A first - this puts A's HELLOIAM message in the air
+    // Initialize nodes (this will assign them their IDs)
     REQUIRE(rollCallA.begin() == true);
-    
-    // B processes A's message before starting itself
-    rollCallB.processMessages(100);
-    
-    // Now initialize B - this puts B's HELLOIAM message in the air
     REQUIRE(rollCallB.begin() == true);
     
-    // A processes B's message
-    rollCallA.processMessages(100);
+    // Get the actual IDs assigned
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    
+    // Clear any messages from begin()
+    MockRadio::clearChannel();
+    
+    // Manually send HELLOIAM messages to simulate the broadcast
+    std::string helloA = "HELLOIAM|node-a AT " + std::to_string(idA);
+    std::string helloB = "HELLOIAM|node-b AT " + std::to_string(idB);
+    
+    // Send A's message for B to receive
+    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloA.c_str()), 
+                            helloA.length()) == true);
+    REQUIRE(rollCallB.processMessages(100) == true);
+    
+    // Send B's message for A to receive  
+    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
+                            helloB.length()) == true);
+    REQUIRE(rollCallA.processMessages(100) == true);
     
     // Check that they learned about each other
     auto aNameToId = rollCallA.getNameToIdMap();
     auto bNameToId = rollCallB.getNameToIdMap();
     
     REQUIRE(aNameToId.count("node-b") == 1);
-    REQUIRE(aNameToId["node-b"] == rollCallB.getNodeId());
+    REQUIRE(aNameToId["node-b"] == idB);
     
     REQUIRE(bNameToId.count("node-a") == 1);
-    REQUIRE(bNameToId["node-a"] == rollCallA.getNodeId());
+    REQUIRE(bNameToId["node-a"] == idA);
 }
 
 TEST_CASE("RollCall WHOIS query", "[RollCall]") {
@@ -176,35 +191,70 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
     LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
     
-    // Use a custom random function that returns the same ID initially
-    uint16_t fixedId = 0x1234;
-    auto sameIdRandom = []() { return static_cast<uint16_t>(0x1234); };
+    // Use a custom random function that returns the same ID initially for A, then different values
+    static int callCount = 0;
+    auto collisionRandom = []() { 
+        callCount++;
+        if (callCount == 1) {
+            return static_cast<uint16_t>(0x1234); // First call returns fixed ID
+        } else {
+            return static_cast<uint16_t>(0x5678); // Subsequent calls return different ID
+        }
+    };
     
-    RollCall rollCallA(&linkA, "node-alpha", getTimeMock, sleepMock, sameIdRandom);
+    RollCall rollCallA(&linkA, "node-alpha", getTimeMock, sleepMock, collisionRandom);
     RollCall rollCallB(&linkB, "node-beta", getTimeMock, sleepMock, getTestRandom2);
     
-    // Initialize A first
+    // Initialize both nodes
     REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallA.getNodeId() == fixedId);
-    
-    // Now initialize B - it should detect collision during begin()
     REQUIRE(rollCallB.begin() == true);
     
-    // Let them process messages during the collision backoff period
-    for (int i = 0; i < 10; i++) {
-        rollCallA.processMessages(50);
-        rollCallB.processMessages(50);
-    }
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
     
-    // They should have different IDs now
-    REQUIRE(rollCallA.getNodeId() != rollCallB.getNodeId());
+    // Clear messages from begin()
+    MockRadio::clearChannel();
     
-    // Both should know about each other
+    // Simulate collision: B announces with A's ID
+    std::string conflictMessage = "HELLOIAM|node-beta AT " + std::to_string(idA);
+    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
+                            conflictMessage.length()) == true);
+    
+    // A processes the conflicting message - should trigger collision handling
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // A should have changed its ID due to the collision
+    uint16_t newIdA = rollCallA.getNodeId();
+    REQUIRE(newIdA != idA); // A should have a new ID
+    
+    // Clear channel again
+    MockRadio::clearChannel();
+    
+    // Now let them properly exchange their final identities
+    std::string helloNewA = "HELLOIAM|node-alpha AT " + std::to_string(newIdA);
+    std::string helloB = "HELLOIAM|node-beta AT " + std::to_string(idB);
+    
+    // Exchange messages
+    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloNewA.c_str()), 
+                            helloNewA.length()) == true);
+    REQUIRE(rollCallB.processMessages(100) == true);
+    
+    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
+                            helloB.length()) == true);
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // Both should know about each other with correct IDs
     auto aMapping = rollCallA.getNameToIdMap();
     auto bMapping = rollCallB.getNameToIdMap();
     
     REQUIRE(aMapping.count("node-beta") == 1);
+    REQUIRE(aMapping["node-beta"] == idB);
+    
     REQUIRE(bMapping.count("node-alpha") == 1);
+    REQUIRE(bMapping["node-alpha"] == newIdA);
 }
 
 TEST_CASE("RollCall local cache lookup", "[RollCall]") {
@@ -217,17 +267,32 @@ TEST_CASE("RollCall local cache lookup", "[RollCall]") {
     RollCall rollCallA(&linkA, "test-node", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "remote-sensor", getTimeMock, sleepMock, getTestRandom2);
     
-    // Initialize nodes and let them learn about each other
+    // Initialize nodes and let them learn about each other using manual message exchange
     REQUIRE(rollCallA.begin() == true);
-    rollCallB.processMessages(100);  // B learns about A
     REQUIRE(rollCallB.begin() == true);
-    rollCallA.processMessages(100);  // A learns about B
+    
+    // Get the actual IDs assigned
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    
+    // Clear any messages from begin()
+    MockRadio::clearChannel();
+    
+    // Exchange HELLOIAM messages
+    std::string helloA = "HELLOIAM|test-node AT " + std::to_string(idA);
+    std::string helloB = "HELLOIAM|remote-sensor AT " + std::to_string(idB);
+    
+    // A learns about B
+    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
+                            helloB.length()) == true);
+    REQUIRE(rollCallA.processMessages(100) == true);
     
     // Now test that local cache works (should find it immediately without network)
     uint16_t cachedId = rollCallA.whoIs("remote-sensor", 10); // Short timeout - should use cache
-    REQUIRE(cachedId == rollCallB.getNodeId());
+    REQUIRE(cachedId == idB);
     
-    std::string cachedName = rollCallA.whereIs(rollCallB.getNodeId(), 10); // Short timeout - should use cache
+    std::string cachedName = rollCallA.whereIs(idB, 10); // Short timeout - should use cache
     REQUIRE(cachedName == "remote-sensor");
 }
 

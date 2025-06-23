@@ -28,10 +28,16 @@ bool RollCall::begin() {
     }
     
     // Listen for potential collisions for a short period
+    // But don't be too aggressive about consuming messages during startup
     uint32_t start = _getTime();
+    uint32_t lastCheck = start;
     while (_getTime() - start < COLLISION_BACKOFF_MS) {
-        processMessages(50);
-        _sleep(50); // Add small delay to prevent busy-waiting
+        uint32_t now = _getTime();
+        if (now - lastCheck >= 100) { // Only check every 100ms
+            processMessages(10); // Short timeout to avoid consuming too many messages
+            lastCheck = now;
+        }
+        _sleep(50); // Sleep most of the time
     }
     
     return true;
