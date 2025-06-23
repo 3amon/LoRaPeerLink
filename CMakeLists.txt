@@ -28,6 +28,7 @@ add_executable(test_all
   tests/test_packet_framing.cpp
   tests/test_backoff_packet_framing.cpp
   tests/test_rollcall.cpp
+  tests/test_interface.cpp
   tests/TestUtils.cpp
   lib/lora_peer_link/src/RollCall.cpp
   # Add other test_*.cpp files here as needed

@@ -1,9 +1,10 @@
 #include "RollCall.h"
+#include "LoraBasicLink.h"  // For MAX_PAYLOAD constant
 #include <cstring>
 #include <sstream>
 #include <algorithm>
 
-RollCall::RollCall(LoRaBasicLink* link, const std::string& nodeName, 
+RollCall::RollCall(ILoRaLink* link, const std::string& nodeName, 
                    time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
