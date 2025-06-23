@@ -1,0 +1,200 @@
+#ifndef ROLLCALL_H
+#define ROLLCALL_H
+
+#include "LoraSimpleLink.h"
+#include <stdint.h>
+#include <string>
+#include <unordered_map>
+#include <random>
+
+/**
+ * RollCall - Node Naming + Discovery Layer
+ * 
+ * Maps human-readable node names (e.g., "sensor-1") to short 2-byte node IDs.
+ * Supports decentralized name discovery and identity resolution over LoRaBasicLink.
+ * 
+ * Supported message types:
+ * - HELLOIAM <name> AT <id> - broadcast introduction
+ * - WHOIS <name> - query the ID of a known name
+ * - WHEREIS <id> - query the name associated with an ID
+ */
+class RollCall {
+public:
+    using time_ms_fn = uint32_t (*)();
+    using sleep_ms_fn = void (*)(uint32_t);
+    using random_fn = uint16_t (*)();
+
+    /**
+     * Constructor
+     * @param link Pointer to LoRaBasicLink for communication
+     * @param nodeName Human-readable name for this node
+     * @param getTime Function to get current time in milliseconds
+     * @param sleep Function to sleep for specified milliseconds
+     * @param getRandom Function to generate random uint16_t values (optional)
+     */
+    RollCall(LoRaBasicLink* link, const std::string& nodeName, 
+             time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom = nullptr);
+
+    /**
+     * Initialize the RollCall layer
+     * - Generates random node ID
+     * - Broadcasts HELLOIAM message
+     * - Listens for collisions
+     * @return true if initialization successful
+     */
+    bool begin();
+
+    /**
+     * Process incoming messages and handle discovery requests
+     * Should be called regularly to handle incoming packets
+     * @param timeoutMs Maximum time to wait for a packet
+     * @return true if a message was processed
+     */
+    bool processMessages(uint32_t timeoutMs = 100);
+
+    /**
+     * Look up node ID by name
+     * @param name Node name to look up
+     * @param timeoutMs Maximum time to wait for response
+     * @return Node ID if found, 0 if not found or timeout
+     */
+    uint16_t whoIs(const std::string& name, uint32_t timeoutMs = 1000);
+
+    /**
+     * Look up node name by ID
+     * @param nodeId Node ID to look up
+     * @param timeoutMs Maximum time to wait for response
+     * @return Node name if found, empty string if not found or timeout
+     */
+    std::string whereIs(uint16_t nodeId, uint32_t timeoutMs = 1000);
+
+    /**
+     * Get current node ID
+     * @return Current node ID
+     */
+    uint16_t getNodeId() const { return _nodeId; }
+
+    /**
+     * Get current node name
+     * @return Current node name
+     */
+    const std::string& getNodeName() const { return _nodeName; }
+
+    /**
+     * Get all known name-to-ID mappings
+     * @return Reference to internal mapping table
+     */
+    const std::unordered_map<std::string, uint16_t>& getNameToIdMap() const { return _nameToId; }
+
+    /**
+     * Get all known ID-to-name mappings
+     * @return Reference to internal mapping table
+     */
+    const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
+
+private:
+    LoRaBasicLink* _link;
+    std::string _nodeName;
+    uint16_t _nodeId;
+    time_ms_fn _getTime;
+    sleep_ms_fn _sleep;
+    random_fn _getRandom;
+
+    // Mapping tables
+    std::unordered_map<std::string, uint16_t> _nameToId;
+    std::unordered_map<uint16_t, std::string> _idToName;
+
+    // Protocol constants
+    static constexpr const char* HELLOIAM_PREFIX = "HELLOIAM|";
+    static constexpr const char* WHOIS_PREFIX = "WHOIS|";
+    static constexpr const char* WHEREIS_PREFIX = "WHEREIS|";
+    static constexpr const char* RESPONSE_PREFIX = "RESP|";
+    static constexpr uint32_t COLLISION_BACKOFF_MS = 1000;
+    static constexpr uint32_t DISCOVERY_TIMEOUT_MS = 1000;
+    static constexpr int MAX_RETRIES = 3;
+
+    /**
+     * Generate a random 2-byte node ID
+     * @return Random node ID (avoiding 0 and 0xFFFF)
+     */
+    uint16_t generateRandomId();
+
+    /**
+     * Broadcast HELLOIAM message
+     * @return true if message sent successfully
+     */
+    bool broadcastHelloIam();
+
+    /**
+     * Handle incoming HELLOIAM message
+     * @param message Full message content
+     * @param srcId Source node ID
+     * @return true if message processed successfully
+     */
+    bool handleHelloIam(const std::string& message, uint16_t srcId);
+
+    /**
+     * Handle incoming WHOIS message
+     * @param message Full message content
+     * @param srcId Source node ID
+     * @return true if message processed successfully
+     */
+    bool handleWhois(const std::string& message, uint16_t srcId);
+
+    /**
+     * Handle incoming WHEREIS message
+     * @param message Full message content
+     * @param srcId Source node ID
+     * @return true if message processed successfully
+     */
+    bool handleWhereis(const std::string& message, uint16_t srcId);
+
+    /**
+     * Handle incoming RESP message
+     * @param message Full message content
+     * @param srcId Source node ID
+     * @return true if message processed successfully
+     */
+    bool handleResponse(const std::string& message, uint16_t srcId);
+
+    /**
+     * Send response message
+     * @param destId Destination node ID
+     * @param response Response content
+     * @return true if message sent successfully
+     */
+    bool sendResponse(uint16_t destId, const std::string& response);
+
+    /**
+     * Update mapping tables with new name-ID pair
+     * @param name Node name
+     * @param nodeId Node ID
+     */
+    void updateMapping(const std::string& name, uint16_t nodeId);
+
+    /**
+     * Check for ID collision and reassign if necessary
+     * @param name Node name that might be conflicting
+     * @param nodeId Node ID that might be conflicting
+     * @return true if collision detected and handled
+     */
+    bool handleCollision(const std::string& name, uint16_t nodeId);
+
+    /**
+     * Parse message content after prefix
+     * @param message Full message
+     * @param prefix Expected prefix
+     * @return Content after prefix, or empty string if prefix doesn't match
+     */
+    std::string parseMessage(const std::string& message, const char* prefix);
+
+    // Default random number generator
+    std::mt19937 _defaultRng;
+    uint16_t defaultRandom();
+    
+    // Static wrapper for default random function
+    static uint16_t staticDefaultRandom();
+    static std::mt19937 _staticRng;
+};
+
+#endif // ROLLCALL_H
