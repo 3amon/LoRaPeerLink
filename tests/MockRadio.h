@@ -29,7 +29,8 @@ public:
     int receive(uint8_t* buffer, size_t maxLength, unsigned long timeoutMs = 1000) override {
         if (_globalAir.empty()) return 0;
 
-        Packet p = _globalAir.back();
+        Packet p = _globalAir.front();
+        _globalAir.pop(); // Actually consume the packet
 
         if (p.data.size() > maxLength) return 0;
 
