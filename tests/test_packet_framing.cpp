@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "LoraSimpleLink.h"
+#include "LoraBasicLink.h"
 #include "MockRadio.h"
 #include "TestUtils.h"
 

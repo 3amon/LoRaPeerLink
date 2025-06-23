@@ -2,6 +2,7 @@
 #define LORA_BASIC_LINK_H
 
 #include "IRadio.h"
+#include "ILoRaLink.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -16,7 +17,7 @@
 #define FLAG_ACK         0x01
 #define FLAG_ACK_REQUEST 0x02
 
-class LoRaBasicLink {
+class LoRaBasicLink : public ILoRaLink {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
@@ -25,7 +26,7 @@ public:
         : _radio(radio), _localId(localId), _seqNum(0),
           _getTimeMs(getTime), _sleepMs(sleep) {}
 
-    bool sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false) {
+    bool sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false, int maxRetries = 3) override {
         if (len > MAX_PAYLOAD) return false;
 
         uint8_t buffer[BUFFER_SIZE];
@@ -60,7 +61,7 @@ public:
         return ok;
     }
 
-    int receivePacket(uint8_t* srcId, uint8_t* buffer, uint8_t maxLen) {
+    int receivePacket(uint8_t* srcId, uint8_t* buffer, uint8_t maxLen) override {
         uint8_t raw[BUFFER_SIZE];
         int len = _radio->receive(raw, BUFFER_SIZE);
         if (len < 7) return 0;

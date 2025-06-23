@@ -5,11 +5,12 @@
 #include <stddef.h>
 #include <string.h>
 #include "IRadio.h"
+#include "ILoRaLink.h"
 
 #define BROADCAST_ADDR 0xFF
 #define BUFFER_SIZE    256
 
-class LoRaBackoffLink {
+class LoRaBackoffLink : public ILoRaLink {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
@@ -17,7 +18,7 @@ public:
     LoRaBackoffLink(IRadio* radio, uint8_t nodeId, time_ms_fn getTime, sleep_ms_fn sleep)
         : _radio(radio), _nodeId(nodeId), _seqNum(0), _getTime(getTime), _sleep(sleep) {}
 
-    bool sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3) {
+    bool sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3) override {
         if (len > maxPayloadSize()) return false;
 
         uint8_t buffer[BUFFER_SIZE];
@@ -47,7 +48,7 @@ public:
         return false;
     }
 
-    int receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen) {
+    int receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen) override {
         uint8_t raw[BUFFER_SIZE];
         int len = _radio->receive(raw, BUFFER_SIZE);
         if (len < (int)(sizeof(PacketHeader) + 2)) return 0;
