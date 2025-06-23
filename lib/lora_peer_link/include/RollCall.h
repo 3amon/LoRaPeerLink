@@ -2,6 +2,7 @@
 #define ROLLCALL_H
 
 #include "ILoRaLink.h"
+
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
