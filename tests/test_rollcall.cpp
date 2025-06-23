@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "RollCall.h"
+#include "LoraBasicLink.h"
 #include "TestUtils.h"
 
 // Simple deterministic random number generator for testing
@@ -344,4 +345,51 @@ TEST_CASE("RollCall timeout handling", "[RollCall]") {
     
     std::string nameResult = rollCallA.whereIs(9999, 100);
     REQUIRE(nameResult == "");
+}
+
+TEST_CASE("RollCall periodic HELLOIAM rebroadcast functionality", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    
+    fakeTime = 0; // Reset time
+    
+    RollCall rollCallA(&linkA, "test-periodic", getTimeMock, sleepMock, getTestRandom1);
+    RollCall rollCallB(&linkB, "test-listener", getTimeMock, sleepMock, getTestRandom2);
+    
+    // Initialize both nodes
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    // Clear all initial messages from begin()
+    MockRadio::clearChannel();
+    
+    // Test that periodic announcement is triggered after the interval
+    fakeTime = 35000; // 35 seconds - should trigger the 30-second interval
+    
+    // A should send periodic announcement
+    rollCallA.processMessages(100);
+    
+    // B should be able to receive the announcement
+    bool received = rollCallB.processMessages(100);
+    
+    // Verify that a message was sent (B received something)
+    REQUIRE(received == true);
+    
+    // Test that announcement is NOT triggered before the interval (timing test)
+    fakeTime = 40000; // Only 5 seconds later, should not trigger again yet
+    MockRadio::clearChannel(); // Clear the previous message
+    
+    rollCallA.processMessages(100);
+    bool receivedTooEarly = rollCallB.processMessages(100);
+    REQUIRE(receivedTooEarly == false); // Should be no new message
+    
+    // Test that announcement IS triggered after another full interval
+    fakeTime = 70000; // 30+ seconds later, should trigger again
+    
+    rollCallA.processMessages(100);
+    bool receivedAgain = rollCallB.processMessages(100);
+    REQUIRE(receivedAgain == true); // Should be a new message
 }
