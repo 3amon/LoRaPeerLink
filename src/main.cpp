@@ -2,6 +2,7 @@
 #include <SemtechRadio.h>
 #include <LoraBasicLink.h>
 #include <ScreenHandler.h>
+#include <RollCall.h>
 
 uint32_t loop_counter = 0;
 
@@ -17,20 +18,23 @@ void sleep_ms(uint32_t ms) {
     delay(ms);
 }
 
+// Generate a random name for this node based on chip ID
+String node_name = "Node_" + String(ESP.getEfuseMac(), HEX);
+
 SemtechRadio radio(915000000);
 LoRaBasicLink baic_link(&radio, 1, get_time_ms, sleep_ms);
+RollCall roll_call(&baic_link, node_name.c_str(), get_time_ms, sleep_ms);
 
 void setup() {
     Serial.begin(115200);
     display_screen.setup();
     attachInterrupt(0, interrupt_GPIO0, FALLING);
     display_screen.update_status("Lora Simp Init");
-    
-    
 }
 
 void loop() {
     radio.begin();
+    roll_call.begin();
 
     delay(1000); // Allow radio to initialize
     display_screen.update_status("Lora Simp Ready");
@@ -56,6 +60,15 @@ void loop() {
         }
 
         delay(1000);
+
+        roll_call.processMessages(100); // Process any incoming RollCall messages
+
+        if (loop_counter % 1000 == 0) {
+            for(auto & [name, id] : roll_call.getNameToIdMap()) {
+                printf("Name: %s, ID: %d\n", name.c_str(), id);
+                display_screen.add_line("Name: " + String(name.c_str()) + ", ID: " + String(id));
+            }
+        }
     }
 }
 
