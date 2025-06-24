@@ -245,6 +245,11 @@ bool RollCall::handleHelloIam(const std::string& message, uint16_t srcId) {
         return handleCollision(name, announcedId);
     }
     
+    // Check for name collision with our own name
+    if (name == _nodeName && announcedId != _nodeId) {
+        return handleNameCollision(name, announcedId);
+    }
+    
     // Update mapping - use the announced ID, not the transport layer source ID
     updateMapping(name, announcedId);
     return true;
@@ -345,6 +350,36 @@ bool RollCall::handleCollision(const std::string& name, uint16_t nodeId) {
     _sleep(backoff);
     
     // Broadcast new introduction
+    return broadcastHelloIam();
+}
+
+bool RollCall::handleNameCollision(const std::string& conflictingName, uint16_t conflictingNodeId) {
+    // Generate unique suffix for our name (not using nodeID for privacy)
+    uint16_t randomSuffix = _getRandom() % 10000; // 4-digit random number
+    std::string newName = _nodeName + "-" + std::to_string(randomSuffix);
+    
+    // Ensure the new name is unique by checking if we already know about it
+    while (_nameToId.find(newName) != _nameToId.end()) {
+        randomSuffix = _getRandom() % 10000;
+        newName = _nodeName + "-" + std::to_string(randomSuffix);
+    }
+    
+    // Update our name and mapping
+    std::string oldName = _nodeName;
+    _nodeName = newName;
+    
+    // Remove old mapping and add new one
+    _nameToId.erase(oldName);
+    updateMapping(_nodeName, _nodeId);
+    
+    // Also update the mapping for the conflicting node
+    updateMapping(conflictingName, conflictingNodeId);
+    
+    // Wait a random backoff time
+    uint32_t backoff = 100 + (_getRandom() % 500);
+    _sleep(backoff);
+    
+    // Broadcast new introduction with new name
     return broadcastHelloIam();
 }
 
