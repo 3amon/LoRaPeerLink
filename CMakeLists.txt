@@ -39,12 +39,30 @@ add_executable(test_all
   # Add other test_*.cpp files here as needed
 )
 
+# CLI tool for Python-C++ encryption cross-validation
+add_executable(encryption_cli_tool
+  tests/encryption_cli_tool.cpp
+  tests/TestUtils.cpp
+  lib/lora_peer_link/src/LoraBasicLink.cpp
+  lib/lora_peer_link/src/EncryptedLoRaLink.cpp
+)
+
 set_target_properties(test_all PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+)
+
+set_target_properties(encryption_cli_tool PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
 )
 
 target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
 target_include_directories(test_all PRIVATE ${catch2_SOURCE_DIR}/src)
+
+target_include_directories(encryption_cli_tool PRIVATE 
+  include
+  lib/lora_peer_link/include
+  tests
+)
 
 # Optional: Catch2 test discovery (for `ctest`)
 include(CTest)
