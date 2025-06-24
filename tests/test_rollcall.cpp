@@ -37,7 +37,7 @@ TEST_CASE("RollCall basic initialization", "[RollCall]") {
     MockRadio radioA;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
     RollCall rollCallA(&linkA, "node-a", getTimeMock, sleepMock, getTestRandom1);
     
     REQUIRE(rollCallA.begin() == true);
@@ -59,8 +59,8 @@ TEST_CASE("RollCall HELLOIAM broadcast and reception", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     RollCall rollCallA(&linkA, "node-a", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "node-b", getTimeMock, sleepMock, getTestRandom2);
@@ -81,13 +81,13 @@ TEST_CASE("RollCall HELLOIAM broadcast and reception", "[RollCall]") {
     std::string helloB = "HELLOIAM|node-b AT " + std::to_string(idB);
     
     // Send A's message for B to receive
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloA.c_str()), 
                             helloA.length()) == true);
     REQUIRE(rollCallB.processMessages(100) == true);
     
     // Send B's message for A to receive  
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloB.c_str()), 
                             helloB.length()) == true);
     REQUIRE(rollCallA.processMessages(100) == true);
@@ -107,8 +107,8 @@ TEST_CASE("RollCall WHOIS query", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     RollCall rollCallA(&linkA, "sensor-1", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "gateway-1", getTimeMock, sleepMock, getTestRandom2);
@@ -118,6 +118,10 @@ TEST_CASE("RollCall WHOIS query", "[RollCall]") {
     rollCallB.processMessages(100);  // B learns about A
     REQUIRE(rollCallB.begin() == true);
     rollCallA.processMessages(100);  // A learns about B
+    
+    // Get the node IDs
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
     
     // Clear the channel
     MockRadio::clearChannel();
@@ -131,7 +135,7 @@ TEST_CASE("RollCall WHOIS query", "[RollCall]") {
     // Since we can't do this in parallel with the mock, we'll simulate the exchange
     // A sends WHOIS query
     std::string query = std::string("WHOIS|") + queryName;
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(query.c_str()), 
                             query.length()) == true);
     
@@ -150,8 +154,8 @@ TEST_CASE("RollCall WHEREIS query", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     RollCall rollCallA(&linkA, "sensor-2", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "controller-1", getTimeMock, sleepMock, getTestRandom2);
@@ -170,7 +174,7 @@ TEST_CASE("RollCall WHEREIS query", "[RollCall]") {
     
     // A sends WHEREIS query
     std::string query = std::string("WHEREIS|") + std::to_string(queryId);
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(rollCallA.getNodeId(), BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(query.c_str()), 
                             query.length()) == true);
     
@@ -189,8 +193,8 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     // Use a custom random function that returns the same ID initially for A, then different values
     static int callCount = 0;
@@ -218,7 +222,7 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     
     // Simulate collision: B announces with A's ID
     std::string conflictMessage = "HELLOIAM|node-beta AT " + std::to_string(idA);
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
                             conflictMessage.length()) == true);
     
@@ -237,12 +241,12 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     std::string helloB = "HELLOIAM|node-beta AT " + std::to_string(idB);
     
     // Exchange messages
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(newIdA, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloNewA.c_str()), 
                             helloNewA.length()) == true);
     REQUIRE(rollCallB.processMessages(100) == true);
     
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloB.c_str()), 
                             helloB.length()) == true);
     REQUIRE(rollCallA.processMessages(100) == true);
@@ -262,8 +266,8 @@ TEST_CASE("RollCall local cache lookup", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     RollCall rollCallA(&linkA, "test-node", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "remote-sensor", getTimeMock, sleepMock, getTestRandom2);
@@ -284,7 +288,7 @@ TEST_CASE("RollCall local cache lookup", "[RollCall]") {
     std::string helloB = "HELLOIAM|remote-sensor AT " + std::to_string(idB);
     
     // A learns about B
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloB.c_str()), 
                             helloB.length()) == true);
     REQUIRE(rollCallA.processMessages(100) == true);
@@ -301,8 +305,8 @@ TEST_CASE("RollCall message parsing", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     RollCall rollCallA(&linkA, "parser-test", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "target-node", getTimeMock, sleepMock, getTestRandom2);
@@ -334,7 +338,7 @@ TEST_CASE("RollCall timeout handling", "[RollCall]") {
     MockRadio radioA;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
     RollCall rollCallA(&linkA, "timeout-test", getTimeMock, sleepMock, getTestRandom1);
     
     REQUIRE(rollCallA.begin() == true);
@@ -351,8 +355,8 @@ TEST_CASE("RollCall periodic HELLOIAM rebroadcast functionality", "[RollCall]") 
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
     
-    LoRaBasicLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
     
     fakeTime = 0; // Reset time
     

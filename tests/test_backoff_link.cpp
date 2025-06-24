@@ -8,13 +8,17 @@ TEST_CASE("LoRaBackoffLink sends and receives packets", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
     uint8_t msg[] = { 'h', 'i' };
-    REQUIRE(linkA.sendPacket(2, msg, 2) == true);
+    REQUIRE(linkA.sendPacket(1, 2, msg, 2) == true);
 
-    uint8_t src = 0;
+    uint16_t src = 0;
     uint8_t out[10];
     int len = linkB.receivePacket(&src, out, 10);
     REQUIRE(len == 2);
@@ -27,14 +31,18 @@ TEST_CASE("LoRaBackoffLink ignores packet with invalid CRC", "[LoRaBackoffLink]"
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
-    // Manually corrupt message
-    uint8_t corrupt[] = {2, 1, 0, 0, 1, 'x', 0x12, 0x34}; // wrong CRC
+    // Manually corrupt message (updated for 16-bit addressing)
+    uint8_t corrupt[] = {0, 2, 0, 1, 0, 0, 1, 'x', 0x12, 0x34}; // wrong CRC
     radioA.send(corrupt, sizeof(corrupt));
 
-    uint8_t src;
+    uint16_t src;
     uint8_t out[10];
     int len = linkB.receivePacket(&src, out, 10);
     REQUIRE(len == 0); // Should be rejected
@@ -45,25 +53,29 @@ TEST_CASE("LoRaBackoffLink times out waiting for ACK", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
 
     fakeTime = 0;
-    REQUIRE(linkA.sendPacket(2, (uint8_t*)"yo", 2, true) == false); // No ACK response
+    REQUIRE(linkA.sendPacket(1, 2, (uint8_t*)"yo", 2, true) == false); // No ACK response
 }
 
 TEST_CASE("LoRaBackoffLink retry mechanism", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
     SECTION("Successful transmission with retries disabled") {
         uint8_t msg[] = {'o', 'k'};
-        REQUIRE(linkA.sendPacket(2, msg, 2, false, 1) == true); // No ACK, single attempt
+        REQUIRE(linkA.sendPacket(1, 2, msg, 2, false, 1) == true); // No ACK, single attempt
         
-        uint8_t src = 0;
+        uint16_t src = 0;
         uint8_t out[10];
         int len = linkB.receivePacket(&src, out, 10);
         REQUIRE(len == 2);
@@ -75,7 +87,7 @@ TEST_CASE("LoRaBackoffLink retry mechanism", "[LoRaBackoffLink]") {
     SECTION("Multiple retry attempts when ACK required but not received") {
         fakeTime = 0;
         // Request ACK but no one will respond
-        REQUIRE(linkA.sendPacket(99, (uint8_t*)"test", 4, true, 2) == false);
+        REQUIRE(linkA.sendPacket(1, 99, (uint8_t*)"test", 4, true, 2) == false);
         
         // Should have attempted multiple times with backoff delays
         REQUIRE(fakeTime > 100); // Some time should have passed due to backoffs and retries
@@ -87,28 +99,30 @@ TEST_CASE("LoRaBackoffLink broadcast handling", "[LoRaBackoffLink]") {
     MockRadio radioB;
     MockRadio radioC;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
-    LoRaBackoffLink linkC(&radioC, 3, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+    LoRaBackoffLink linkC(&radioC, getTimeMock, sleepMock);
 
     SECTION("Broadcast message structure") {
         uint8_t msg[] = {'a', 'l', 'l'};
-        REQUIRE(linkA.sendPacket(0xFF, msg, 3) == true); // Broadcast
+        REQUIRE(linkA.sendPacket(1, 0xFFFF, msg, 3) == true); // Broadcast
 
         // Check the packet structure in air
         uint8_t rawPacket[256];
         int rawLen = radioB.receive(rawPacket, 256);
         REQUIRE(rawLen > 0);
-        REQUIRE(rawPacket[0] == 0xFF); // Destination should be broadcast address
-        REQUIRE(rawPacket[1] == 1);    // Source should be linkA's ID
+        REQUIRE(rawPacket[0] == 0xFF); // Destination low byte (broadcast address)
+        REQUIRE(rawPacket[1] == 0xFF); // Destination high byte (broadcast address)
+        REQUIRE(rawPacket[2] == 1);    // Source low byte
+        REQUIRE(rawPacket[3] == 0);    // Source high byte (linkA's ID)
     }
     
     SECTION("Both receivers can process broadcast individually") {
         // Send broadcast, let B receive it
         uint8_t msg[] = {'a', 'l', 'l'};
-        REQUIRE(linkA.sendPacket(0xFF, msg, 3) == true);
+        REQUIRE(linkA.sendPacket(1, 0xFFFF, msg, 3) == true);
         
-        uint8_t src = 0;
+        uint16_t src = 0;
         uint8_t out[10];
         int lenB = linkB.receivePacket(&src, out, 10);
         REQUIRE(lenB == 3);
@@ -117,7 +131,7 @@ TEST_CASE("LoRaBackoffLink broadcast handling", "[LoRaBackoffLink]") {
         
         // Send another broadcast for C to receive
         MockRadio::clearChannel();
-        REQUIRE(linkA.sendPacket(0xFF, msg, 3) == true);
+        REQUIRE(linkA.sendPacket(1, 0xFFFF, msg, 3) == true);
         
         int lenC = linkC.receivePacket(&src, out, 10);
         REQUIRE(lenC == 3);
@@ -131,31 +145,35 @@ TEST_CASE("LoRaBackoffLink maximum payload size", "[LoRaBackoffLink]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
     SECTION("Maximum payload succeeds") {
-        uint8_t maxPayload[249]; // BUFFER_SIZE - sizeof(PacketHeader) - 2 = 256 - 5 - 2
-        for (int i = 0; i < 249; i++) {
+        uint8_t maxPayload[247]; // BUFFER_SIZE - HEADER_SIZE - CRC_SIZE = 256 - 7 - 2
+        for (int i = 0; i < 247; i++) {
             maxPayload[i] = i & 0xFF;
         }
         
-        REQUIRE(linkA.sendPacket(2, maxPayload, 249) == true);
+        REQUIRE(linkA.sendPacket(1, 2, maxPayload, 247) == true);
         
-        uint8_t src = 0;
-        uint8_t out[249];
-        int len = linkB.receivePacket(&src, out, 249);
-        REQUIRE(len == 249);
+        uint16_t src = 0;
+        uint8_t out[247];
+        int len = linkB.receivePacket(&src, out, 247);
+        REQUIRE(len == 247);
         REQUIRE(src == 1);
         
-        for (int i = 0; i < 249; i++) {
+        for (int i = 0; i < 247; i++) {
             REQUIRE(out[i] == (i & 0xFF));
         }
     }
     
     SECTION("Oversized payload fails") {
-        uint8_t oversized[250];
-        REQUIRE(linkA.sendPacket(2, oversized, 250) == false);
+        uint8_t oversized[248];
+        REQUIRE(linkA.sendPacket(1, 2, oversized, 248) == false);
     }
 }
 
@@ -163,14 +181,14 @@ TEST_CASE("LoRaBackoffLink backoff timing", "[LoRaBackoffLink]") {
     MockRadio radioA;
     MockRadio radioB;
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
 
     SECTION("Backoff introduces delay") {
         fakeTime = 0;
         uint8_t msg[] = {'t'};
         
-        REQUIRE(linkA.sendPacket(2, msg, 1) == true);
+        REQUIRE(linkA.sendPacket(1, 2, msg, 1) == true);
         
         // Should introduce some backoff delay
         REQUIRE(fakeTime >= 10); // Minimum initial backoff
@@ -181,11 +199,11 @@ TEST_CASE("LoRaBackoffLink backoff timing", "[LoRaBackoffLink]") {
         uint32_t startTime = fakeTime;
         
         uint8_t msg[] = {'a'};
-        linkA.sendPacket(2, msg, 1);
+        linkA.sendPacket(1, 2, msg, 1);
         uint32_t timeA = fakeTime - startTime;
         
         fakeTime = 100; // Reset to same start time
-        linkB.sendPacket(1, msg, 1);
+        linkB.sendPacket(2, 1, msg, 1);
         uint32_t timeB = fakeTime - startTime;
         
         // Times might be different due to random component in backoff
@@ -200,19 +218,23 @@ TEST_CASE("LoRaBackoffLink sequence number uniqueness", "[LoRaBackoffLink]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
     uint8_t msg[] = {'s', 'e', 'q'};
     
     // Send multiple packets
     for (int i = 0; i < 5; i++) {
         msg[2] = '0' + i;
-        REQUIRE(linkA.sendPacket(2, msg, 3) == true);
+        REQUIRE(linkA.sendPacket(1, 2, msg, 3) == true);
     }
     
     // Verify all packets are received
-    uint8_t src = 0;
+    uint16_t src = 0;
     uint8_t out[10];
     int received = 0;
     
@@ -236,14 +258,19 @@ TEST_CASE("LoRaBackoffLink wrong destination filtering", "[LoRaBackoffLink]") {
     MockRadio radioC;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
-    LoRaBackoffLink linkC(&radioC, 3, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
+    LoRaBackoffLink linkC(&radioC, getTimeMock, sleepMock);
+
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
+    linkC.setLocalId(3);
 
     uint8_t msg[] = {'p', 'r', 'i', 'v'};
-    REQUIRE(linkA.sendPacket(2, msg, 4) == true); // Send to B only
+    REQUIRE(linkA.sendPacket(1, 2, msg, 4) == true); // Send to B only
 
-    uint8_t src = 0;
+    uint16_t src = 0;
     uint8_t out[10];
     
     // B should receive
@@ -261,12 +288,16 @@ TEST_CASE("LoRaBackoffLink empty payload handling", "[LoRaBackoffLink]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
 
-    REQUIRE(linkA.sendPacket(2, nullptr, 0) == true);
+    // Set local IDs for address filtering
+    linkA.setLocalId(1);
+    linkB.setLocalId(2);
 
-    uint8_t src = 0;
+    REQUIRE(linkA.sendPacket(1, 2, nullptr, 0) == true);
+
+    uint16_t src = 0;
     uint8_t out[10];
     int len = linkB.receivePacket(&src, out, 10);
     REQUIRE(len == 0);
