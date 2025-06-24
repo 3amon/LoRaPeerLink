@@ -1,9 +1,34 @@
+/**
+ * @file SemtechRadio.cpp
+ * @brief Implementation of Semtech LoRa radio hardware abstraction layer
+ * @author LoRaPeerLink Project
+ * @version 1.0
+ * 
+ * This file implements the SemtechRadio class, providing hardware-specific
+ * functionality for Semtech LoRa radio chipsets. It handles radio initialization,
+ * event management, and provides a simplified interface for LoRa communication
+ * without LoRaWAN protocol overhead.
+ */
+
 #include "SemtechRadio.h"
 #include <string.h>
 
-// For now, only one global instance
+/**
+ * @brief Global instance pointer for callback forwarding
+ * 
+ * The Semtech library uses C-style callbacks, so we need a global instance
+ * to forward events to the appropriate object methods. Only one SemtechRadio
+ * instance should be active at a time.
+ */
 SemtechRadio* SemtechRadio::_globalInstance = nullptr;
 
+/**
+ * @brief Constructor initializes radio with frequency and default settings
+ * 
+ * Creates a new SemtechRadio instance and sets it as the global instance
+ * for callback forwarding. Initializes internal state variables and
+ * configures the radio for the specified frequency.
+ */
 SemtechRadio::SemtechRadio(uint32_t frequency)
     : _frequency(frequency),
       _rxDoneFlag(false),
@@ -11,7 +36,7 @@ SemtechRadio::SemtechRadio(uint32_t frequency)
       _lastRssi(0),
       _lastSnr(0),
       _rxLen(0) {
-    _globalInstance = this;
+    _globalInstance = this; // Set global instance for callback forwarding
 }
 
 bool SemtechRadio::begin() {
