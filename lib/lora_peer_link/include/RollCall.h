@@ -1,3 +1,23 @@
+/**
+ * @file RollCall.h
+ * @brief Node naming and discovery layer for LoRa peer-to-peer networks
+ * @author LoRaPeerLink Project
+ * @version 1.0
+ * 
+ * This file implements a decentralized node discovery and naming system
+ * that operates over any ILoRaLink implementation. It provides:
+ * - Human-readable node names mapped to short numeric IDs
+ * - Decentralized name resolution without central authority
+ * - Collision detection and automatic ID reassignment
+ * - Periodic announcements for network maintenance
+ * 
+ * The protocol supports several message types:
+ * - HELLOIAM: Node introduction broadcasts
+ * - WHOIS: Name-to-ID resolution queries
+ * - WHEREIS: ID-to-name resolution queries
+ * - RESP: Response messages for queries
+ */
+
 #ifndef ROLLCALL_H
 #define ROLLCALL_H
 
@@ -9,15 +29,50 @@
 #include <random>
 
 /**
- * RollCall - Node Naming + Discovery Layer
+ * @class RollCall
+ * @brief Node naming and discovery layer for LoRa peer-to-peer networks
  * 
- * Maps human-readable node names (e.g., "sensor-1") to short 2-byte node IDs.
- * Supports decentralized name discovery and identity resolution over ILoRaLink.
+ * This class implements a decentralized node discovery system that maps
+ * human-readable node names (e.g., "sensor-1", "gateway-main") to short
+ * 2-byte node IDs for efficient over-the-air transmission. It provides:
  * 
- * Supported message types:
- * - HELLOIAM <name> AT <id> - broadcast introduction
- * - WHOIS <name> - query the ID of a known name
- * - WHEREIS <id> - query the name associated with an ID
+ * **Key Features:**
+ * - **Decentralized Operation**: No central naming authority required
+ * - **Collision Detection**: Automatic handling of ID conflicts
+ * - **Dynamic Discovery**: Real-time node discovery and mapping
+ * - **Periodic Maintenance**: Automatic network announcements
+ * - **Efficient Protocol**: Minimal overhead for name resolution
+ * 
+ * **Protocol Messages:**
+ * - `HELLOIAM <name> AT <id>`: Broadcast node introduction
+ * - `WHOIS <name>`: Query for node ID by name
+ * - `WHEREIS <id>`: Query for node name by ID
+ * - `RESP <data>`: Response to queries
+ * 
+ * **Collision Handling:**
+ * When multiple nodes choose the same ID, the protocol detects conflicts
+ * and automatically reassigns IDs using exponential backoff to prevent
+ * synchronized retries.
+ * 
+ * **Usage Pattern:**
+ * 1. Initialize with link layer and node name
+ * 2. Call begin() to generate ID and announce presence
+ * 3. Regularly call processMessages() to handle incoming requests
+ * 4. Use whoIs()/whereIs() for name resolution as needed
+ * 
+ * @par Example:
+ * @code
+ * LoRaBasicLink link(&radio, 0, getTime, sleep);
+ * RollCall rollCall(&link, "sensor-1", getTime, sleep);
+ * 
+ * rollCall.begin();
+ * 
+ * // In main loop:
+ * rollCall.processMessages();
+ * 
+ * // Look up another node:
+ * uint16_t gatewayId = rollCall.whoIs("gateway-main");
+ * @endcode
  */
 class RollCall {
 public:
