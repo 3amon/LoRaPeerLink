@@ -469,3 +469,44 @@ TEST_CASE("RollCall logging disabled by default", "[RollCall]") {
     // This should work fine without any logging
     rollCallA.whoIs("nonexistent", 50);
 }
+
+TEST_CASE("RollCall name deconfliction", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Nodes will have the same name initially, but different IDs
+    RollCall rollCallA(&linkA, "node-alpha", getTimeMock, sleepMock, getTestRandom1);
+    RollCall rollCallB(&linkB, "node-alpha", getTimeMock, sleepMock, getTestRandom2);
+    
+    // Initialize both nodes
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    
+    // Clear messages from begin()
+    MockRadio::clearChannel();
+    
+    // Simulate collision: B announces with A's name
+    std::string conflictMessage = "HELLOIAM|node-alpha AT " + std::to_string(idA);
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
+                            conflictMessage.length()) == true);
+    
+    // A processes the conflicting message - should trigger collision handling
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // A should have changed its name due to the collision but not its ID
+    uint16_t newIdA = rollCallA.getNodeId();
+    REQUIRE(newIdA == idA); // A should not have a new ID
+    
+    REQUIRE(rollCallA.getNodeName() != "node-alpha"); // A should have a new name
+
+    // TODO: Finish test by checking that B also gets a new name and that both names are unique and what the implementation in RollCall does in this case
+    // This part is not implemented in the original code, so we can't check it here.
+    // We would need to implement name collision resolution logic in RollCall first.
+}

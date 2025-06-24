@@ -20,6 +20,7 @@
 #include <SemtechRadio.h>
 #include <LoraBasicLink.h>
 #include <ScreenHandler.h>
+#include <RollCall.h>
 
 /**
  * @brief Global loop counter for application timing and debugging
@@ -74,7 +75,8 @@ void sleep_ms(uint32_t ms) {
 
 // --- Global Objects ---
 SemtechRadio radio(915000000);                                    ///< LoRa radio configured for 915 MHz
-LoRaBasicLink baic_link(&radio, 1, get_time_ms, sleep_ms);       ///< Basic link layer with node ID 1
+LoRaBasicLink basic_link(&radio, get_time_ms, sleep_ms);       ///< Basic link layer with node ID 1
+RollCall roll_call(&basic_link, "lora-simp", get_time_ms, sleep_ms, nullptr, RollCall::consoleLog); ///< Roll call for node discovery
 
 /**
  * @brief Arduino setup function - initializes hardware and peripherals
@@ -123,7 +125,7 @@ void loop() {
     display_screen.update_status("Lora Simp Ready");
 
     // Buffers for packet reception
-    uint8_t srcId;
+    uint16_t srcId;
     uint8_t buffer[MAX_PAYLOAD];
 
     // Main communication loop
@@ -137,14 +139,14 @@ void loop() {
             display_screen.add_line("Button Pressed");
             
             // Broadcast button press message to all nodes
-            baic_link.sendPacket(BROADCAST_ADDR, (uint8_t*)"Button Pressed", 15, false);
+            basic_link.sendPacket(roll_call.getNodeId(), BROADCAST_ADDR, (uint8_t*)"Button Pressed", 15, false);
             
             // Debug output to serial console
             printf("Button Pressed, sending packet\n");
         }
 
         // Check for incoming packets
-        int rcv_len = baic_link.receivePacket(&srcId, buffer, MAX_PAYLOAD);
+        int rcv_len = basic_link.receivePacket(&srcId, buffer, MAX_PAYLOAD);
         if (rcv_len > 0) {
             // Display source node ID
             display_screen.add_line("SRC: " + String(srcId));
@@ -156,6 +158,8 @@ void loop() {
             // Debug output to serial console
             printf("Received packet from %d: %s\n", srcId, message.c_str());
         }
+
+        roll_call.processMessages(100); // Process roll call messages
 
         // Main loop delay - controls polling rate
         delay(1000);
