@@ -20,8 +20,12 @@
  * Initializes sequence number counter and stores timing function pointers for
  * backoff calculations and network synchronization.
  */
-LoRaBackoffLink::LoRaBackoffLink(IRadio* radio, uint8_t nodeId, time_ms_fn getTime, sleep_ms_fn sleep)
-    : _radio(radio), _nodeId(nodeId), _seqNum(0), _getTime(getTime), _sleep(sleep) {}
+LoRaBackoffLink::LoRaBackoffLink(IRadio* radio, time_ms_fn getTime, sleep_ms_fn sleep)
+    : _radio(radio), _localId(0), _seqNum(0), _getTime(getTime), _sleep(sleep) {}
+
+void LoRaBackoffLink::setLocalId(uint16_t localId) {
+    _localId = localId;
+}
 
 /**
  * @brief Send a packet with exponential backoff and intelligent retry logic
@@ -36,7 +40,7 @@ LoRaBackoffLink::LoRaBackoffLink(IRadio* radio, uint8_t nodeId, time_ms_fn getTi
  * The backoff algorithm uses randomized delays to minimize collision probability
  * when multiple nodes attempt simultaneous transmission.
  */
-bool LoRaBackoffLink::sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck, int maxRetries) {
+bool LoRaBackoffLink::sendPacket(uint16_t srcId, uint16_t dest, const uint8_t* data, uint8_t len, bool requireAck, int maxRetries) {
     // Validate payload size against current configuration
     if (len > maxPayloadSize()) return false;
 
@@ -44,7 +48,7 @@ bool LoRaBackoffLink::sendPacket(uint8_t dest, const uint8_t* data, uint8_t len,
     uint8_t buffer[BUFFER_SIZE];
     PacketHeader* hdr = reinterpret_cast<PacketHeader*>(buffer);
     hdr->dst = dest;                                      // Destination node ID
-    hdr->src = _nodeId;                                   // Source node ID (this node)
+    hdr->src = srcId;                                     // Source node ID (passed as parameter)
     hdr->seq = _seqNum++;                                 // Sequence number (auto-increment)
     hdr->flags = (requireAck ? FLAG_NEEDS_ACK : 0);       // Protocol flags
     hdr->len = len;                                       // Payload length
@@ -95,7 +99,7 @@ bool LoRaBackoffLink::sendPacket(uint8_t dest, const uint8_t* data, uint8_t len,
  * The method ensures only valid, properly addressed packets are processed
  * and automatically handles protocol-level acknowledgment requirements.
  */
-int LoRaBackoffLink::receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen) {
+int LoRaBackoffLink::receivePacket(uint16_t* src, uint8_t* buffer, uint8_t maxLen) {
     uint8_t raw[BUFFER_SIZE];
     int len = _radio->receive(raw, BUFFER_SIZE);
     
@@ -113,7 +117,7 @@ int LoRaBackoffLink::receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen
     if (receivedCrc != crc16(raw, len - 2)) return 0;
 
     // Address filtering: only process packets for this node or broadcasts
-    if (hdr->dst != _nodeId && hdr->dst != BROADCAST_ADDR) return 0;
+    if (hdr->dst != _localId && hdr->dst != BROADCAST_ADDR) return 0;
 
     // Validate payload fits in provided buffer
     if (hdr->len > maxLen) return 0;
@@ -123,8 +127,8 @@ int LoRaBackoffLink::receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen
     *src = hdr->src;
 
     // Send automatic ACK if requested and this is a unicast packet
-    if ((hdr->flags & FLAG_NEEDS_ACK) && hdr->dst == _nodeId) {
-        sendAck(hdr->src, hdr->seq);
+    if ((hdr->flags & FLAG_NEEDS_ACK) && hdr->dst == _localId) {
+        sendAck(_localId, hdr->src, hdr->seq);
     }
 
     return hdr->len;
@@ -151,13 +155,13 @@ uint8_t LoRaBackoffLink::maxPayloadSize() const {
  * ACK packets have zero payload length and only contain the necessary
  * header information for protocol operation.
  */
-void LoRaBackoffLink::sendAck(uint8_t to, uint8_t seq) {
+void LoRaBackoffLink::sendAck(uint16_t srcId, uint16_t to, uint8_t seq) {
     uint8_t buffer[BUFFER_SIZE];
     PacketHeader* hdr = reinterpret_cast<PacketHeader*>(buffer);
     
     // Construct ACK header
     hdr->dst = to;              // Send ACK back to original sender
-    hdr->src = _nodeId;         // ACK originates from this node
+    hdr->src = srcId;           // ACK originates from this node
     hdr->seq = seq;             // Echo the sequence number being acknowledged
     hdr->flags = FLAG_ACK;      // Set ACK flag
     hdr->len = 0;               // No payload in ACK packets
@@ -200,7 +204,7 @@ bool LoRaBackoffLink::waitForAck(uint8_t expectedSeq, uint32_t timeoutMs) {
             
             // Validate ACK packet: CRC, destination, ACK flag, sequence number
             if (receivedCrc == crc16(raw, len - 2) &&    // CRC valid
-                hdr->dst == _nodeId &&                   // Addressed to this node
+                hdr->dst == _localId &&                  // Addressed to this node
                 (hdr->flags & FLAG_ACK) &&               // ACK flag set
                 hdr->seq == expectedSeq) {               // Sequence number matches
                 return true;

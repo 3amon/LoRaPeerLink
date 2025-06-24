@@ -24,7 +24,7 @@
 #include "IRadio.h"
 #include "ILoRaLink.h"
 
-#define BROADCAST_ADDR 0xFF   ///< Address for broadcast messages
+#define BROADCAST_ADDR 0xFFFF ///< Address for broadcast messages (16-bit)
 #define BUFFER_SIZE    256    ///< Maximum packet size including headers
 
 /**
@@ -77,19 +77,19 @@ public:
     /**
      * @brief Constructor for LoRaBackoffLink
      * @param radio Pointer to radio interface implementation
-     * @param nodeId Local node ID (1-254, should be unique in network)
      * @param getTime Function to get current time in milliseconds
      * @param sleep Function to sleep/delay for specified milliseconds
      * 
-     * Initializes the backoff link with the specified radio and node configuration.
-     * The radio must be properly initialized before use. Node IDs should be unique
-     * within the network to avoid addressing conflicts.
+     * Initializes the backoff link with the specified radio interface.
+     * The radio must be properly initialized before use. Node IDs are now
+     * passed per-packet in sendPacket() calls rather than stored in the link.
      */
-    LoRaBackoffLink(IRadio* radio, uint8_t nodeId, time_ms_fn getTime, sleep_ms_fn sleep);
+    LoRaBackoffLink(IRadio* radio, time_ms_fn getTime, sleep_ms_fn sleep);
 
     /**
      * @brief Send a packet with exponential backoff retry logic
-     * @param dest Destination node ID (1-254 for unicast, 0xFF for broadcast)
+     * @param srcId Source node ID (16-bit identifier for this node)
+     * @param dest Destination node ID (16-bit identifier, 0xFFFF for broadcast)
      * @param data Payload data to transmit
      * @param len Length of payload data
      * @param requireAck Whether to require acknowledgment (ignored for broadcasts)
@@ -106,11 +106,11 @@ public:
      * The backoff window starts small and doubles with each retry, helping
      * to resolve collision scenarios automatically.
      */
-    bool sendPacket(uint8_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3) override;
+    bool sendPacket(uint16_t srcId, uint16_t dest, const uint8_t* data, uint8_t len, bool requireAck = false, int maxRetries = 3) override;
 
     /**
      * @brief Receive a packet and handle protocol processing
-     * @param src Pointer to store source node ID of received packet
+     * @param src Pointer to store source node ID (16-bit) of received packet
      * @param buffer Buffer to store received payload data
      * @param maxLen Maximum buffer size for payload
      * @return Length of received payload, 0 if no valid packet available
@@ -123,11 +123,20 @@ public:
      * 
      * This method is non-blocking and should be called regularly.
      */
-    int receivePacket(uint8_t* src, uint8_t* buffer, uint8_t maxLen) override;
+    int receivePacket(uint16_t* src, uint8_t* buffer, uint8_t maxLen) override;
+
+    /**
+     * @brief Set the local node ID for address filtering
+     * @param localId The 16-bit node ID for this node (used for filtering incoming packets)
+     * 
+     * This method must be called before receivePacket() to enable proper address filtering.
+     * Packets addressed to this ID or to the broadcast address (0xFFFF) will be accepted.
+     */
+    void setLocalId(uint16_t localId) override;
 
 private:
     IRadio* _radio;        ///< Pointer to radio interface
-    uint8_t _nodeId;       ///< This node's unique ID
+    uint16_t _localId;     ///< This node's ID (for address filtering)
     uint8_t _seqNum;       ///< Current sequence number for outgoing packets
     time_ms_fn _getTime;   ///< Function to get current time
     sleep_ms_fn _sleep;    ///< Function to sleep/delay
@@ -150,8 +159,8 @@ private:
      * The packed attribute prevents compiler padding between fields.
      */
     struct __attribute__((packed)) PacketHeader {
-        uint8_t dst;    ///< Destination node ID
-        uint8_t src;    ///< Source node ID
+        uint16_t dst;   ///< Destination node ID (16-bit)
+        uint16_t src;   ///< Source node ID (16-bit)
         uint8_t seq;    ///< Sequence number
         uint8_t flags;  ///< Protocol flags (ACK, NEED_ACK, etc.)
         uint8_t len;    ///< Length of payload data
@@ -169,6 +178,7 @@ private:
 
     /**
      * @brief Send an acknowledgment packet
+     * @param srcId Source node ID to use for the ACK
      * @param to Destination node ID to send ACK to
      * @param seq Sequence number being acknowledged
      * 
@@ -176,7 +186,7 @@ private:
      * that requested acknowledgment. The ACK includes the original
      * sequence number for proper matching.
      */
-    void sendAck(uint8_t to, uint8_t seq);
+    void sendAck(uint16_t srcId, uint16_t to, uint8_t seq);
 
     /**
      * @brief Wait for acknowledgment with timeout

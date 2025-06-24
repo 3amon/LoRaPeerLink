@@ -50,6 +50,9 @@ bool RollCall::begin() {
     // Generate initial random ID for this node
     _nodeId = generateRandomId();
     
+    // Set the local ID on the link layer for address filtering
+    _link->setLocalId(_nodeId);
+    
     // Register ourselves in the local mapping tables
     updateMapping(_nodeName, _nodeId);
     
@@ -85,17 +88,14 @@ bool RollCall::processMessages(uint32_t timeoutMs) {
         _lastAnnouncementTime = currentTime;
     }
     
-    uint8_t srcId8;
+    uint16_t srcId;
     uint8_t buffer[MAX_PAYLOAD]; // Use the constant from LoRaBasicLink
     
     // Receive packet from link layer
-    int len = _link->receivePacket(&srcId8, buffer, MAX_PAYLOAD);
+    int len = _link->receivePacket(&srcId, buffer, MAX_PAYLOAD);
     if (len <= 0) {
         return false;
     }
-    
-    // Convert 8-bit source ID to 16-bit (link layer uses 8-bit addressing)
-    uint16_t srcId = srcId8;
     
     // Convert buffer to string
     std::string message(reinterpret_cast<const char*>(buffer), len);
@@ -123,7 +123,7 @@ uint16_t RollCall::whoIs(const std::string& name, uint32_t timeoutMs) {
     
     // Broadcast WHOIS query
     std::string query = std::string(WHOIS_PREFIX) + name;
-    if (!_link->sendPacket(BROADCAST_ADDR, 
+    if (!_link->sendPacket(_nodeId, BROADCAST_ADDR, 
                           reinterpret_cast<const uint8_t*>(query.c_str()), 
                           query.length())) {
         return 0;
@@ -156,7 +156,7 @@ std::string RollCall::whereIs(uint16_t nodeId, uint32_t timeoutMs) {
     
     // Broadcast WHEREIS query
     std::string query = std::string(WHEREIS_PREFIX) + std::to_string(nodeId);
-    if (!_link->sendPacket(BROADCAST_ADDR, 
+    if (!_link->sendPacket(_nodeId, BROADCAST_ADDR, 
                           reinterpret_cast<const uint8_t*>(query.c_str()), 
                           query.length())) {
         return "";
@@ -190,7 +190,7 @@ uint16_t RollCall::generateRandomId() {
 
 bool RollCall::broadcastHelloIam() {
     std::string message = std::string(HELLOIAM_PREFIX) + _nodeName + " AT " + std::to_string(_nodeId);
-    return _link->sendPacket(BROADCAST_ADDR, 
+    return _link->sendPacket(_nodeId, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(message.c_str()), 
                             message.length());
 }
@@ -281,10 +281,7 @@ bool RollCall::handleResponse(const std::string& message, uint16_t srcId) {
 bool RollCall::sendResponse(uint16_t destId, const std::string& response) {
     std::string message = std::string(RESPONSE_PREFIX) + response;
     
-    // Use the destId directly if it's broadcast, otherwise truncate to 8-bit
-    uint8_t dest8 = (destId == BROADCAST_ADDR) ? BROADCAST_ADDR : static_cast<uint8_t>(destId & 0xFF);
-    
-    return _link->sendPacket(dest8, 
+    return _link->sendPacket(_nodeId, destId, 
                             reinterpret_cast<const uint8_t*>(message.c_str()), 
                             message.length());
 }
@@ -300,6 +297,9 @@ bool RollCall::handleCollision(const std::string& name, uint16_t nodeId) {
     
     // Update our own ID
     _nodeId = newId;
+    
+    // Update the link layer with our new local ID for address filtering
+    _link->setLocalId(_nodeId);
     
     // Update mapping
     _idToName.erase(nodeId); // Remove old mapping

@@ -58,7 +58,8 @@ public:
 
     /**
      * @brief Send a packet to a destination node
-     * @param destId Destination node ID (0-254), or 0xFF for broadcast
+     * @param srcId Source node ID (16-bit identifier for this node)
+     * @param destId Destination node ID (16-bit identifier), or 0xFFFF for broadcast
      * @param payload Pointer to data to transmit
      * @param len Length of payload data in bytes
      * @param requestAck Whether to request acknowledgment from receiver (default: false)
@@ -67,18 +68,18 @@ public:
      * 
      * Transmits a packet to the specified destination. If acknowledgment is requested,
      * the method will wait for an ACK response and retry transmission up to maxRetries
-     * times if no ACK is received. Broadcast packets (destId = 0xFF) typically do not
+     * times if no ACK is received. Broadcast packets (destId = 0xFFFF) typically do not
      * use acknowledgments.
      * 
      * The exact behavior depends on the implementation:
      * - Basic links: Simple transmission with optional ACK
      * - Backoff links: Collision avoidance with exponential backoff
      */
-    virtual bool sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false, int maxRetries = 3) = 0;
+    virtual bool sendPacket(uint16_t srcId, uint16_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false, int maxRetries = 3) = 0;
 
     /**
      * @brief Receive a packet from any source
-     * @param srcId Pointer to variable that will store the source node ID
+     * @param srcId Pointer to variable that will store the source node ID (16-bit)
      * @param buffer Buffer to store the received payload data
      * @param maxLen Maximum number of bytes that can be stored in buffer
      * @return Length of received payload data, 0 if no packet available or error occurred
@@ -94,7 +95,16 @@ public:
      * - Automatic ACK transmission (if requested by sender)
      * - Protocol-specific packet processing
      */
-    virtual int receivePacket(uint8_t* srcId, uint8_t* buffer, uint8_t maxLen) = 0;
+    virtual int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) = 0;
+
+    /**
+     * @brief Set the local node ID for address filtering
+     * @param localId The 16-bit node ID for this node (used for filtering incoming packets)
+     * 
+     * This method must be called before receivePacket() to enable proper address filtering.
+     * Packets addressed to this ID or to the broadcast address (0xFFFF) will be accepted.
+     */
+    virtual void setLocalId(uint16_t localId) = 0;
 };
 
 #endif // ILORA_LINK_H
