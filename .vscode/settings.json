@@ -49,6 +49,16 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "bitset": "cpp",
+        "condition_variable": "cpp",
+        "list": "cpp",
+        "ratio": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "future": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp",
+        "variant": "cpp"
     }
 }
