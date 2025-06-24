@@ -1,29 +1,59 @@
+/**
+ * @file RollCall.cpp
+ * @brief Implementation of decentralized node naming and discovery system
+ * @author LoRaPeerLink Project
+ * @version 1.0
+ * 
+ * This file implements the RollCall class, providing a decentralized node
+ * discovery and naming system for LoRa peer-to-peer networks. It handles
+ * node registration, name resolution, collision detection, and maintains
+ * distributed naming tables without requiring a central authority.
+ */
+
 #include "RollCall.h"
 #include "LoraBasicLink.h"  // For MAX_PAYLOAD constant
 #include <cstring>
 #include <sstream>
 #include <algorithm>
 
+/**
+ * @brief Constructor initializes RollCall with link layer and node configuration
+ * 
+ * Sets up the node discovery system with the provided link layer interface
+ * and node identification. Initializes random number generation and prepares
+ * the system for decentralized name resolution operations.
+ */
 RollCall::RollCall(ILoRaLink* link, const std::string& nodeName, 
                    time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
       _lastAnnouncementTime(0), _defaultRng(std::random_device{}()) {
     
+    // Set up random number generation if not provided
     if (!_getRandom) {
-        // Use static function pointer instead of lambda
+        // Use static function pointer for default random generation
         _getRandom = &RollCall::staticDefaultRandom;
     }
 }
 
+/**
+ * @brief Initialize the RollCall system and announce node presence
+ * 
+ * Performs initial setup for the node discovery system:
+ * 1. Generates a random unique node ID
+ * 2. Registers this node in the local mapping tables
+ * 3. Broadcasts initial HELLOIAM announcement to the network
+ * 
+ * This method must be called before using other RollCall functionality.
+ */
 bool RollCall::begin() {
-    // Generate initial random ID
+    // Generate initial random ID for this node
     _nodeId = generateRandomId();
     
-    // Add ourselves to the mapping
+    // Register ourselves in the local mapping tables
     updateMapping(_nodeName, _nodeId);
     
-    // Broadcast our introduction
+    // Announce our presence to the network
     if (!broadcastHelloIam()) {
         return false;
     }
