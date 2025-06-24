@@ -8,8 +8,8 @@ TEST_CASE("LoRaBackoffLink packet framing", "[BackoffPacketFraming]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
 
     SECTION("Packet header structure") {
         uint8_t msg[] = {'d', 'a', 't', 'a'};
@@ -58,8 +58,8 @@ TEST_CASE("LoRaBackoffLink minimum packet size", "[BackoffPacketFraming]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
     
     // Send empty payload
     REQUIRE(linkA.sendPacket(2, nullptr, 0) == true);
@@ -74,8 +74,8 @@ TEST_CASE("LoRaBackoffLink flag handling", "[BackoffPacketFraming]") {
     MockRadio radioB;
     MockRadio::clearChannel();
 
-    LoRaBackoffLink linkA(&radioA, 1, getTimeMock, sleepMock);
-    LoRaBackoffLink linkB(&radioB, 2, getTimeMock, sleepMock);
+    LoRaBackoffLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBackoffLink linkB(&radioB, getTimeMock, sleepMock);
     
     // Send without ACK request to test flag is not set
     uint8_t msg[] = {'n', 'o', 'a', 'c', 'k'};
