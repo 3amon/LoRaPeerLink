@@ -59,6 +59,7 @@
  * 2. Call begin() to generate ID and announce presence
  * 3. Regularly call processMessages() to handle incoming requests
  * 4. Use whoIs()/whereIs() for name resolution as needed
+ * 5. Optional: Enable message logging for debugging protocol traffic
  * 
  * @par Example:
  * @code
@@ -73,12 +74,19 @@
  * // Look up another node:
  * uint16_t gatewayId = rollCall.whoIs("gateway-main");
  * @endcode
+ * 
+ * @par Example with Debug Logging:
+ * @code
+ * // Enable logging to see all protocol messages
+ * RollCall rollCall(&link, "sensor-1", getTime, sleep, nullptr, RollCall::consoleLog);
+ * @endcode
  */
 class RollCall {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
     using random_fn = uint16_t (*)();
+    using log_fn = void (*)(const char*);
 
     /**
      * Constructor
@@ -87,9 +95,11 @@ public:
      * @param getTime Function to get current time in milliseconds
      * @param sleep Function to sleep for specified milliseconds
      * @param getRandom Function to generate random uint16_t values (optional)
+     * @param logMessage Function to log debug messages (optional, for debugging only)
      */
     RollCall(ILoRaLink* link, const std::string& nodeName, 
-             time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom = nullptr);
+             time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom = nullptr,
+             log_fn logMessage = nullptr);
 
     /**
      * Initialize the RollCall layer
@@ -148,6 +158,12 @@ public:
      */
     const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
 
+    /**
+     * Default console logging function for debugging
+     * @param message Message to log to console
+     */
+    static void consoleLog(const char* message);
+
 private:
     ILoRaLink* _link;
     std::string _nodeName;
@@ -155,6 +171,7 @@ private:
     time_ms_fn _getTime;
     sleep_ms_fn _sleep;
     random_fn _getRandom;
+    log_fn _logMessage;
 
     // Timing for periodic announcements
     uint32_t _lastAnnouncementTime;

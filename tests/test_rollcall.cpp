@@ -397,3 +397,75 @@ TEST_CASE("RollCall periodic HELLOIAM rebroadcast functionality", "[RollCall]") 
     bool receivedAgain = rollCallB.processMessages(100);
     REQUIRE(receivedAgain == true); // Should be a new message
 }
+
+TEST_CASE("RollCall message logging", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    // Use a global variable for capturing log messages in test
+    static std::vector<std::string> testLogMessages;
+    testLogMessages.clear();
+    
+    auto testLogger = [](const char* message) {
+        testLogMessages.push_back(std::string(message));
+    };
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Create RollCall instances with logging enabled
+    RollCall rollCallA(&linkA, "log-test-a", getTimeMock, sleepMock, getTestRandom1, testLogger);
+    RollCall rollCallB(&linkB, "log-test-b", getTimeMock, sleepMock, getTestRandom2, testLogger);
+    
+    // Initialize both nodes - this should generate HELLOIAM messages
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    // Clear log messages after initialization to focus on query/response
+    testLogMessages.clear();
+    
+    // Let A learn about B first (this is important for the test to work)
+    rollCallA.processMessages(100);  // A processes B's announcement
+    
+    // Now test a WHOIS query - A should know about B and can query for it  
+    uint16_t result = rollCallA.whoIs("log-test-b", 100);
+    
+    // Process any remaining messages
+    rollCallB.processMessages(100);
+    rollCallA.processMessages(100);
+    
+    // Check that we have log messages
+    REQUIRE(testLogMessages.size() > 0);
+    
+    // Check for specific message types in logs
+    bool hasWhoisSent = false;
+    bool hasWhoisReceived = false;
+    
+    for (const auto& msg : testLogMessages) {
+        if (msg.find("WHOIS|") != std::string::npos && msg.find("Sending:") != std::string::npos) {
+            hasWhoisSent = true;
+        }
+        if (msg.find("WHOIS|") != std::string::npos && msg.find("Received:") != std::string::npos) {
+            hasWhoisReceived = true;
+        }
+    }
+    
+    REQUIRE(hasWhoisSent == true);
+    REQUIRE(hasWhoisReceived == true);
+}
+
+TEST_CASE("RollCall logging disabled by default", "[RollCall]") {
+    MockRadio radioA;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    
+    // Create RollCall without logging function (should work fine)
+    RollCall rollCallA(&linkA, "no-log-test", getTimeMock, sleepMock, getTestRandom1);
+    
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallA.getNodeName() == "no-log-test");
+    
+    // This should work fine without any logging
+    rollCallA.whoIs("nonexistent", 50);
+}

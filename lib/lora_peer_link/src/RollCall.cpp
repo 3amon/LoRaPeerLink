@@ -15,6 +15,7 @@
 #include <cstring>
 #include <sstream>
 #include <algorithm>
+#include <cstdio>  // For printf
 
 /**
  * @brief Constructor initializes RollCall with link layer and node configuration
@@ -24,10 +25,11 @@
  * the system for decentralized name resolution operations.
  */
 RollCall::RollCall(ILoRaLink* link, const std::string& nodeName, 
-                   time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom)
+                   time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom,
+                   log_fn logMessage)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
-      _lastAnnouncementTime(0), _defaultRng(std::random_device{}()) {
+      _logMessage(logMessage), _lastAnnouncementTime(0), _defaultRng(std::random_device{}()) {
     
     // Set up random number generation if not provided
     if (!_getRandom) {
@@ -100,6 +102,12 @@ bool RollCall::processMessages(uint32_t timeoutMs) {
     // Convert buffer to string
     std::string message(reinterpret_cast<const char*>(buffer), len);
     
+    // Log the received message if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Received: " + message + " from ID " + std::to_string(srcId);
+        _logMessage(logMsg.c_str());
+    }
+    
     // Handle different message types
     if (message.find(HELLOIAM_PREFIX) == 0) {
         return handleHelloIam(message, srcId);
@@ -123,6 +131,13 @@ uint16_t RollCall::whoIs(const std::string& name, uint32_t timeoutMs) {
     
     // Broadcast WHOIS query
     std::string query = std::string(WHOIS_PREFIX) + name;
+    
+    // Log the outgoing query if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Sending: " + query;
+        _logMessage(logMsg.c_str());
+    }
+    
     if (!_link->sendPacket(_nodeId, BROADCAST_ADDR, 
                           reinterpret_cast<const uint8_t*>(query.c_str()), 
                           query.length())) {
@@ -156,6 +171,13 @@ std::string RollCall::whereIs(uint16_t nodeId, uint32_t timeoutMs) {
     
     // Broadcast WHEREIS query
     std::string query = std::string(WHEREIS_PREFIX) + std::to_string(nodeId);
+    
+    // Log the outgoing query if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Sending: " + query;
+        _logMessage(logMsg.c_str());
+    }
+    
     if (!_link->sendPacket(_nodeId, BROADCAST_ADDR, 
                           reinterpret_cast<const uint8_t*>(query.c_str()), 
                           query.length())) {
@@ -190,6 +212,13 @@ uint16_t RollCall::generateRandomId() {
 
 bool RollCall::broadcastHelloIam() {
     std::string message = std::string(HELLOIAM_PREFIX) + _nodeName + " AT " + std::to_string(_nodeId);
+    
+    // Log the outgoing message if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Sending: " + message;
+        _logMessage(logMsg.c_str());
+    }
+    
     return _link->sendPacket(_nodeId, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(message.c_str()), 
                             message.length());
@@ -281,6 +310,12 @@ bool RollCall::handleResponse(const std::string& message, uint16_t srcId) {
 bool RollCall::sendResponse(uint16_t destId, const std::string& response) {
     std::string message = std::string(RESPONSE_PREFIX) + response;
     
+    // Log the outgoing response if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Sending: " + message + " to ID " + std::to_string(destId);
+        _logMessage(logMsg.c_str());
+    }
+    
     return _link->sendPacket(_nodeId, destId, 
                             reinterpret_cast<const uint8_t*>(message.c_str()), 
                             message.length());
@@ -335,4 +370,9 @@ uint16_t RollCall::staticDefaultRandom() {
         result = static_cast<uint16_t>(_staticRng());
     }
     return result;
+}
+
+void RollCall::consoleLog(const char* message) {
+    // Simple console output for debugging
+    printf("%s\n", message);
 }
