@@ -12,7 +12,8 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y cmake g++ catch2
+        sudo apt install -y cmake g++ catch2 python3 python3-pip
+        pip3 install cryptography
 
     - name: Configure and Build
       run: |
@@ -20,5 +21,8 @@ jobs:
         cmake ..
         make
 
-    - name: Run Tests
+    - name: Run C++ Tests
       run: ./build/tests/test_all
+
+    - name: Run Python-C++ Cross-Validation Tests
+      run: python3 validate_encryption.py

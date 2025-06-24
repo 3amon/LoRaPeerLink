@@ -46,6 +46,13 @@ public:
         std::swap(_globalAir, empty);
     }
 
+    // Method to inject packets directly for testing
+    void injectPacket(const uint8_t* data, size_t length) {
+        Packet p;
+        p.data.assign(data, data + length);
+        _globalAir.push(p);
+    }
+
 private:
     static std::queue<Packet> _globalAir;  // shared by all nodes
 };
