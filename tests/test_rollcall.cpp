@@ -491,8 +491,8 @@ TEST_CASE("RollCall name deconfliction", "[RollCall]") {
     // Clear messages from begin()
     MockRadio::clearChannel();
     
-    // Simulate collision: B announces with A's name
-    std::string conflictMessage = "HELLOIAM|node-alpha AT " + std::to_string(idA);
+    // Simulate collision: B announces with A's name but B's own ID
+    std::string conflictMessage = "HELLOIAM|node-alpha AT " + std::to_string(idB);
     REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
                             conflictMessage.length()) == true);
@@ -506,7 +506,108 @@ TEST_CASE("RollCall name deconfliction", "[RollCall]") {
     
     REQUIRE(rollCallA.getNodeName() != "node-alpha"); // A should have a new name
 
-    // TODO: Finish test by checking that B also gets a new name and that both names are unique and what the implementation in RollCall does in this case
-    // This part is not implemented in the original code, so we can't check it here.
-    // We would need to implement name collision resolution logic in RollCall first.
+    // Clear channel and now let A announce its new name to B
+    MockRadio::clearChannel();
+    
+    // A announces its new name, which should trigger B to also change its name
+    std::string newHelloA = "HELLOIAM|" + rollCallA.getNodeName() + " AT " + std::to_string(idA);
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(newHelloA.c_str()), 
+                            newHelloA.length()) == true);
+    
+    // B should still have the original name at this point
+    REQUIRE(rollCallB.getNodeName() == "node-alpha");
+    
+    // But when A announces with the original name that B still has, B should also change
+    // First, let's simulate this by having someone else announce with B's current name
+    MockRadio::clearChannel();
+    std::string conflictForB = "HELLOIAM|node-alpha AT " + std::to_string(idA); // A claims the name B still has
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(conflictForB.c_str()), 
+                            conflictForB.length()) == true);
+    
+    // B processes this and should change its name too
+    REQUIRE(rollCallB.processMessages(100) == true);
+    REQUIRE(rollCallB.getNodeName() != "node-alpha"); // B should have a new name
+    
+    // Both names should be unique
+    REQUIRE(rollCallA.getNodeName() != rollCallB.getNodeName());
+    
+    // Both should still have their original IDs
+    REQUIRE(rollCallA.getNodeId() == idA);
+    REQUIRE(rollCallB.getNodeId() == idB);
+}
+
+TEST_CASE("RollCall bidirectional name collision resolution", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Both nodes start with the same name
+    RollCall rollCallA(&linkA, "duplicate-name", getTimeMock, sleepMock, getTestRandom1);
+    RollCall rollCallB(&linkB, "duplicate-name", getTimeMock, sleepMock, getTestRandom2);
+    
+    // Initialize both nodes
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    
+    // Clear initial announcements
+    MockRadio::clearChannel();
+    
+    // First: A discovers B has the same name
+    std::string helloB = "HELLOIAM|duplicate-name AT " + std::to_string(idB);
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
+                            helloB.length()) == true);
+    
+    // A processes B's message and should detect name collision
+    REQUIRE(rollCallA.processMessages(100) == true);
+    REQUIRE(rollCallA.getNodeName() != "duplicate-name");
+    
+    // Clear channel
+    MockRadio::clearChannel();
+    
+    // Second: B discovers A has the same name (using A's original name)
+    std::string helloA = "HELLOIAM|duplicate-name AT " + std::to_string(idA);
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(helloA.c_str()), 
+                            helloA.length()) == true);
+    
+    // B processes A's message and should also detect name collision
+    REQUIRE(rollCallB.processMessages(100) == true);
+    REQUIRE(rollCallB.getNodeName() != "duplicate-name");
+    
+    // Names should be different from each other
+    REQUIRE(rollCallA.getNodeName() != rollCallB.getNodeName());
+    
+    // IDs should remain the same
+    REQUIRE(rollCallA.getNodeId() == idA);
+    REQUIRE(rollCallB.getNodeId() == idB);
+    
+    // Verify both nodes can exchange their new names successfully
+    MockRadio::clearChannel();
+    
+    std::string newHelloA = "HELLOIAM|" + rollCallA.getNodeName() + " AT " + std::to_string(idA);
+    std::string newHelloB = "HELLOIAM|" + rollCallB.getNodeName() + " AT " + std::to_string(idB);
+    
+    // A tells B its new name
+    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(newHelloA.c_str()), 
+                            newHelloA.length()) == true);
+    REQUIRE(rollCallB.processMessages(100) == true);
+    
+    // B tells A its new name
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(newHelloB.c_str()), 
+                            newHelloB.length()) == true);
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // Both should know about each other's new names
+    REQUIRE(rollCallA.whoIs(rollCallB.getNodeName(), 10) == idB);
+    REQUIRE(rollCallB.whoIs(rollCallA.getNodeName(), 10) == idA);
 }

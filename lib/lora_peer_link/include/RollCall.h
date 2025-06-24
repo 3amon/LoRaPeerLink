@@ -258,6 +258,14 @@ private:
     bool handleCollision(const std::string& name, uint16_t nodeId);
 
     /**
+     * Check for name collision and reassign name if necessary
+     * @param conflictingName Node name that is conflicting
+     * @param conflictingNodeId Node ID of the conflicting node
+     * @return true if collision detected and handled
+     */
+    bool handleNameCollision(const std::string& conflictingName, uint16_t conflictingNodeId);
+
+    /**
      * Parse message content after prefix
      * @param message Full message
      * @param prefix Expected prefix
