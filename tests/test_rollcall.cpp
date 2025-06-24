@@ -174,7 +174,7 @@ TEST_CASE("RollCall WHEREIS query", "[RollCall]") {
     
     // A sends WHEREIS query
     std::string query = std::string("WHEREIS|") + std::to_string(queryId);
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(rollCallA.getNodeId(), BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(query.c_str()), 
                             query.length()) == true);
     
@@ -222,7 +222,7 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     
     // Simulate collision: B announces with A's ID
     std::string conflictMessage = "HELLOIAM|node-beta AT " + std::to_string(idA);
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
                             conflictMessage.length()) == true);
     
@@ -241,12 +241,12 @@ TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
     std::string helloB = "HELLOIAM|node-beta AT " + std::to_string(idB);
     
     // Exchange messages
-    REQUIRE(linkA.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkA.sendPacket(newIdA, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloNewA.c_str()), 
                             helloNewA.length()) == true);
     REQUIRE(rollCallB.processMessages(100) == true);
     
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloB.c_str()), 
                             helloB.length()) == true);
     REQUIRE(rollCallA.processMessages(100) == true);
@@ -288,7 +288,7 @@ TEST_CASE("RollCall local cache lookup", "[RollCall]") {
     std::string helloB = "HELLOIAM|remote-sensor AT " + std::to_string(idB);
     
     // A learns about B
-    REQUIRE(linkB.sendPacket(BROADCAST_ADDR, 
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
                             reinterpret_cast<const uint8_t*>(helloB.c_str()), 
                             helloB.length()) == true);
     REQUIRE(rollCallA.processMessages(100) == true);
