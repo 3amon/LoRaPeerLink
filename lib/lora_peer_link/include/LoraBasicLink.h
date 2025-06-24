@@ -24,9 +24,9 @@
 #include <string.h>
 
 // --- Protocol Definitions ---
-#define BROADCAST_ADDR 0xFF        ///< Address for broadcast messages
+#define BROADCAST_ADDR 0xFFFF      ///< Address for broadcast messages (16-bit)
 #define BUFFER_SIZE    256         ///< Maximum packet size including headers
-#define HEADER_SIZE    5           ///< Size of packet header in bytes
+#define HEADER_SIZE    7           ///< Size of packet header in bytes (2 bytes each for dst/src + 3 bytes)
 #define CRC_SIZE       2           ///< Size of CRC field in bytes
 #define MAX_PAYLOAD    (BUFFER_SIZE - HEADER_SIZE - CRC_SIZE)  ///< Maximum payload size
 
@@ -82,19 +82,19 @@ public:
     /**
      * @brief Constructor for LoRaBasicLink
      * @param radio Pointer to radio interface implementation
-     * @param localId Local node ID (1-254, avoid 0 and 255)
      * @param getTime Function to get current time in milliseconds
      * @param sleep Function to sleep/delay for specified milliseconds
      * 
-     * Initializes the basic link with the specified radio and node configuration.
-     * The radio must be properly initialized before use. Node IDs should be unique
-     * within the network, with 0xFF reserved for broadcast and 0x00 typically avoided.
+     * Initializes the basic link with the specified radio interface.
+     * The radio must be properly initialized before use. Node IDs are now
+     * passed per-packet in sendPacket() calls rather than stored in the link.
      */
-    LoRaBasicLink(IRadio* radio, uint8_t localId, time_ms_fn getTime, sleep_ms_fn sleep);
+    LoRaBasicLink(IRadio* radio, time_ms_fn getTime, sleep_ms_fn sleep);
 
     /**
      * @brief Send a packet to destination node
-     * @param destId Destination node ID (1-254 for unicast, 0xFF for broadcast)
+     * @param srcId Source node ID (16-bit identifier for this node)
+     * @param destId Destination node ID (16-bit identifier, 0xFFFF for broadcast)
      * @param payload Data to transmit
      * @param len Length of payload (must be <= MAX_PAYLOAD)
      * @param requestAck Whether to request acknowledgment (ignored for broadcasts)
@@ -105,14 +105,14 @@ public:
      * requested, waits up to 500ms for an ACK response and retries transmission
      * if no ACK is received within the timeout period.
      * 
-     * @note Broadcast packets (destId = 0xFF) do not use acknowledgments
+     * @note Broadcast packets (destId = 0xFFFF) do not use acknowledgments
      * @note Maximum payload size is MAX_PAYLOAD bytes
      */
-    bool sendPacket(uint8_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false, int maxRetries = 3) override;
+    bool sendPacket(uint16_t srcId, uint16_t destId, const uint8_t* payload, uint8_t len, bool requestAck = false, int maxRetries = 3) override;
 
     /**
      * @brief Receive a packet from the radio
-     * @param srcId Pointer to store source node ID of received packet
+     * @param srcId Pointer to store source node ID (16-bit) of received packet
      * @param buffer Buffer to store received payload
      * @param maxLen Maximum buffer size
      * @return Length of received payload, 0 if no valid packet available
@@ -124,19 +124,30 @@ public:
      * - Returns payload data and source ID for valid packets
      * 
      * This method is non-blocking and should be called regularly to process
-     * incoming messages.
+     * incoming messages. Note that this method now requires a destination node ID
+     * to be provided during construction or via other means for address filtering.
      */
-    int receivePacket(uint8_t* srcId, uint8_t* buffer, uint8_t maxLen) override;
+    int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) override;
+
+    /**
+     * @brief Set the local node ID for address filtering
+     * @param localId The 16-bit node ID for this node (used for filtering incoming packets)
+     * 
+     * This method must be called before receivePacket() to enable proper address filtering.
+     * Packets addressed to this ID or to the broadcast address (0xFFFF) will be accepted.
+     */
+    void setLocalId(uint16_t localId) override;
 
 private:
     IRadio* _radio;          ///< Pointer to radio interface
-    uint8_t _localId;        ///< This node's ID
+    uint16_t _localId;       ///< This node's ID (for address filtering)
     uint8_t _seqNum;         ///< Current sequence number for outgoing packets
     time_ms_fn _getTimeMs;   ///< Function to get current time
     sleep_ms_fn _sleepMs;    ///< Function to sleep/delay
 
     /**
      * @brief Send an acknowledgment packet
+     * @param srcId Source node ID to use for the ACK
      * @param to Destination node ID to send ACK to
      * @param seq Sequence number to acknowledge
      * 
@@ -144,7 +155,7 @@ private:
      * requested acknowledgment. The ACK contains the original sequence
      * number to allow the sender to match it with the original transmission.
      */
-    void sendAck(uint8_t to, uint8_t seq);
+    void sendAck(uint16_t srcId, uint16_t to, uint8_t seq);
 
     /**
      * @brief Calculate 16-bit CRC for data integrity
