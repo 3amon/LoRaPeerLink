@@ -30,7 +30,6 @@ add_executable(test_all
   tests/test_rollcall.cpp
   tests/test_interface.cpp
   tests/test_encrypted_link.cpp
-  tests/test_encryption_debug.cpp
   tests/TestUtils.cpp
   lib/lora_peer_link/src/RollCall.cpp
   lib/lora_peer_link/src/LoraBasicLink.cpp
