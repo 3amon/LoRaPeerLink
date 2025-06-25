@@ -19,9 +19,9 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 
 1. **Install PlatformIO**: Follow the [PlatformIO installation guide](https://platformio.org/install)
 
-2. **Install LoRaPeerLink Library**: 
-   - Option A: Copy the entire LoRaPeerLink library to your global PlatformIO libraries folder
-   - Option B: Use this example in-place (lib_extra_dirs points to the parent library)
+2. **LoRaPeerLink Library**: 
+   - The complete LoRaPeerLink library is included in the `lib/LoRaPeerLink/` directory
+   - No external installation or configuration required - the example is self-contained
 
 3. **Open Project**: Open this directory in PlatformIO IDE or VS Code with PlatformIO extension
 
@@ -38,6 +38,7 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 - `src/ScreenHandler.cpp`: OLED display management
 - `include/ScreenHandler.h`: Display interface definitions
 - `include/LoraHandler.h`: High-level LoRa communication wrapper (legacy)
+- `lib/LoRaPeerLink/`: Complete LoRaPeerLink library (headers and source files)
 - `lib/`: Hardware-specific libraries for display and LoRa hardware
 
 ## Usage

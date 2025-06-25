@@ -1,0 +1,26 @@
+{
+    "name": "LoRaPeerLink",
+    "version": "1.0.0",
+    "description": "LoRa peer-to-peer communication library",
+    "keywords": [
+        "lora",
+        "p2p", 
+        "peer-to-peer",
+        "communication",
+        "radio",
+        "wireless"
+    ],
+    "authors": [
+        {
+            "name": "Eamon White",
+            "maintainer": true
+        }
+    ],
+    "license": "MIT",
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "espressif32"
+    ]
+}
