@@ -29,11 +29,11 @@ RollCall::RollCall(ILoRaLink* link, const std::string& nodeName,
                    log_fn logMessage)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
-      _logMessage(logMessage), _lastAnnouncementTime(0), _defaultRng(std::random_device{}()) {
+      _logMessage(logMessage), _lastAnnouncementTime(0), _defaultRng(createSeedValue(getTime)) {
     
     // Set up random number generation if not provided
     if (!_getRandom) {
-        // Use static function pointer for default random generation
+        // Use static function pointer for default random generation but with improved seeding
         _getRandom = &RollCall::staticDefaultRandom;
     }
 }
@@ -240,6 +240,14 @@ bool RollCall::handleHelloIam(const std::string& message, uint16_t srcId) {
     std::string idStr = content.substr(atPos + 4);
     uint16_t announcedId = static_cast<uint16_t>(std::stoul(idStr));
     
+    // Check for complete collision: same name AND same ID from different transport source
+    // This indicates another node has randomly chosen our exact identity
+    if (announcedId == _nodeId && name == _nodeName && srcId != _nodeId) {
+        // This is a complete collision - both name and ID match but it's from a different node
+        // We need to change both our name and ID
+        return handleCompleteCollision(name, announcedId);
+    }
+    
     // Check for collision with our own ID
     if (announcedId == _nodeId && name != _nodeName) {
         return handleCollision(name, announcedId);
@@ -383,6 +391,52 @@ bool RollCall::handleNameCollision(const std::string& conflictingName, uint16_t 
     return broadcastHelloIam();
 }
 
+bool RollCall::handleCompleteCollision(const std::string& conflictingName, uint16_t conflictingNodeId) {
+    // This is a complete collision - another node has chosen both our name and our ID
+    // We need to change both our name and our ID
+    
+    // Generate new random ID
+    uint16_t newId = generateRandomId();
+    
+    // Generate unique suffix for our name
+    uint16_t randomSuffix = _getRandom() % 10000; // 4-digit random number
+    std::string newName = _nodeName + "-" + std::to_string(randomSuffix);
+    
+    // Ensure the new name is unique by checking if we already know about it
+    while (_nameToId.find(newName) != _nameToId.end()) {
+        randomSuffix = _getRandom() % 10000;
+        newName = _nodeName + "-" + std::to_string(randomSuffix);
+    }
+    
+    // Store old values for cleanup
+    std::string oldName = _nodeName;
+    uint16_t oldId = _nodeId;
+    
+    // Update our identity
+    _nodeName = newName;
+    _nodeId = newId;
+    
+    // Update the link layer with our new local ID for address filtering
+    _link->setLocalId(_nodeId);
+    
+    // Clean up old mappings
+    _nameToId.erase(oldName);
+    _idToName.erase(oldId);
+    
+    // Add new mapping for ourselves
+    updateMapping(_nodeName, _nodeId);
+    
+    // Also update the mapping for the conflicting node
+    updateMapping(conflictingName, conflictingNodeId);
+    
+    // Wait a random backoff time (longer for complete collision)
+    uint32_t backoff = 200 + (_getRandom() % 1000);
+    _sleep(backoff);
+    
+    // Broadcast new introduction with new identity
+    return broadcastHelloIam();
+}
+
 std::string RollCall::parseMessage(const std::string& message, const char* prefix) {
     size_t prefixLen = strlen(prefix);
     if (message.length() >= prefixLen && message.substr(0, prefixLen) == prefix) {
@@ -391,12 +445,63 @@ std::string RollCall::parseMessage(const std::string& message, const char* prefi
     return "";
 }
 
-uint16_t RollCall::defaultRandom() {
-    return static_cast<uint16_t>(_defaultRng());
+uint32_t RollCall::createSeedValue(time_ms_fn getTime) {
+    uint32_t seed = 0;
+    
+    // Try to get entropy from std::random_device
+    try {
+        std::random_device rd;
+        seed = rd();
+        
+        // If std::random_device entropy is low (common on embedded platforms),
+        // mix in additional entropy sources
+        if (rd.entropy() < 2.0) {
+            // Add time-based entropy if available
+            if (getTime) {
+                seed ^= getTime();
+            }
+            
+            // Add some memory address entropy (varies between runs)
+            seed ^= reinterpret_cast<uintptr_t>(&seed);
+            
+            // Simple hash mixing to improve distribution
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+        }
+    } catch (...) {
+        // Fallback if std::random_device fails
+        if (getTime) {
+            seed = getTime();
+        } else {
+            seed = 12345; // Last resort fallback
+        }
+        
+        // Mix in memory addresses for uniqueness
+        seed ^= reinterpret_cast<uintptr_t>(&seed);
+        seed ^= seed << 13;
+        seed ^= seed >> 17;
+        seed ^= seed << 5;
+    }
+    
+    return seed;
 }
 
-// Static members
-std::mt19937 RollCall::_staticRng(std::random_device{}());
+uint32_t RollCall::createSeed() {
+    return createSeedValue(_getTime);
+}
+
+uint16_t RollCall::defaultRandom() {
+    uint16_t result = static_cast<uint16_t>(_defaultRng());
+    // Avoid reserved values
+    while (result == 0 || result == 0xFFFF) {
+        result = static_cast<uint16_t>(_defaultRng());
+    }
+    return result;
+}
+
+// Static members with improved seeding
+std::mt19937 RollCall::_staticRng(RollCall::createSeedValue(nullptr));
 
 uint16_t RollCall::staticDefaultRandom() {
     uint16_t result = static_cast<uint16_t>(_staticRng());

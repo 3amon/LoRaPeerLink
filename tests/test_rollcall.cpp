@@ -611,3 +611,134 @@ TEST_CASE("RollCall bidirectional name collision resolution", "[RollCall]") {
     REQUIRE(rollCallA.whoIs(rollCallB.getNodeName(), 10) == idB);
     REQUIRE(rollCallB.whoIs(rollCallA.getNodeName(), 10) == idA);
 }
+
+TEST_CASE("RollCall random number generation uniqueness", "[RollCall]") {
+    MockRadio radioA, radioB, radioC;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    LoRaBasicLink linkC(&radioC, getTimeMock, sleepMock);
+    
+    // Create multiple RollCall instances without custom random functions
+    // They should get different IDs due to improved seeding
+    RollCall rollCallA(&linkA, "node-a", getTimeMock, sleepMock);
+    RollCall rollCallB(&linkB, "node-b", getTimeMock, sleepMock);
+    RollCall rollCallC(&linkC, "node-c", getTimeMock, sleepMock);
+    
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    REQUIRE(rollCallC.begin() == true);
+    
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    uint16_t idC = rollCallC.getNodeId();
+    
+    // All IDs should be different (very high probability with good randomness)
+    REQUIRE(idA != idB);
+    REQUIRE(idB != idC);
+    REQUIRE(idA != idC);
+    
+    // All IDs should be valid (not reserved values)
+    REQUIRE(idA != 0);
+    REQUIRE(idA != 0xFFFF);
+    REQUIRE(idB != 0);
+    REQUIRE(idB != 0xFFFF);
+    REQUIRE(idC != 0);
+    REQUIRE(idC != 0xFFFF);
+}
+
+TEST_CASE("RollCall complete collision detection and resolution", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    // Use a deterministic random function for A that returns known values
+    static uint16_t fixedValues[] = {0x1234, 0x5678, 0x9ABC}; // First call returns 0x1234, then 0x5678, etc.
+    static int valueIndex = 0;
+    auto deterministicRandom = []() { 
+        uint16_t result = fixedValues[valueIndex % 3];
+        valueIndex++;
+        return result;
+    };
+    
+    // Reset the index for this test
+    valueIndex = 0;
+    
+    RollCall rollCallA(&linkA, "duplicate-node", getTimeMock, sleepMock, deterministicRandom);
+    RollCall rollCallB(&linkB, "other-node", getTimeMock, sleepMock, getTestRandom2);
+    
+    // Initialize both nodes
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    std::string nameA = rollCallA.getNodeName();
+    
+    // Verify A got the expected ID (first call to deterministicRandom)
+    REQUIRE(idA == 0x1234);
+    
+    // Clear messages from begin()
+    MockRadio::clearChannel();
+    
+    // Simulate complete collision: B announces with A's exact name and ID, but different transport source
+    std::string completeCollisionMessage = "HELLOIAM|duplicate-node AT " + std::to_string(idA);
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(completeCollisionMessage.c_str()), 
+                            completeCollisionMessage.length()) == true);
+    
+    // A processes the complete collision message - should trigger complete collision handling
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // A should have changed both its name and its ID due to the complete collision
+    uint16_t newIdA = rollCallA.getNodeId();
+    std::string newNameA = rollCallA.getNodeName();
+    
+    REQUIRE(newIdA != idA); // A should have a new ID (should be 0x5678 from second call)
+    REQUIRE(newIdA == 0x5678); // Verify it's the expected new ID
+    REQUIRE(newNameA != nameA); // A should have a new name
+    REQUIRE(newNameA.find("duplicate-node-") == 0); // New name should be based on original with suffix
+    
+    // The original conflicting identity should be mapped to the other node
+    auto aMapping = rollCallA.getNameToIdMap();
+    REQUIRE(aMapping.count("duplicate-node") == 1);
+    REQUIRE(aMapping["duplicate-node"] == idA); // Should map to the original ID (now owned by the other node)
+}
+
+TEST_CASE("RollCall collision detection with transport layer source checking", "[RollCall]") {
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    
+    LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
+    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+    
+    RollCall rollCallA(&linkA, "test-node", getTimeMock, sleepMock, getTestRandom1);
+    RollCall rollCallB(&linkB, "test-node", getTimeMock, sleepMock, getTestRandom2);
+    
+    // Initialize both nodes
+    REQUIRE(rollCallA.begin() == true);
+    REQUIRE(rollCallB.begin() == true);
+    
+    uint16_t idA = rollCallA.getNodeId();
+    uint16_t idB = rollCallB.getNodeId();
+    
+    // Clear messages from begin()
+    MockRadio::clearChannel();
+    
+    // Test case 1: Different transport source with same announced name and ID as ours
+    // This should trigger complete collision detection
+    std::string sameNameAndId = "HELLOIAM|test-node AT " + std::to_string(idA);
+    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
+                            reinterpret_cast<const uint8_t*>(sameNameAndId.c_str()), 
+                            sameNameAndId.length()) == true);
+    
+    // A processes the message - transport source (idB) != announced ID (idA)
+    REQUIRE(rollCallA.processMessages(100) == true);
+    
+    // A should have detected complete collision and changed identity
+    REQUIRE(rollCallA.getNodeId() != idA);
+    REQUIRE(rollCallA.getNodeName() != "test-node");
+}
