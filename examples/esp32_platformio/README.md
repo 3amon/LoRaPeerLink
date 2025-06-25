@@ -19,15 +19,21 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 
 1. **Install PlatformIO**: Follow the [PlatformIO installation guide](https://platformio.org/install)
 
-2. **Install LoRaPeerLink Library**: 
-   - Option A: Copy the entire LoRaPeerLink library to your global PlatformIO libraries folder
-   - Option B: Use this example in-place (lib_extra_dirs points to the parent library)
+2. **Copy to New Repository** (Recommended):
+   ```bash
+   # Create a new repository for your ESP32 project
+   git clone https://github.com/yourusername/your-esp32-project.git
+   cd your-esp32-project
+   
+   # Copy the ESP32 example files
+   cp -r /path/to/LoRaPeerLink/examples/esp32_platformio/* .
+   ```
 
-3. **Open Project**: Open this directory in PlatformIO IDE or VS Code with PlatformIO extension
+3. **LoRaPeerLink Library**: 
+   - The library is automatically downloaded from GitHub via PlatformIO's dependency manager
+   - See `platformio.ini` for the Git dependency configuration
 
-4. **Configure Board**: Modify `platformio.ini` if using a different board
-
-5. **Build and Upload**: 
+4. **Build and Upload**: 
    ```bash
    pio run --target upload
    ```
@@ -39,6 +45,7 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 - `include/ScreenHandler.h`: Display interface definitions
 - `include/LoraHandler.h`: High-level LoRa communication wrapper (legacy)
 - `lib/`: Hardware-specific libraries for display and LoRa hardware
+- `platformio.ini`: Project configuration with LoRaPeerLink Git dependency
 
 ## Usage
 
@@ -66,6 +73,15 @@ LoRaBasicLink basic_link(&radio, get_time_ms, sleep_ms);
 RollCall roll_call(&basic_link, "lora-simp", get_time_ms, sleep_ms, nullptr, RollCall::consoleLog);
 ```
 
+## Standalone Repository Setup
+
+To create a completely independent project:
+
+1. Create a new GitHub repository
+2. Copy this entire `esp32_platformio` directory to your new repository
+3. The `platformio.ini` is already configured to pull LoRaPeerLink from GitHub
+4. Add your own README linking back to the main [LoRaPeerLink repository](https://github.com/3amon/LoRaPeerLink)
+
 ## Customization
 
 - Modify frequency in `SemtechRadio` constructor for your region
@@ -75,6 +91,6 @@ RollCall roll_call(&basic_link, "lora-simp", get_time_ms, sleep_ms, nullptr, Rol
 
 ## Notes
 
-- This example uses the legacy file structure for demonstration
-- The `LoraHandler.h` class is a higher-level wrapper that may be simplified in future versions
-- For new projects, consider using the core LoRaPeerLink classes directly as shown in the main loop
+- This example uses Git dependency management for the LoRaPeerLink library
+- The library is automatically downloaded and managed by PlatformIO
+- For updates to LoRaPeerLink, simply rebuild your project to get the latest version
