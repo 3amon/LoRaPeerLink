@@ -12,7 +12,7 @@
 #include "EncryptedLoRaLink.h"
 #include "LoraBasicLink.h"
 #include "RollCall.h"
-#include "SemtechRadio.h"
+#include "../tests/MockRadio.h"  // Using MockRadio for platform-independent example
 #include <iostream>
 #include <string>
 
@@ -34,8 +34,9 @@ void sleepMs(uint32_t ms) {
 void basicEncryptedCommunication() {
     std::cout << "=== Basic Encrypted Communication Example ===" << std::endl;
     
-    // 1. Initialize radio (example for 915MHz)
-    SemtechRadio radio(915000000);  // 915 MHz frequency
+    // 1. Initialize radio (using MockRadio for platform-independent example)
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+    MockRadio radio;
     
     // 2. Create base link layer
     LoRaBasicLink baseLink(&radio, getTimeMs, sleepMs);
@@ -80,7 +81,8 @@ void encryptedNetworkWithRollCall() {
     std::cout << "\n=== Encrypted Network with RollCall Example ===" << std::endl;
     
     // 1. Initialize radio and base link
-    SemtechRadio radio(915000000);
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+    MockRadio radio;
     LoRaBasicLink baseLink(&radio, getTimeMs, sleepMs);
     
     // 2. Add encryption layer
@@ -125,7 +127,8 @@ void encryptedNetworkWithRollCall() {
 void mixedNetworkExample() {
     std::cout << "\n=== Mixed Network Example ===" << std::endl;
     
-    SemtechRadio radio(915000000);
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+    MockRadio radio;
     LoRaBasicLink baseLink(&radio, getTimeMs, sleepMs);
     
     // This node uses encryption
@@ -154,7 +157,8 @@ void mixedNetworkExample() {
 void multipleNetworksExample() {
     std::cout << "\n=== Multiple Secure Networks Example ===" << std::endl;
     
-    SemtechRadio radio(915000000);
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+    MockRadio radio;
     LoRaBasicLink baseLink(&radio, getTimeMs, sleepMs);
     
     // Network A: Sensor Network
@@ -190,7 +194,8 @@ void multipleNetworksExample() {
 void payloadSizeExample() {
     std::cout << "\n=== Payload Size Considerations Example ===" << std::endl;
     
-    SemtechRadio radio(915000000);
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+    MockRadio radio;
     LoRaBasicLink baseLink(&radio, getTimeMs, sleepMs);
     EncryptedLoRaLink encryptedLink(&baseLink, "TestNet", "TestPass");
     

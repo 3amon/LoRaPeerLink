@@ -27,7 +27,7 @@ void sleep_ms(uint32_t ms);
 void debug_print(const char* message);
 
 // Example MockRadio implementation for testing
-// In a real application, use SemtechRadio or your hardware-specific radio class
+// In a real application, use SemtechRadio (see esp32_platformio example) or your hardware-specific radio class
 #include "../tests/MockRadio.h"
 
 /**
@@ -40,7 +40,7 @@ void basic_communication_example() {
     debug_print("Starting LoRaPeerLink Basic Communication Example");
     
     // 1. Create radio instance
-    // For real hardware, use: SemtechRadio radio(915000000);
+    // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
     MockRadio radio;
     
     // 2. Create basic link layer
