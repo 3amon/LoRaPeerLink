@@ -1,125 +1,251 @@
-# LoRaPeerLink
+# LoRaPeerLink Library
 
-**LoRaPeerLink** is a lightweight, layered protocol framework designed for low-level LoRa communication between nearby nodes without the overhead of LoRaWAN or routing. It includes a modular radio interface, multiple link-layer strategies, and a simulation/test environment using Catch2 and mock radios.
+**LoRaPeerLink** is a comprehensive, standalone LoRa peer-to-peer communication library for microcontrollers. It provides multiple link layer implementations, hardware abstraction, encryption support, and device discovery protocols for building robust LoRa mesh networks without LoRaWAN overhead.
+
+## 🚀 Key Features
+
+- **Hardware Abstraction**: Works with any LoRa radio via the `IRadio` interface
+- **Multiple Link Layers**: Basic, backoff-based collision avoidance, and encrypted communication
+- **Device Discovery**: Built-in RollCall protocol for automatic node discovery
+- **Encryption Support**: AES encryption with integrity checking
+- **Platform Agnostic**: Runs on Arduino, PlatformIO, and other microcontroller platforms
+- **Comprehensive Testing**: 1000+ test assertions with mock radio simulation
+- **Well Documented**: Extensive API documentation and usage examples
 
 ---
 
-## 🌐 Project Structure
+## 📦 Library Structure
 
 ```
 LoRaPeerLink/
-├── include/
-│ └── lora_peer_link/
-│ ├── IRadio.h
-│ ├── LoRaBasicLink.h
-│ ├── WeaklyBackoffLink.h
-│ └── MockRadio.h
-├── lib/
-│ └── lora_peer_link/
-│ ├── include/...
-│ └── src/
-│ └── SemtechRadio.cpp
-├── tests/
-│ ├── test_simple_link.cpp
-│ └── test_backoff_link.cpp
-├── CMakeLists.txt
-└── README.md
+├── include/                    # Library header files
+│   ├── IRadio.h               # Hardware abstraction interface  
+│   ├── ILoRaLink.h            # Link layer interface
+│   ├── LoraBasicLink.h        # Basic communication implementation
+│   ├── LoraBackoffLink.h      # Collision avoidance implementation
+│   ├── EncryptedLoRaLink.h    # Encrypted communication layer
+│   ├── SemtechRadio.h         # Semtech radio hardware driver
+│   └── RollCall.h             # Device discovery protocol
+├── src/                       # Library source files
+├── examples/                  # Usage examples and demos
+│   ├── basic_communication.cpp # Simple usage example
+│   ├── encryption_example.cpp  # Encryption layer demo
+│   └── esp32_platformio/       # Complete ESP32 application
+├── tests/                     # Comprehensive test suite
+├── CMakeLists.txt             # Build configuration for testing
+└── library.json               # PlatformIO library metadata
 ```
 
 ---
 
-## 📦 Layered Architecture
+## 🛠️ Installation
 
-### 1. **IRadio Interface**
-An abstract C++ interface used to decouple radio drivers from higher layers.
+### PlatformIO (Recommended)
+
+1. **Install via PlatformIO Registry** (when published):
+   ```ini
+   [env:your_board]
+   lib_deps = LoRaPeerLink
+   ```
+
+2. **Install from Source**:
+   - Clone or download this repository
+   - Copy the entire directory to your PlatformIO `lib/` folder
+   - Or use `lib_extra_dirs` in `platformio.ini`
+
+### Arduino IDE
+
+1. Download this repository as a ZIP file
+2. Extract to your Arduino `libraries/` folder
+3. Restart Arduino IDE
+4. Include the library: `#include <LoraBasicLink.h>`
+
+### Manual Integration
+
+Simply copy the `include/` and `src/` directories to your project and add them to your build system.
+
+---
+
+## 🎯 Quick Start
+
+### Basic Communication
 
 ```cpp
-class IRadio {
-public:
-    virtual bool send(const uint8_t* data, size_t len) = 0;
-    virtual int receive(uint8_t* buffer, size_t maxLen, int timeoutMs = -1) = 0;
-    virtual ~IRadio() = default;
-};
+#include "SemtechRadio.h"
+#include "LoraBasicLink.h"
+
+// Timing functions (implement for your platform)
+uint32_t get_time_ms() { return millis(); }
+void sleep_ms(uint32_t ms) { delay(ms); }
+
+// Create radio and link instances
+SemtechRadio radio(915000000);  // 915 MHz
+LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
+
+void setup() {
+    // Initialize radio
+    radio.begin();
+    link.setLocalId(1);  // Set unique node ID
+}
+
+void loop() {
+    // Send message
+    const char* message = "Hello World";
+    link.sendPacket(1, 2, (uint8_t*)message, strlen(message), false);
+    
+    // Receive messages
+    uint16_t sourceId;
+    uint8_t buffer[100];
+    int len = link.receivePacket(&sourceId, buffer, 100);
+    if (len > 0) {
+        // Process received message
+        buffer[len] = '\0';
+        Serial.printf("From %d: %s\n", sourceId, (char*)buffer);
+    }
+    
+    delay(1000);
+}
 ```
-### 2. LoRaBasicLink
 
-A simple framing protocol with:
+### With Device Discovery
 
-    Fixed-size headers
+```cpp
+#include "RollCall.h"
 
-    CRC-16 integrity
+RollCall rollcall(&link, "MyDevice", get_time_ms, sleep_ms);
 
-    Optional ACK/Retry
+void setup() {
+    radio.begin();
+    rollcall.begin();
+}
 
-### 3. WeaklyBackoffLink
+void loop() {
+    rollcall.processMessages(100);  // Handle discovery protocol
+    // Your application logic here
+}
+```
 
-An alternative link-layer that introduces basic collision avoidance by:
+### With Encryption
 
-    Listening before sending
+```cpp
+#include "EncryptedLoRaLink.h"
 
-    Retrying with backoff (when no CAD is available)
+const uint8_t key[16] = {0x00, 0x01, 0x02, ...};  // Your AES key
+EncryptedLoRaLink encLink(&radio, key, get_time_ms, sleep_ms);
 
-### 🧪 Testing
-MockRadio
+// Use encLink.sendPacket() and encLink.receivePacket() as normal
+// All communication is automatically encrypted/decrypted
+```
 
-A simulated IRadio implementation that allows two nodes to communicate through a shared virtual “air”. Only one message can be in the air at a time.
-Catch2 Integration
+---
 
-Uses Catch2 v3 via CMake’s FetchContent to compile and run unit tests.
-Test Cases
+## 🔧 Supported Hardware
 
-    test_simple_link.cpp: Covers LoRaBasicLink for sending/receiving and ACK handling.
+### Semtech Radio Chips
+- **SX127x series**: SX1276, SX1277, SX1278, SX1279
+- **SX126x series**: SX1261, SX1262 (with appropriate driver modifications)
 
-    test_backoff_link.cpp: Covers WeaklyBackoffLink behavior.
+### Development Boards
+- **Heltec WiFi LoRa 32** (V2, V3)
+- **TTGO LoRa32**
+- **Adafruit RFM95W** + Arduino/ESP32
+- **Any ESP32/Arduino + SX127x module**
 
-Run Tests (on Ubuntu):
+### Microcontroller Platforms
+- **ESP32** (Arduino, ESP-IDF)
+- **Arduino** (Uno, Mega, etc. with external LoRa module)
+- **STM32** 
+- **Raspberry Pi Pico**
+- Any platform with SPI support
 
+---
+
+## 📋 Library Components
+
+### Link Layer Implementations
+
+| Class | Features | Use Case |
+|-------|----------|----------|
+| `LoRaBasicLink` | Simple send/receive, optional ACK | Basic P2P communication |
+| `LoRaBackoffLink` | Collision avoidance, exponential backoff | Networks with multiple nodes |
+| `EncryptedLoRaLink` | AES encryption, integrity checking | Secure communication |
+
+### Hardware Abstraction
+
+| Class | Purpose |
+|-------|---------|
+| `IRadio` | Abstract radio interface |
+| `SemtechRadio` | Semtech chipset implementation |
+| `MockRadio` | Simulation for testing |
+
+### Protocols
+
+| Class | Purpose |
+|-------|---------|
+| `RollCall` | Device discovery and presence |
+
+---
+
+## 🧪 Testing
+
+The library includes a comprehensive test suite with 1000+ assertions covering all major functionality.
+
+### Run Tests
+
+```bash
 mkdir build && cd build
 cmake ..
 make
-./tests/test_simple_link
-./tests/test_backoff_link
+./tests/test_all
+```
 
-### 🧠 Design Notes
-Future Features (Not Yet Implemented)
+### Test Coverage
+- ✅ Basic send/receive operations
+- ✅ Packet framing and CRC validation  
+- ✅ Collision avoidance and backoff timing
+- ✅ Encryption/decryption and key management
+- ✅ Device discovery protocols
+- ✅ Error handling and edge cases
 
-    Name-to-ID Layer:
+---
 
-        Each node chooses a random 2-byte ID.
+## 📖 Examples
 
-        Collisions are detected and resolved via backoff.
+### Complete Applications
+- **[ESP32 PlatformIO Example](examples/esp32_platformio/)**: Full-featured LoRa device with OLED display
+- **[Basic Communication](examples/basic_communication.cpp)**: Minimal usage example
+- **[Encryption Demo](examples/encryption_example.cpp)**: Secure communication examples
 
-        Nodes can query names with messages like:
+### Key Documentation
+- **[Interface Usage Guide](INTERFACE_USAGE.md)**: Detailed API reference
+- **[Encryption Report](ENCRYPTION_REPORT.md)**: Security implementation details
+- **[Test Summary](TEST_SUMMARY.md)**: Comprehensive testing documentation
 
-            WHOIS <ID>
+---
 
-            WHEREIS <Name>
+## 🤝 Contributing
 
-            HELLOIAM <Name> AT <ID>
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Ensure all tests pass: `make test`
+5. Submit a pull request
 
-        Only human-readable strings are sent briefly in name resolution messages; otherwise, short numeric IDs are used.
+---
 
-    Robust Collision Management:
+## 📄 License
 
-        Consider more advanced backoff strategies
+This library is released under the MIT License. See `LICENSE` file for details.
 
-        Fairness under high contention
+---
 
-    Timing Simulation:
+## 🆘 Support
 
-        Currently assumes perfect timing (no partial messages, no interleaving)
+- **Issues**: Report bugs and feature requests via GitHub Issues
+- **Discussions**: Ask questions in GitHub Discussions
+- **Documentation**: Check the `examples/` directory and header file documentation
 
-        Potential future use of queues, message lifetime, or air contention simulation
+---
 
-### 🧰 Building on GitHub Actions
+**Perfect for**: IoT sensor networks, mesh communication, remote monitoring, agricultural sensors, environmental monitoring, and any application requiring reliable peer-to-peer LoRa communication.
 
-The CI system builds all test binaries and runs them on each push.
-
-You can simulate and validate link behavior entirely in a GitHub container (Ubuntu-latest) without any hardware required.
-💬 Notes
-
-    Currently avoids all Arduino functions.
-
-    Designed with embedded Linux or bare-metal microcontroller usage in mind.
-
-    Perfect for unit testing link protocols before hardware integration.
