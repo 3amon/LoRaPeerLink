@@ -3,6 +3,9 @@
 build/
 .build
 
+# Export directory
+LoRaPeerLink-Export/
+
 # Example build artifacts
 basic_example
 encryption_example
