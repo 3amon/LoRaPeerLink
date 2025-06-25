@@ -132,3 +132,7 @@ void SemtechRadio::onRxTimeoutStatic() {
 void SemtechRadio::onRxErrorStatic() {
     // Empty implementation
 }
+
+IRadio* GetRadio() {
+    return SemtechRadio::_globalInstance;
+}

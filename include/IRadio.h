@@ -26,7 +26,7 @@
  * allowing higher-level protocols to work with any compatible radio device.
  * 
  * Implementations include:
- * - SemtechRadio: For real hardware communication
+ * - SemtechRadio: For real hardware communication (see esp32_platformio example)
  * - MockRadio: For testing and simulation
  */
 class IRadio {
