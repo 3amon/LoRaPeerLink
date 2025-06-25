@@ -49,7 +49,8 @@
  * 
  * @par Usage Example:
  * @code
- * SemtechRadio radio(915000000);
+ * // For real hardware, use: SemtechRadio radio(915000000); (see esp32_platformio example)
+ * MockRadio radio;  // For testing/simulation
  * LoRaBasicLink link(&radio, 1, millis, delay);
  * 
  * // Send a message with acknowledgment
