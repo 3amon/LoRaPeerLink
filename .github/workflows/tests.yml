@@ -26,3 +26,15 @@ jobs:
 
     - name: Run Python-C++ Cross-Validation Tests
       run: python3 validate_encryption.py
+
+    - name: Export PlatformIO Library
+      if: success()
+      run: ./export_library.sh
+
+    - name: Upload Library Export
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: LoRaPeerLink-PlatformIO-Library
+        path: LoRaPeerLink-Export/
+        retention-days: 90
