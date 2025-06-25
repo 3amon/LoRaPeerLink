@@ -266,6 +266,14 @@ private:
     bool handleNameCollision(const std::string& conflictingName, uint16_t conflictingNodeId);
 
     /**
+     * Handle complete collision where both name and ID match but from different transport source
+     * @param conflictingName Node name that is conflicting (same as ours)
+     * @param conflictingNodeId Node ID that is conflicting (same as ours)
+     * @return true if collision detected and handled
+     */
+    bool handleCompleteCollision(const std::string& conflictingName, uint16_t conflictingNodeId);
+
+    /**
      * Parse message content after prefix
      * @param message Full message
      * @param prefix Expected prefix
@@ -275,6 +283,8 @@ private:
 
     // Default random number generator
     std::mt19937 _defaultRng;
+    static uint32_t createSeedValue(time_ms_fn getTime);
+    uint32_t createSeed();
     uint16_t defaultRandom();
     
     // Static wrapper for default random function
