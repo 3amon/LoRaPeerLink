@@ -42,13 +42,19 @@ LoRaPeerLink/
 
 ### PlatformIO (Recommended)
 
-1. **Install via PlatformIO Registry** (when published):
+1. **Install from GitHub Actions** (Recommended):
+   - Go to [GitHub Actions](https://github.com/3amon/LoRaPeerLink/actions)
+   - Download the latest `LoRaPeerLink-PlatformIO-Library` artifact
+   - Extract and copy to your project's `lib/` folder
+   - See [PLATFORMIO_USAGE.md](PLATFORMIO_USAGE.md) for detailed instructions
+
+2. **Install via PlatformIO Registry** (when published):
    ```ini
    [env:your_board]
    lib_deps = LoRaPeerLink
    ```
 
-2. **Install from Source**:
+3. **Install from Source**:
    - Clone or download this repository
    - Copy the entire directory to your PlatformIO `lib/` folder
    - Or use `lib_extra_dirs` in `platformio.ini`
