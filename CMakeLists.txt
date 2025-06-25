@@ -13,10 +13,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-# Include your headers
+# Include library headers
 include_directories(
   include
-  lib/lora_peer_link/include
 )
 
 # Single test executable with all suites
@@ -31,10 +30,10 @@ add_executable(test_all
   tests/test_interface.cpp
   tests/test_encrypted_link.cpp
   tests/TestUtils.cpp
-  lib/lora_peer_link/src/RollCall.cpp
-  lib/lora_peer_link/src/LoraBasicLink.cpp
-  lib/lora_peer_link/src/LoraBackoffLink.cpp
-  lib/lora_peer_link/src/EncryptedLoRaLink.cpp
+  src/RollCall.cpp
+  src/LoraBasicLink.cpp
+  src/LoraBackoffLink.cpp
+  src/EncryptedLoRaLink.cpp
   # Note: SemtechRadio.cpp excluded from tests as it requires external dependencies
   # Add other test_*.cpp files here as needed
 )
@@ -43,8 +42,8 @@ add_executable(test_all
 add_executable(encryption_cli_tool
   tests/encryption_cli_tool.cpp
   tests/TestUtils.cpp
-  lib/lora_peer_link/src/LoraBasicLink.cpp
-  lib/lora_peer_link/src/EncryptedLoRaLink.cpp
+  src/LoraBasicLink.cpp
+  src/EncryptedLoRaLink.cpp
 )
 
 set_target_properties(test_all PROPERTIES
@@ -60,7 +59,6 @@ target_include_directories(test_all PRIVATE ${catch2_SOURCE_DIR}/src)
 
 target_include_directories(encryption_cli_tool PRIVATE 
   include
-  lib/lora_peer_link/include
   tests
 )
 

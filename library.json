@@ -1,0 +1,83 @@
+{
+    "name": "LoRaPeerLink",
+    "version": "1.0.0",
+    "description": "A comprehensive LoRa peer-to-peer communication library for microcontrollers. Provides multiple link layer implementations including basic communication, collision avoidance with exponential backoff, encrypted communication, and device discovery protocols. Hardware abstraction allows use with different radio modules.",
+    "keywords": [
+        "lora",
+        "p2p",
+        "peer-to-peer", 
+        "communication",
+        "radio",
+        "wireless",
+        "mesh",
+        "encryption",
+        "semtech",
+        "sx127x",
+        "sx126x"
+    ],
+    "authors": [
+        {
+            "name": "Eamon White",
+            "maintainer": true
+        },
+        {
+            "name": "LoRaPeerLink Project"
+        }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/3amon/LoRaPeerLink",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/3amon/LoRaPeerLink.git"
+    },
+    "frameworks": [
+        "arduino",
+        "platformio"
+    ],
+    "platforms": [
+        "espressif32",
+        "atmelsam",
+        "atmelavr",
+        "ststm32"
+    ],
+    "build": {
+        "srcFilter": [
+            "+<src/>",
+            "-<examples/>"
+        ],
+        "libArchive": false
+    },
+    "export": {
+        "include": [
+            "src/*",
+            "include/*",
+            "examples/*",
+            "README.md",
+            "library.json"
+        ]
+    },
+    "examples": [
+        {
+            "name": "Basic Communication",
+            "base": "examples/basic_communication",
+            "files": [
+                "basic_communication.cpp"
+            ]
+        },
+        {
+            "name": "ESP32 PlatformIO Application", 
+            "base": "examples/esp32_platformio",
+            "files": [
+                "main.cpp",
+                "ScreenHandler.cpp"
+            ]
+        },
+        {
+            "name": "Encryption Example",
+            "base": "examples/encryption_example.cpp",
+            "files": [
+                "encryption_example.cpp"
+            ]
+        }
+    ]
+}
