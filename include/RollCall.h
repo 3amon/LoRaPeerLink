@@ -281,11 +281,8 @@ private:
      */
     std::string parseMessage(const std::string& message, const char* prefix);
 
-    // Default random number generator
-    std::mt19937 _defaultRng;
+    // Static random number generator for default case
     static uint32_t createSeedValue(time_ms_fn getTime);
-    uint32_t createSeed();
-    uint16_t defaultRandom();
     
     // Static wrapper for default random function
     static uint16_t staticDefaultRandom();

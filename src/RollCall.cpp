@@ -29,7 +29,7 @@ RollCall::RollCall(ILoRaLink* link, const std::string& nodeName,
                    log_fn logMessage)
     : _link(link), _nodeName(nodeName), _nodeId(0), 
       _getTime(getTime), _sleep(sleep), _getRandom(getRandom),
-      _logMessage(logMessage), _lastAnnouncementTime(0), _defaultRng(createSeedValue(getTime)) {
+      _logMessage(logMessage), _lastAnnouncementTime(0) {
     
     // Set up random number generation if not provided
     if (!_getRandom) {
@@ -485,19 +485,6 @@ uint32_t RollCall::createSeedValue(time_ms_fn getTime) {
     }
     
     return seed;
-}
-
-uint32_t RollCall::createSeed() {
-    return createSeedValue(_getTime);
-}
-
-uint16_t RollCall::defaultRandom() {
-    uint16_t result = static_cast<uint16_t>(_defaultRng());
-    // Avoid reserved values
-    while (result == 0 || result == 0xFFFF) {
-        result = static_cast<uint16_t>(_defaultRng());
-    }
-    return result;
 }
 
 // Static members with improved seeding
