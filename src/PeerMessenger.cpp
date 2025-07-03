@@ -43,9 +43,50 @@ bool PeerMessenger::processMessages(uint32_t timeoutMs) {
     if (!_rollCall) {
         return false;
     }
-
-    // Let RollCall handle all messages including user messages
-    return _rollCall->processMessages(timeoutMs);
+    
+    // Get access to the underlying link
+    uint16_t srcId;
+    uint8_t buffer[MAX_PAYLOAD];
+    
+    // Try to receive a packet
+    int len = _rollCall->getLink().receivePacket(&srcId, buffer, MAX_PAYLOAD);
+    if (len <= 0) {
+        return false;
+    }
+    
+    // Convert buffer to string
+    std::string message(reinterpret_cast<const char*>(buffer), len);
+    
+    // Check if this is a RollCall message
+    if (_rollCall->isRollCallMessage(message)) {
+        // Let RollCall process it
+        return _rollCall->processRollCallMessage(message, srcId);
+    }
+    
+    // Check if this is a user message
+    if (message.find(MESSAGE_PREFIX) == 0) {
+        // Handle user message
+        size_t prefixLen = strlen(MESSAGE_PREFIX);
+        std::string content = message.substr(prefixLen);
+        
+        // Queue the user message
+        UserMessage_Internal userMsg;
+        userMsg.srcId = srcId;
+        userMsg.content = content;
+        _userMessageQueue.push(userMsg);
+        
+        // Log the received user message if logging is enabled
+        if (_logMessage) {
+            std::string logMsg = "[PeerMessenger] Received user message from ID " + std::to_string(srcId) + 
+                               ": " + content;
+            _logMessage(logMsg.c_str());
+        }
+        
+        return true;
+    }
+    
+    // Unknown message type
+    return false;
 }
 
 bool PeerMessenger::sendMessage(uint16_t destId, const std::string& message, bool requestAck) {
@@ -60,8 +101,8 @@ bool PeerMessenger::sendMessage(uint16_t destId, const std::string& message, boo
         _logMessage(logMsg.c_str());
     }
     
-    // Send through RollCall's user message capability
-    return _rollCall->sendUserMessage(destId, message, requestAck);
+    // Send through our own user message capability
+    return sendUserMessage(destId, message, requestAck);
 }
 
 bool PeerMessenger::sendMessage(const std::string& destName, const std::string& message, 
@@ -89,48 +130,54 @@ bool PeerMessenger::broadcastMessage(const std::string& message) {
 }
 
 bool PeerMessenger::hasMessage() const {
-    return _rollCall && _rollCall->hasUserMessage();
+    return !_userMessageQueue.empty();
 }
 
 UserMessage PeerMessenger::receiveMessage() {
-    if (!_rollCall || !_rollCall->hasUserMessage()) {
+    if (_userMessageQueue.empty()) {
         return UserMessage{0, "", ""};
     }
     
-    uint16_t srcId;
-    std::string content;
-    if (_rollCall->receiveUserMessage(&srcId, &content)) {
-        UserMessage msg;
-        msg.srcId = srcId;
-        msg.content = content;
-        
-        // Try to resolve the source ID to a name
-        auto& idToName = _rollCall->getIdToNameMap();
-        auto it = idToName.find(srcId);
-        if (it != idToName.end()) {
-            msg.srcName = it->second;
-        } else {
-            msg.srcName = "";
-        }
-        
-        if (_logMessage) {
-            std::string srcInfo = msg.srcName.empty() ? 
-                "ID " + std::to_string(msg.srcId) : 
-                msg.srcName + " (ID " + std::to_string(msg.srcId) + ")";
-            std::string logMsg = "[PeerMessenger] Received from " + srcInfo + ": " + msg.content;
-            _logMessage(logMsg.c_str());
-        }
-        
-        return msg;
+    UserMessage_Internal userMsg = _userMessageQueue.front();
+    _userMessageQueue.pop();
+    
+    UserMessage msg;
+    msg.srcId = userMsg.srcId;
+    msg.content = userMsg.content;
+    
+    // Try to resolve the source ID to a name
+    auto& idToName = _rollCall->getIdToNameMap();
+    auto it = idToName.find(userMsg.srcId);
+    if (it != idToName.end()) {
+        msg.srcName = it->second;
+    } else {
+        msg.srcName = "";
     }
     
-    return UserMessage{0, "", ""};
+    if (_logMessage) {
+        std::string srcInfo = msg.srcName.empty() ? 
+            "ID " + std::to_string(msg.srcId) : 
+            msg.srcName + " (ID " + std::to_string(msg.srcId) + ")";
+        std::string logMsg = "[PeerMessenger] Received from " + srcInfo + ": " + msg.content;
+        _logMessage(logMsg.c_str());
+    }
+    
+    return msg;
 }
 
 size_t PeerMessenger::getMessageCount() const {
-    return _rollCall ? _rollCall->getUserMessageCount() : 0;
+    return _userMessageQueue.size();
 }
 
 void PeerMessenger::consoleLog(const char* message) {
     printf("%s\n", message);
+}
+
+bool PeerMessenger::sendUserMessage(uint16_t destId, const std::string& message, bool requestAck) {
+    std::string fullMessage = std::string(MESSAGE_PREFIX) + message;
+    
+    // Send through the link layer
+    return _rollCall->getLink().sendPacket(_rollCall->getNodeId(), destId, 
+                                          reinterpret_cast<const uint8_t*>(fullMessage.c_str()), 
+                                          fullMessage.length(), requestAck);
 }

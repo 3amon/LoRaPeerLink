@@ -16,6 +16,7 @@
 #include "RollCall.h"
 #include <string>
 #include <memory>
+#include <queue>
 
 /**
  * @struct UserMessage
@@ -159,12 +160,24 @@ private:
     RollCall* _rollCall;              ///< RollCall instance for name resolution
     log_fn _logMessage;               ///< Optional logging function
 
-    // Protocol constants
+    // User message queue structure
+    struct UserMessage_Internal {
+        uint16_t srcId;
+        std::string content;
+    };
+    std::queue<UserMessage_Internal> _userMessageQueue;
+
+    // Protocol constants for user messages
     static constexpr const char* MESSAGE_PREFIX = "MSG|";
-    static constexpr const char* HELLOIAM_PREFIX = "HELLOIAM|";
-    static constexpr const char* WHOIS_PREFIX = "WHOIS|";
-    static constexpr const char* WHEREIS_PREFIX = "WHEREIS|";
-    static constexpr const char* RESPONSE_PREFIX = "RESP|";
+
+    /**
+     * Send user message with prefix
+     * @param destId Destination node ID
+     * @param message Message content to send
+     * @param requestAck Whether to request acknowledgment
+     * @return true if message was sent successfully
+     */
+    bool sendUserMessage(uint16_t destId, const std::string& message, bool requestAck);
 };
 
 #endif // PEER_MESSENGER_H

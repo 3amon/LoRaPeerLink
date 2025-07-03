@@ -160,33 +160,25 @@ public:
     const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
 
     /**
-     * Send a user message to a specific node ID
-     * @param destId Destination node ID
-     * @param message Message content to send
-     * @param requestAck Whether to request acknowledgment (default: false)
-     * @return true if message was sent successfully
+     * Get access to the underlying link layer
+     * @return Reference to ILoRaLink instance
      */
-    bool sendUserMessage(uint16_t destId, const std::string& message, bool requestAck = false);
+    ILoRaLink& getLink() { return *_link; }
 
     /**
-     * Check if any user messages are available
-     * @return true if user messages are waiting to be received
+     * Check if a message is a RollCall protocol message
+     * @param message Message content to check
+     * @return true if the message is a RollCall protocol message
      */
-    bool hasUserMessage() const;
+    bool isRollCallMessage(const std::string& message) const;
 
     /**
-     * Receive the next available user message
-     * @param srcId Output parameter for source node ID
-     * @param message Output parameter for message content
-     * @return true if a message was received, false if no messages available
+     * Process a RollCall protocol message
+     * @param message Message content
+     * @param srcId Source node ID from transport layer
+     * @return true if message was processed successfully
      */
-    bool receiveUserMessage(uint16_t* srcId, std::string* message);
-
-    /**
-     * Get the number of queued user messages waiting to be received
-     * @return Number of user messages in receive queue
-     */
-    size_t getUserMessageCount() const;
+    bool processRollCallMessage(const std::string& message, uint16_t srcId);
 
     /**
      * Default console logging function for debugging
@@ -210,19 +202,11 @@ private:
     std::unordered_map<std::string, uint16_t> _nameToId;
     std::unordered_map<uint16_t, std::string> _idToName;
 
-    // User message queue structure
-    struct UserMessage {
-        uint16_t srcId;
-        std::string content;
-    };
-    std::queue<UserMessage> _userMessageQueue;
-
     // Protocol constants
     static constexpr const char* HELLOIAM_PREFIX = "HELLOIAM|";
     static constexpr const char* WHOIS_PREFIX = "WHOIS|";
     static constexpr const char* WHEREIS_PREFIX = "WHEREIS|";
     static constexpr const char* RESPONSE_PREFIX = "RESP|";
-    static constexpr const char* USER_MESSAGE_PREFIX = "MSG|";
     static constexpr uint32_t COLLISION_BACKOFF_MS = 1000;
     static constexpr uint32_t DISCOVERY_TIMEOUT_MS = 1000;
     static constexpr uint32_t PERIODIC_ANNOUNCE_INTERVAL_MS = 30000; // 30 seconds
@@ -318,14 +302,6 @@ private:
      * @return Content after prefix, or empty string if prefix doesn't match
      */
     std::string parseMessage(const std::string& message, const char* prefix);
-
-    /**
-     * Handle incoming user message
-     * @param message Full message content
-     * @param srcId Source node ID
-     * @return true if message was a user message and queued
-     */
-    bool handleUserMessage(const std::string& message, uint16_t srcId);
 
     // Static random number generator for default case
     static uint32_t createSeedValue(time_ms_fn getTime);

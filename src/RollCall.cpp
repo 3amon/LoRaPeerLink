@@ -102,23 +102,9 @@ bool RollCall::processMessages(uint32_t timeoutMs) {
     // Convert buffer to string
     std::string message(reinterpret_cast<const char*>(buffer), len);
     
-    // Log the received message if logging is enabled
-    if (_logMessage) {
-        std::string logMsg = "[RollCall] Received: " + message + " from ID " + std::to_string(srcId);
-        _logMessage(logMsg.c_str());
-    }
-    
-    // Handle different message types
-    if (message.find(HELLOIAM_PREFIX) == 0) {
-        return handleHelloIam(message, srcId);
-    } else if (message.find(WHOIS_PREFIX) == 0) {
-        return handleWhois(message, srcId);
-    } else if (message.find(WHEREIS_PREFIX) == 0) {
-        return handleWhereis(message, srcId);
-    } else if (message.find(RESPONSE_PREFIX) == 0) {
-        return handleResponse(message, srcId);
-    } else if (message.find(USER_MESSAGE_PREFIX) == 0) {
-        return handleUserMessage(message, srcId);
+    // Only process RollCall messages
+    if (isRollCallMessage(message)) {
+        return processRollCallMessage(message, srcId);
     }
     
     return false;
@@ -447,6 +433,34 @@ std::string RollCall::parseMessage(const std::string& message, const char* prefi
     return "";
 }
 
+bool RollCall::isRollCallMessage(const std::string& message) const {
+    return message.find(HELLOIAM_PREFIX) == 0 ||
+           message.find(WHOIS_PREFIX) == 0 ||
+           message.find(WHEREIS_PREFIX) == 0 ||
+           message.find(RESPONSE_PREFIX) == 0;
+}
+
+bool RollCall::processRollCallMessage(const std::string& message, uint16_t srcId) {
+    // Log the received message if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Received: " + message + " from ID " + std::to_string(srcId);
+        _logMessage(logMsg.c_str());
+    }
+    
+    // Handle different message types
+    if (message.find(HELLOIAM_PREFIX) == 0) {
+        return handleHelloIam(message, srcId);
+    } else if (message.find(WHOIS_PREFIX) == 0) {
+        return handleWhois(message, srcId);
+    } else if (message.find(WHEREIS_PREFIX) == 0) {
+        return handleWhereis(message, srcId);
+    } else if (message.find(RESPONSE_PREFIX) == 0) {
+        return handleResponse(message, srcId);
+    }
+    
+    return false;
+}
+
 uint32_t RollCall::createSeedValue(time_ms_fn getTime) {
     uint32_t seed = 0;
     
@@ -504,67 +518,4 @@ uint16_t RollCall::staticDefaultRandom() {
 void RollCall::consoleLog(const char* message) {
     // Simple console output for debugging
     printf("%s\n", message);
-}
-
-bool RollCall::sendUserMessage(uint16_t destId, const std::string& message, bool requestAck) {
-    std::string fullMessage = std::string(USER_MESSAGE_PREFIX) + message;
-    
-    // Log the outgoing user message if logging is enabled
-    if (_logMessage) {
-        std::string logMsg = "[RollCall] Sending user message to ID " + std::to_string(destId) + 
-                           ": " + message;
-        _logMessage(logMsg.c_str());
-    }
-    
-    return _link->sendPacket(_nodeId, destId, 
-                            reinterpret_cast<const uint8_t*>(fullMessage.c_str()), 
-                            fullMessage.length(), requestAck);
-}
-
-bool RollCall::hasUserMessage() const {
-    return !_userMessageQueue.empty();
-}
-
-bool RollCall::receiveUserMessage(uint16_t* srcId, std::string* message) {
-    if (_userMessageQueue.empty()) {
-        return false;
-    }
-    
-    UserMessage userMsg = _userMessageQueue.front();
-    _userMessageQueue.pop();
-    
-    if (srcId) {
-        *srcId = userMsg.srcId;
-    }
-    if (message) {
-        *message = userMsg.content;
-    }
-    
-    return true;
-}
-
-size_t RollCall::getUserMessageCount() const {
-    return _userMessageQueue.size();
-}
-
-bool RollCall::handleUserMessage(const std::string& message, uint16_t srcId) {
-    std::string content = parseMessage(message, USER_MESSAGE_PREFIX);
-    if (content.empty()) {
-        return false;
-    }
-    
-    // Queue the user message
-    UserMessage userMsg;
-    userMsg.srcId = srcId;
-    userMsg.content = content;
-    _userMessageQueue.push(userMsg);
-    
-    // Log the received user message if logging is enabled
-    if (_logMessage) {
-        std::string logMsg = "[RollCall] Received user message from ID " + std::to_string(srcId) + 
-                           ": " + content;
-        _logMessage(logMsg.c_str());
-    }
-    
-    return true;
 }
