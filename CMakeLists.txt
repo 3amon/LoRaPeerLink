@@ -27,10 +27,12 @@ add_executable(test_all
   tests/test_packet_framing.cpp
   tests/test_backoff_packet_framing.cpp
   tests/test_rollcall.cpp
+  tests/test_peer_messenger.cpp
   tests/test_interface.cpp
   tests/test_encrypted_link.cpp
   tests/TestUtils.cpp
   src/RollCall.cpp
+  src/PeerMessenger.cpp
   src/LoraBasicLink.cpp
   src/LoraBackoffLink.cpp
   src/EncryptedLoRaLink.cpp

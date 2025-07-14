@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
+#include <queue>
 #include <random>
 
 /**
@@ -157,6 +158,27 @@ public:
      * @return Reference to internal mapping table
      */
     const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
+
+    /**
+     * Get access to the underlying link layer
+     * @return Reference to ILoRaLink instance
+     */
+    ILoRaLink& getLink() { return *_link; }
+
+    /**
+     * Check if a message is a RollCall protocol message
+     * @param message Message content to check
+     * @return true if the message is a RollCall protocol message
+     */
+    bool isRollCallMessage(const std::string& message) const;
+
+    /**
+     * Process a RollCall protocol message
+     * @param message Message content
+     * @param srcId Source node ID from transport layer
+     * @return true if message was processed successfully
+     */
+    bool processRollCallMessage(const std::string& message, uint16_t srcId);
 
     /**
      * Default console logging function for debugging
