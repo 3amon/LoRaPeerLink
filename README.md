@@ -4,13 +4,14 @@
 
 ## 🚀 Key Features
 
-- **Drop-in LoRa Communication**: Simple API for reliable peer-to-peer LoRa messaging without LoRaWAN complexity
-- **Universal Hardware Support**: Works with any LoRa radio chip through a clean hardware abstraction layer
-- **Intelligent Collision Avoidance**: Automatic backoff algorithms prevent message collisions in multi-node networks
+- **Intuitive Messaging API**: Send messages by device name or ID with automatic discovery
+- **Hardware Agnostic**: Works with any LoRa radio through the IRadio interface
+- **Multi-Layer Architecture**: Use high-level messaging or low-level link protocols as needed
+- **Automatic Device Discovery**: Find and connect to devices by name with RollCall protocol
+- **Intelligent Collision Avoidance**: Multiple backoff strategies for reliable multi-node networks
 - **Built-in Security**: AES encryption with integrity checking for secure communications
-- **Automatic Device Discovery**: Find and connect to nearby devices automatically with the RollCall protocol
-- **Multi-Platform Ready**: Runs on ESP32, Arduino, STM32, Raspberry Pi Pico, and any microcontroller with SPI
-- **Production Ready**: Battle-tested with comprehensive test suite covering real-world scenarios
+- **Flexible Link Protocols**: Choose from basic, backoff, or encrypted link implementations
+- **Production Ready**: Comprehensive test suite covering real-world scenarios
 
 ---
 
@@ -32,48 +33,53 @@ With LoRaPeerLink, you can create devices that talk directly to each other over 
 ### 5-Minute Quick Start
 
 ```cpp
-#include "SemtechRadio.h"
+#include "PeerMessenger.h"
+#include "RollCall.h"
 #include "LoraBasicLink.h"
+// Include your radio implementation (e.g., SemtechRadio for ESP32)
 
 // Your timing functions (platform-specific)
 uint32_t get_time_ms() { return millis(); }
 void sleep_ms(uint32_t ms) { delay(ms); }
 
-// Create radio for 915 MHz (use 868 MHz in Europe)
-SemtechRadio radio(915000000);
+// Create your radio implementation and link layer
+MyRadio radio;  // Your IRadio implementation
 LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
+
+// Create discovery and messaging layers
+RollCall rollCall(&link, "sensor-01", get_time_ms, sleep_ms);
+PeerMessenger messenger(&rollCall);
 
 void setup() {
     Serial.begin(115200);
     
-    // Initialize the radio
+    // Initialize the system
     if (!radio.begin()) {
         Serial.println("Radio failed to start!");
         return;
     }
     
-    // Set your device ID (1-65534)
-    link.setLocalId(100);
-    Serial.println("LoRa device ready!");
+    rollCall.begin();
+    messenger.begin();
+    Serial.println("LoRa messaging ready!");
 }
 
 void loop() {
-    // Send a message every 10 seconds
+    // Handle network discovery and messaging
+    messenger.processMessages();
+    
+    // Send a sensor reading to the gateway
     static uint32_t lastSend = 0;
     if (millis() - lastSend > 10000) {
-        String message = "Hello from device 100!";
-        link.sendPacket(100, 0xFFFF, (uint8_t*)message.c_str(), message.length(), false);
-        Serial.println("Message sent");
+        messenger.sendMessage("gateway", "Temperature: 25.3°C");
+        Serial.println("Sensor data sent to gateway");
         lastSend = millis();
     }
     
     // Check for incoming messages
-    uint16_t fromId;
-    uint8_t buffer[255];
-    int len = link.receivePacket(&fromId, buffer, sizeof(buffer));
-    if (len > 0) {
-        buffer[len] = 0; // Null terminate
-        Serial.printf("Received from %d: %s\n", fromId, (char*)buffer);
+    if (messenger.hasMessage()) {
+        UserMessage msg = messenger.receiveMessage();
+        Serial.printf("From %s: %s\n", msg.srcName.c_str(), msg.content.c_str());
     }
     
     delay(100);
@@ -82,8 +88,47 @@ void loop() {
 
 ### What You Need
 - **Microcontroller**: ESP32, Arduino, STM32, Raspberry Pi Pico, etc.
-- **LoRa Module**: Any Semtech chip (SX1276, SX1278, etc.) or development board
-- **Connections**: Just 4 wires (power, ground, and 2 SPI pins)
+- **LoRa Module**: Any compatible LoRa radio module
+- **Radio Implementation**: You'll need to implement the `IRadio` interface for your specific hardware
+- **Connections**: Typically 4-6 wires depending on your radio module
+
+---
+
+## 🏗️ Architecture Overview
+
+LoRaPeerLink uses a clean layered architecture that separates concerns and makes the library flexible and extensible:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Your Application                     │
+├─────────────────────────────────────────────────────────┤
+│  PeerMessenger (High-level messaging interface)        │
+│  • Send/receive by name or ID                          │
+│  • Automatic message queuing                           │
+│  • Protocol separation                                 │
+├─────────────────────────────────────────────────────────┤
+│  RollCall (Device discovery and name resolution)       │
+│  • Automatic node discovery                            │
+│  • Name-to-ID mapping                                  │
+│  • Network topology awareness                          │
+├─────────────────────────────────────────────────────────┤
+│  ILoRaLink (Link layer abstraction)                    │
+│  • LoRaBasicLink: Simple point-to-point                │
+│  • LoRaBackoffLink: Collision avoidance                │
+│  • EncryptedLoRaLink: Secure communication             │
+├─────────────────────────────────────────────────────────┤
+│  IRadio (Hardware abstraction layer)                   │
+│  • Your radio implementation (SemtechRadio, etc.)      │
+│  • Handles actual radio communication                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Key Benefits:**
+- **Modularity**: Use only the layers you need
+- **Flexibility**: Swap implementations at any layer
+- **Extensibility**: Add new protocols or radio support easily
+- **Testability**: Mock any layer for testing
+- **Hardware Independence**: Works with any radio through IRadio interface
 
 ---
 
@@ -117,13 +162,53 @@ Copy the `include/` and `src/` folders to your project and add to your build sys
 
 ## 🎯 Advanced Usage
 
-### Automatic Device Discovery
+### High-Level Messaging with PeerMessenger
 
-Use RollCall to automatically find and connect to other devices:
+The recommended way to use LoRaPeerLink is through the PeerMessenger interface, which provides automatic discovery and intuitive messaging:
+
+```cpp
+#include "PeerMessenger.h"
+#include "RollCall.h"
+#include "LoraBasicLink.h"
+
+// Setup your radio implementation and link layer
+MyRadio radio;
+LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
+RollCall rollCall(&link, "sensor-01", get_time_ms, sleep_ms);
+PeerMessenger messenger(&rollCall);
+
+void setup() {
+    radio.begin();
+    rollCall.begin();
+    messenger.begin();
+}
+
+void loop() {
+    messenger.processMessages();
+    
+    // Send to specific device by name
+    messenger.sendMessage("gateway", "Temperature: 25.3°C");
+    
+    // Broadcast to all devices
+    messenger.broadcastMessage("System startup complete");
+    
+    // Handle incoming messages
+    if (messenger.hasMessage()) {
+        UserMessage msg = messenger.receiveMessage();
+        Serial.printf("From %s: %s\n", msg.srcName.c_str(), msg.content.c_str());
+    }
+}
+```
+
+### Device Discovery with RollCall
+
+Use RollCall when you need device discovery but want more control over messaging:
 
 ```cpp
 #include "RollCall.h"
+#include "LoraBasicLink.h"
 
+LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
 RollCall discovery(&link, "sensor-01", get_time_ms, sleep_ms);
 
 void setup() {
@@ -137,99 +222,57 @@ void loop() {
     // Find a specific device
     uint16_t gatewayId = discovery.whoIs("gateway");
     if (gatewayId != 0) {
-        // Send sensor data to gateway
+        // Send sensor data to gateway using link layer directly
         String data = "temperature:25.3";
         link.sendPacket(discovery.getLocalId(), gatewayId, 
                        (uint8_t*)data.c_str(), data.length(), true);
     }
-    
-    delay(5000);
 }
 ```
 
-### Secure Communication
+### Direct Link Layer Usage
 
-Protect your messages with AES encryption:
+For maximum control, use the link layer directly:
 
 ```cpp
-#include "EncryptedLoRaLink.h"
+#include "LoraBasicLink.h"      // Basic point-to-point
+#include "LoraBackoffLink.h"    // Collision avoidance
+#include "EncryptedLoRaLink.h"  // Secure communication
 
-const uint8_t key[16] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-                         0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+// Choose your link implementation
+LoRaBasicLink basicLink(&radio, get_time_ms, sleep_ms);
+// OR
+LoRaBackoffLink smartLink(&radio, get_time_ms, sleep_ms);
+// OR
+const uint8_t key[16] = {0x2b, 0x7e, 0x15, 0x16, /* ... */};
 EncryptedLoRaLink secureLink(&radio, key, get_time_ms, sleep_ms);
 
 void setup() {
     radio.begin();
-    secureLink.setLocalId(1);
+    basicLink.setLocalId(1);  // Set your node ID
 }
 
 void loop() {
-    // All messages are automatically encrypted/decrypted
-    const char* secret = "Top secret data";
-    secureLink.sendPacket(1, 2, (uint8_t*)secret, strlen(secret), false);
+    // Send message
+    const char* message = "Hello World";
+    basicLink.sendPacket(1, 2, (uint8_t*)message, strlen(message), true);
     
-    // Receive and decrypt
+    // Receive message
     uint16_t fromId;
     uint8_t buffer[100];
-    int len = secureLink.receivePacket(&fromId, buffer, sizeof(buffer));
+    int len = basicLink.receivePacket(&fromId, buffer, sizeof(buffer));
     if (len > 0) {
         buffer[len] = 0;
-        Serial.printf("Secure message from %d: %s\n", fromId, (char*)buffer);
+        Serial.printf("From %d: %s\n", fromId, (char*)buffer);
     }
-    
-    delay(1000);
-}
-```
-
-### Collision Avoidance for Multi-Node Networks
-
-Use backoff algorithm when multiple devices share the same frequency:
-
-```cpp
-#include "LoraBackoffLink.h"
-
-LoRaBackoffLink smartLink(&radio, get_time_ms, sleep_ms);
-
-void setup() {
-    radio.begin();
-    smartLink.setLocalId(1);
-}
-
-void loop() {
-    // Automatically handles collisions and retries
-    const char* message = "Sensor reading: 42";
-    smartLink.sendPacket(1, 2, (uint8_t*)message, strlen(message), true);
-    
-    delay(10000);
 }
 ```
 
 ---
 
-## 🔧 Supported Hardware
+## 🔧 Implementing Radio Support
 
-### Semtech Radio Chips
-- **SX127x series**: SX1276, SX1277, SX1278, SX1279
-- **SX126x series**: SX1261, SX1262 (with appropriate driver modifications)
-
-### Development Boards
-- **Heltec WiFi LoRa 32** (V2, V3)
-- **TTGO LoRa32**
-- **Adafruit RFM95W** + Arduino/ESP32
-- **Any ESP32/Arduino + SX127x module**
-
-### Microcontroller Platforms
-- **ESP32** (Arduino, ESP-IDF)
-- **Arduino** (Uno, Mega, etc. with external LoRa module)
-- **STM32** 
-- **Raspberry Pi Pico**
-- Any platform with SPI support
-
----
-
-## 🔧 Custom Radio Implementation
-
-Need to use a different LoRa chip? Implement the `IRadio` interface:
+LoRaPeerLink doesn't directly support specific hardware. Instead, it provides the `IRadio` interface that you implement for your radio hardware:
 
 ```cpp
 #include "IRadio.h"
@@ -246,14 +289,9 @@ public:
         return true;
     }
     
-    int receive(uint8_t* buffer, size_t maxLen) override {
+    int receive(uint8_t* buffer, size_t maxLen, unsigned long timeoutMs = 1000) override {
         // Check for incoming data, return length or 0 if none
         return 0;
-    }
-    
-    bool available() override {
-        // Return true if data is ready to receive
-        return false;
     }
     
     int packetRssi() override {
@@ -272,39 +310,55 @@ MyCustomRadio myRadio;
 LoRaBasicLink link(&myRadio, get_time_ms, sleep_ms);
 ```
 
-### Popular LoRa Modules
+### Radio Implementation Examples
 
-| Module | Chip | Frequency | Notes |
-|--------|------|-----------|-------|
-| Heltec WiFi LoRa 32 | SX1276 | 868/915 MHz | Built-in ESP32, OLED display |
-| TTGO LoRa32 | SX1276 | 868/915 MHz | ESP32 with LoRa and GPS |
-| Adafruit RFM95W | SX1276 | 868/915 MHz | Breadboard-friendly |
-| RAK3172 | SX1262 | 868/915 MHz | Low power, smaller size |
+For real hardware, you'll typically implement IRadio using existing libraries:
+
+- **ESP32 with SX127x**: Use RadioLib or LoRa library with IRadio wrapper
+- **Arduino with RFM95W**: Use RadioHead or similar library with IRadio wrapper  
+- **STM32**: Use HAL or LL drivers with IRadio wrapper
+- **Raspberry Pi Pico**: Use SPI library with IRadio wrapper
+
+**Example Projects:**
+- Check `examples/esp32_platformio/` for a complete ESP32 implementation
+- See existing radio wrappers in the community for common platforms
+
+**Popular LoRa Modules:**
+- Heltec WiFi LoRa 32 (SX1276)
+- TTGO LoRa32 (SX1276) 
+- Adafruit RFM95W (SX1276)
+- RAK3172 (SX1262)
+- Any module with SX127x or SX126x chips
 
 ---
 
 ## 📖 Real-World Examples
 
-### 🏡 Smart Home Sensor Network
-- **[ESP32 Complete Example](examples/esp32_platformio/)**: IoT device with OLED display that can send sensor data and receive commands
-- **Use Case**: Temperature sensors reporting to a central gateway, smart switches, garden monitoring
+### 🏡 Complete ESP32 Smart Sensor
+- **[ESP32 PlatformIO Example](examples/esp32_platformio/)**: Complete IoT device with OLED display
+- **Features**: PeerMessenger integration, sensor readings, command handling
+- **Use Case**: Temperature sensors, smart switches, garden monitoring
 
-### 🚀 Quick Prototypes  
-- **[Basic Communication](examples/basic_communication.cpp)**: Simple two-way messaging between devices
-- **[Encrypted Messages](examples/encryption_example.cpp)**: Secure communication for sensitive data
-- **Use Case**: Rapid prototyping, learning the library, simple point-to-point links
+### 🚀 High-Level Messaging  
+- **[PeerMessenger Example](examples/peer_messaging_example.cpp)**: Demonstrates the complete messaging stack
+- **Features**: Auto-discovery, name-based messaging, broadcast support
+- **Use Case**: User-friendly device communication, rapid prototyping
+
+### 🔗 Link Layer Examples
+- **[Basic Communication](examples/basic_communication.cpp)**: Simple point-to-point messaging
+- **[Encrypted Messages](examples/encryption_example.cpp)**: Secure communication demo
+- **Use Case**: Direct device control, security-critical applications
 
 ### 💡 Project Ideas
-- **Weather Station Network**: Multiple sensors reporting to a central display
-- **Farm Monitoring**: Soil moisture, temperature, and livestock tracking
-- **Emergency Communication**: Backup communication when internet/cell towers fail
-- **Remote Control**: Control devices in remote locations without WiFi
-- **Asset Tracking**: Track equipment, vehicles, or livestock over large areas
+- **Smart Farm Network**: Soil sensors reporting to irrigation controller by name
+- **Emergency Mesh**: Devices automatically discover and relay emergency messages
+- **Asset Tracking**: Equipment reports location to "tracker-gateway" automatically
+- **Home Automation**: Switches send commands to "lighting-controller" by name
 
-### 📚 Additional Resources
-- **[PlatformIO Setup Guide](PLATFORMIO_USAGE.md)**: Detailed installation and configuration
-- **[API Reference](INTERFACE_USAGE.md)**: Complete function documentation
-- **Community Examples**: Check GitHub Issues and Discussions for user-contributed projects
+### 📚 Getting Started Resources
+- **[PlatformIO Setup Guide](PLATFORMIO_USAGE.md)**: Complete installation and configuration
+- **[Interface Documentation](INTERFACE_USAGE.md)**: Detailed API reference
+- **[Architecture Guide](SEPARATION_SUMMARY.md)**: Understanding the layer separation
 
 ---
 
@@ -333,14 +387,14 @@ This library is released under the MIT License. See `LICENSE` file for details.
 
 ---
 
-**Start building long-range, low-power communication projects today!** Perfect for IoT sensor networks, remote monitoring, emergency communication, agricultural systems, and any project where devices need to talk directly without internet or cell service.
+**Build powerful LoRa networks with intuitive, name-based messaging!** Perfect for IoT sensors, remote monitoring, emergency communication, and any project where devices need reliable, long-range communication without infrastructure.
 
 ## ⭐ Why Choose LoRaPeerLink?
 
-✅ **Simple**: Start communicating in 5 minutes with minimal code  
-✅ **Flexible**: Works with any LoRa hardware through clean abstractions  
-✅ **Reliable**: Battle-tested with comprehensive automated testing  
-✅ **Secure**: Built-in AES encryption when you need it  
-✅ **Smart**: Automatic collision avoidance for multi-device networks  
-✅ **Documented**: Clear examples and real-world project templates
+✅ **Intuitive**: Send messages by device name, not complex IDs  
+✅ **Flexible**: Use high-level messaging or low-level protocols as needed  
+✅ **Hardware Agnostic**: Implement once, run on any LoRa radio  
+✅ **Battle-Tested**: Comprehensive test suite with real-world scenarios  
+✅ **Layered Design**: Clean architecture that separates concerns  
+✅ **Production Ready**: Used in real IoT deployments
 
