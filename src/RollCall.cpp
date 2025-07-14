@@ -102,21 +102,9 @@ bool RollCall::processMessages(uint32_t timeoutMs) {
     // Convert buffer to string
     std::string message(reinterpret_cast<const char*>(buffer), len);
     
-    // Log the received message if logging is enabled
-    if (_logMessage) {
-        std::string logMsg = "[RollCall] Received: " + message + " from ID " + std::to_string(srcId);
-        _logMessage(logMsg.c_str());
-    }
-    
-    // Handle different message types
-    if (message.find(HELLOIAM_PREFIX) == 0) {
-        return handleHelloIam(message, srcId);
-    } else if (message.find(WHOIS_PREFIX) == 0) {
-        return handleWhois(message, srcId);
-    } else if (message.find(WHEREIS_PREFIX) == 0) {
-        return handleWhereis(message, srcId);
-    } else if (message.find(RESPONSE_PREFIX) == 0) {
-        return handleResponse(message, srcId);
+    // Only process RollCall messages
+    if (isRollCallMessage(message)) {
+        return processRollCallMessage(message, srcId);
     }
     
     return false;
@@ -443,6 +431,34 @@ std::string RollCall::parseMessage(const std::string& message, const char* prefi
         return message.substr(prefixLen);
     }
     return "";
+}
+
+bool RollCall::isRollCallMessage(const std::string& message) const {
+    return message.find(HELLOIAM_PREFIX) == 0 ||
+           message.find(WHOIS_PREFIX) == 0 ||
+           message.find(WHEREIS_PREFIX) == 0 ||
+           message.find(RESPONSE_PREFIX) == 0;
+}
+
+bool RollCall::processRollCallMessage(const std::string& message, uint16_t srcId) {
+    // Log the received message if logging is enabled
+    if (_logMessage) {
+        std::string logMsg = "[RollCall] Received: " + message + " from ID " + std::to_string(srcId);
+        _logMessage(logMsg.c_str());
+    }
+    
+    // Handle different message types
+    if (message.find(HELLOIAM_PREFIX) == 0) {
+        return handleHelloIam(message, srcId);
+    } else if (message.find(WHOIS_PREFIX) == 0) {
+        return handleWhois(message, srcId);
+    } else if (message.find(WHEREIS_PREFIX) == 0) {
+        return handleWhereis(message, srcId);
+    } else if (message.find(RESPONSE_PREFIX) == 0) {
+        return handleResponse(message, srcId);
+    }
+    
+    return false;
 }
 
 uint32_t RollCall::createSeedValue(time_ms_fn getTime) {
