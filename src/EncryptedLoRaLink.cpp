@@ -239,12 +239,12 @@ bool EncryptedLoRaLink::sendPacket(uint16_t srcId, uint16_t destId, const uint8_
 /**
  * @brief Receive and decrypt packet
  */
-int EncryptedLoRaLink::receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) {
+int EncryptedLoRaLink::receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs) {
     if (!_underlyingLink) return 0;
     
-    // Receive from underlying link
+    // Receive from underlying link with timeout
     uint8_t receivedData[200];
-    int receivedLen = _underlyingLink->receivePacket(srcId, receivedData, 200);
+    int receivedLen = _underlyingLink->receivePacket(srcId, receivedData, 200, timeoutMs);
     
     if (receivedLen <= 16) { // Must have at least IV (16 bytes)
         return 0;
