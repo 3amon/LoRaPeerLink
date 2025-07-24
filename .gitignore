@@ -10,6 +10,8 @@ LoRaPeerLink-Export/
 basic_example
 encryption_example
 encryption_test
+timeout_demo
+peer_messaging_example
 
 # IDE files
 .vscode/.browse.c_cpp.db*

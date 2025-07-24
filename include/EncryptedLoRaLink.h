@@ -116,6 +116,7 @@ public:
      * @param srcId Pointer to store source node ID
      * @param buffer Buffer to store decrypted payload
      * @param maxLen Maximum buffer size
+     * @param timeoutMs Maximum time to wait for a packet in milliseconds (default: 1000ms)
      * @return Length of decrypted payload, 0 if no packet or decryption failed
      * 
      * Receives encrypted packet from underlying link and decrypts:
@@ -123,8 +124,9 @@ public:
      * 2. Extract IV from first 16 bytes of payload
      * 3. Decrypt remaining data using AES-128 CBC with extracted IV
      * 4. Return decrypted payload to application
+     * 5. Waits up to timeoutMs for a packet to arrive
      */
-    int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) override;
+    int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs = 1000) override;
 
     /**
      * @brief Set local node ID (passed through to underlying link)

@@ -99,9 +99,9 @@ bool LoRaBackoffLink::sendPacket(uint16_t srcId, uint16_t dest, const uint8_t* d
  * The method ensures only valid, properly addressed packets are processed
  * and automatically handles protocol-level acknowledgment requirements.
  */
-int LoRaBackoffLink::receivePacket(uint16_t* src, uint8_t* buffer, uint8_t maxLen) {
+int LoRaBackoffLink::receivePacket(uint16_t* src, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs) {
     uint8_t raw[BUFFER_SIZE];
-    int len = _radio->receive(raw, BUFFER_SIZE);
+    int len = _radio->receive(raw, BUFFER_SIZE, timeoutMs);
     
     // Minimum packet size check (header + CRC = PacketHeader + 2 bytes)
     if (len < (int)(sizeof(PacketHeader) + 2)) return 0;

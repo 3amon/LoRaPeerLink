@@ -95,6 +95,7 @@ bool LoRaBasicLink::sendPacket(uint16_t srcId, uint16_t destId, const uint8_t* p
  * - Validates packet structure and CRC integrity
  * - Automatically sends ACK if requested by sender
  * - Returns payload data for valid packets
+ * - Respects timeout parameter for waiting for packets
  * 
  * The method performs comprehensive packet validation including:
  * - Minimum packet size check
@@ -102,9 +103,9 @@ bool LoRaBasicLink::sendPacket(uint16_t srcId, uint16_t destId, const uint8_t* p
  * - Payload length consistency verification
  * - CRC integrity validation
  */
-int LoRaBasicLink::receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) {
+int LoRaBasicLink::receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs) {
     uint8_t raw[BUFFER_SIZE];
-    int len = _radio->receive(raw, BUFFER_SIZE);
+    int len = _radio->receive(raw, BUFFER_SIZE, timeoutMs);
     
     // Minimum packet size check (header + CRC = 9 bytes with 16-bit addressing)
     if (len < 9) return 0;

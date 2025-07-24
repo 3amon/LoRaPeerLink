@@ -93,8 +93,8 @@ bool RollCall::processMessages(uint32_t timeoutMs) {
     uint16_t srcId;
     uint8_t buffer[MAX_PAYLOAD]; // Use the constant from LoRaBasicLink
     
-    // Receive packet from link layer
-    int len = _link->receivePacket(&srcId, buffer, MAX_PAYLOAD);
+    // Receive packet from link layer with specified timeout
+    int len = _link->receivePacket(&srcId, buffer, MAX_PAYLOAD, timeoutMs);
     if (len <= 0) {
         return false;
     }

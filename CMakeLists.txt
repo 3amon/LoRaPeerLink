@@ -30,6 +30,7 @@ add_executable(test_all
   tests/test_peer_messenger.cpp
   tests/test_interface.cpp
   tests/test_encrypted_link.cpp
+  tests/test_timeout_propagation.cpp
   tests/TestUtils.cpp
   src/RollCall.cpp
   src/PeerMessenger.cpp

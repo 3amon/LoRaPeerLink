@@ -82,20 +82,22 @@ public:
      * @param srcId Pointer to variable that will store the source node ID (16-bit)
      * @param buffer Buffer to store the received payload data
      * @param maxLen Maximum number of bytes that can be stored in buffer
+     * @param timeoutMs Maximum time to wait for a packet in milliseconds (default: 1000ms)
      * @return Length of received payload data, 0 if no packet available or error occurred
      * 
-     * Attempts to receive a packet from the radio. This method typically performs
-     * a non-blocking check for available data. If a valid packet is received that
-     * is addressed to this node (or is a broadcast), the payload is copied to the
-     * buffer and the source ID is returned via the srcId parameter.
+     * Attempts to receive a packet from the radio within the specified timeout.
+     * This method typically performs a blocking or semi-blocking check for available data.
+     * If a valid packet is received that is addressed to this node (or is a broadcast),
+     * the payload is copied to the buffer and the source ID is returned via the srcId parameter.
      * 
      * The method handles:
      * - Packet validation (CRC, format checking)
      * - Address filtering (drops packets not for this node)
      * - Automatic ACK transmission (if requested by sender)
      * - Protocol-specific packet processing
+     * - Timeout management (waits up to timeoutMs for a packet)
      */
-    virtual int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) = 0;
+    virtual int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs = 1000) = 0;
 
     /**
      * @brief Set the local node ID for address filtering
