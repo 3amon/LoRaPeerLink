@@ -116,6 +116,7 @@ public:
      * @param srcId Pointer to store source node ID (16-bit) of received packet
      * @param buffer Buffer to store received payload
      * @param maxLen Maximum buffer size
+     * @param timeoutMs Maximum time to wait for a packet in milliseconds (default: 1000ms)
      * @return Length of received payload, 0 if no valid packet available
      * 
      * Checks for incoming packets and processes them according to the protocol:
@@ -123,12 +124,12 @@ public:
      * - Filters packets not addressed to this node (unless broadcast)
      * - Automatically sends ACK if requested by sender
      * - Returns payload data and source ID for valid packets
+     * - Waits up to timeoutMs for a packet to arrive
      * 
-     * This method is non-blocking and should be called regularly to process
-     * incoming messages. Note that this method now requires a destination node ID
-     * to be provided during construction or via other means for address filtering.
+     * This method may block for up to timeoutMs milliseconds waiting for a packet.
+     * The timeout parameter is passed through to the underlying radio layer.
      */
-    int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen) override;
+    int receivePacket(uint16_t* srcId, uint8_t* buffer, uint8_t maxLen, uint32_t timeoutMs = 1000) override;
 
     /**
      * @brief Set the local node ID for address filtering

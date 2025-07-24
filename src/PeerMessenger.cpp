@@ -48,8 +48,8 @@ bool PeerMessenger::processMessages(uint32_t timeoutMs) {
     uint16_t srcId;
     uint8_t buffer[MAX_PAYLOAD];
     
-    // Try to receive a packet
-    int len = _rollCall->getLink().receivePacket(&srcId, buffer, MAX_PAYLOAD);
+    // Try to receive a packet with the specified timeout
+    int len = _rollCall->getLink().receivePacket(&srcId, buffer, MAX_PAYLOAD, timeoutMs);
     if (len <= 0) {
         return false;
     }
