@@ -32,17 +32,17 @@ def every(start, step, end, key):
 
 # name, PlatformIO environment, extra build flags, duration [s], commands for A, commands for B, resets [(time, board)]
 PHASES = [
-    ("1-soak-sf7", "t3_scanner", "", 3600,
+    ("1-soak-sf7", "wireless_shell_v3", "", 3600,
      every(60, 300, 3590, "b") + [(600, "m"), (1500, "m"), (2400, "m"), (3300, "m"), (1200, "f"), (3590, "s")],
      every(180, 300, 3590, "b") + [(900, "m"), (1800, "m"), (2700, "m"), (1200, "f"), (3593, "s")],
      [(2100, "B")]),
-    ("2-same-name", "t3_scanner", "-D BENCH_SAME_NAME=1", 240,
+    ("2-same-name", "wireless_shell_v3", "-D BENCH_SAME_NAME=1", 240,
      [(120, "n"), (232, "s")], [(121, "n"), (235, "s")], []),
-    ("3-sf10", "t3_scanner", "-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000", 900,
+    ("3-sf10", "wireless_shell_v3", "-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000", 900,
      [(120, "b"), (300, "m"), (890, "s")], [(200, "b"), (600, "m"), (893, "s")], []),
-    ("4-sf12", "t3_scanner", "-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000", 600,
+    ("4-sf12", "wireless_shell_v3", "-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000", 600,
      [(150, "b"), (585, "s")], [(300, "b"), (590, "s")], []),
-    ("5-encrypted-sf7", "t3_scanner_encrypted", "", 1200,
+    ("5-encrypted-sf7", "wireless_shell_v3_encrypted", "", 1200,
      [(120, "b"), (300, "m"), (900, "m"), (600, "f"), (1190, "s")],
      [(200, "b"), (450, "m"), (600, "f"), (1193, "s")], []),
 ]

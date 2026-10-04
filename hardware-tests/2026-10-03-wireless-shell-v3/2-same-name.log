@@ -1,6 +1,6 @@
-# phase 2-same-name: env=t3_scanner flags='-D BENCH_SAME_NAME=1' duration=240s started 2026-10-03 19:18:16
-# flash /dev/ttyACM0 env=t3_scanner flags='-D BENCH_SAME_NAME=1': ok
-# flash /dev/ttyACM1 env=t3_scanner flags='-D BENCH_SAME_NAME=1': ok
+# phase 2-same-name: env=wireless_shell_v3 flags='-D BENCH_SAME_NAME=1' duration=240s started 2026-10-03 19:18:16
+# flash /dev/ttyACM0 env=wireless_shell_v3 flags='-D BENCH_SAME_NAME=1': ok
+# flash /dev/ttyACM1 env=wireless_shell_v3 flags='-D BENCH_SAME_NAME=1': ok
      0.1 B| oes the same)
      0.1 B|   m  send a maximum-length message to every peer and check it arrives intact
      0.1 B|   q  RF check: sample ESP-ROM:esp32s3-20210327

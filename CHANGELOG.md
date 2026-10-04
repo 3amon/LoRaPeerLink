@@ -7,13 +7,13 @@
   depended on the library (by Git URL, as the README suggests) compiled and
   then failed to link with every library symbol undefined. Fixed.
 - New `examples/esp32_bench_test`: a serial-console bench test for checking
-  the library on real radios (T3 scanner board and Heltec V3 boards).
+  the library on real radios (Heltec Wireless Shell V3 and Heltec V3 boards).
 - **First hardware results.** The library and the rewritten `SemtechRadio`
   driver ran for 1 hour 50 minutes on two Heltec Wireless Shell V3 boards
   over a very weak link: 1,204 of 1,209 acknowledged pings in an hour at SF7,
   nothing delivered twice, full-size frames intact, recovery from a board
   restart, name collision resolved, SF10 and SF12, and the encrypted link.
-  Results and raw logs are in `hardware-tests/2026-10-03-t3-scanner/`;
+  Results and raw logs are in `hardware-tests/2026-10-03-wireless-shell-v3/`;
   `hardware-tests/run_bench.py` and `summarize.py` reproduce the run.
 - `SemtechRadio`: the transmit timeout is now derived from the longest
   frame's time on air (it was fixed at 3 s, which aborted long frames at SF11
