@@ -386,7 +386,7 @@ Wireless Shell V3 boards (ESP32-S3 + SX1262) with `examples/esp32_bench_test`,
 over a very weak link: 99.6% of 1,209 acknowledged pings delivered in an hour
 at SF7, nothing delivered twice, SF10 and SF12, and the encrypted link.
 Results and logs are in
-[hardware-tests/2026-10-03-t3-scanner](hardware-tests/2026-10-03-t3-scanner/RESULTS.md).
+[hardware-tests/2026-10-03-wireless-shell-v3](hardware-tests/2026-10-03-wireless-shell-v3/RESULTS.md).
 Range with antennas, more than two boards and longer runs are still to be
 tested.
 

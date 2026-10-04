@@ -12,9 +12,9 @@ Use it to verify the library and the `SemtechRadio` driver on real radios
 
 | Environment | Board | Console |
 |---|---|---|
-| `t3_scanner` (default) | T3 handheld scanner (Heltec Wireless Shell V3: ESP32-S3 + SX1262) | ESP32-S3 native USB |
+| `wireless_shell_v3` (default) | Heltec Wireless Shell V3 module on a carrier board (ESP32-S3 + SX1262) | ESP32-S3 native USB |
 | `heltec_v3` | Heltec WiFi LoRa 32 V3, Wireless Stick V3 | CP2102 USB serial |
-| `t3_scanner_encrypted`, `heltec_v3_encrypted` | Same, with `EncryptedLoRaLink` in the stack | |
+| `wireless_shell_v3_encrypted`, `heltec_v3_encrypted` | Same, with `EncryptedLoRaLink` in the stack | |
 
 **Attach the LoRa antenna before powering a board.** Transmitting without one
 can damage the radio.
@@ -49,8 +49,8 @@ chip; do not commit licenses to a public repository.
 
 ```bash
 cd examples/esp32_bench_test
-pio run -e t3_scanner -t upload --upload-port /dev/ttyACM0
-pio run -e t3_scanner -t upload --upload-port /dev/ttyACM1
+pio run -e wireless_shell_v3 -t upload --upload-port /dev/ttyACM0
+pio run -e wireless_shell_v3 -t upload --upload-port /dev/ttyACM1
 
 pio device monitor -p /dev/ttyACM0      # one terminal per board
 pio device monitor -p /dev/ttyACM1
@@ -110,7 +110,7 @@ board in (or while pressing reset) to enter the bootloader.
 Override on the command line, for example to test a slow modem setting:
 
 ```bash
-PLATFORMIO_BUILD_FLAGS="-D BENCH_SPREADING_FACTOR=10" pio run -e t3_scanner -t upload
+PLATFORMIO_BUILD_FLAGS="-D BENCH_SPREADING_FACTOR=10" pio run -e wireless_shell_v3 -t upload
 ```
 
 `BENCH_FREQUENCY_HZ`, `BENCH_SPREADING_FACTOR`, `BENCH_TX_POWER_DBM`,

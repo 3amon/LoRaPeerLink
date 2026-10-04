@@ -173,10 +173,10 @@ describes what a healthy run looks like.
 
 ### Hardware results (2026-10-03)
 
-Two T3 scanner boards (Heltec Wireless Shell V3: ESP32-S3 + SX1262) ran
+Two Heltec Wireless Shell V3 boards (ESP32-S3 + SX1262) ran
 `examples/esp32_bench_test` for 1 hour 50 minutes under
 `hardware-tests/run_bench.py`. Full results and raw logs:
-[hardware-tests/2026-10-03-t3-scanner/RESULTS.md](hardware-tests/2026-10-03-t3-scanner/RESULTS.md).
+[hardware-tests/2026-10-03-wireless-shell-v3/RESULTS.md](hardware-tests/2026-10-03-wireless-shell-v3/RESULTS.md).
 
 The link was very weak (about -115 dBm with the boards on one desk, so
 probably no antennas attached), which makes these results a test on a

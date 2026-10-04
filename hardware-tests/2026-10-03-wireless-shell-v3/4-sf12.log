@@ -1,6 +1,6 @@
-# phase 4-sf12: env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000' duration=600s started 2026-10-03 19:37:45
-# flash /dev/ttyACM0 env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000': ok
-# flash /dev/ttyACM1 env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000': ok
+# phase 4-sf12: env=wireless_shell_v3 flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000' duration=600s started 2026-10-03 19:37:45
+# flash /dev/ttyACM0 env=wireless_shell_v3 flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000': ok
+# flash /dev/ttyACM1 env=wireless_shell_v3 flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000': ok
      0.1 A| ESP-ROM:esp32s3-20210327
      0.1 A| Build:Mar 27 2021
      0.1 A| rst:0x15 (USB_UART_CHIP_RESET),boot:0x9 (SPI_FAST_FLASH_BOOT)

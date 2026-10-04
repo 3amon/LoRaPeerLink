@@ -1,6 +1,6 @@
 # Hardware test results, 2026-10-03
 
-Two T3 handheld scanner boards (Heltec Wireless Shell V3: ESP32-S3 + SX1262)
+Two Heltec Wireless Shell V3 boards (ESP32-S3 + SX1262)
 running `examples/esp32_bench_test`, driven by `hardware-tests/run_bench.py`
 for 1 hour 50 minutes. 915 MHz, 125 kHz, 14 dBm; spreading factor per phase.
 Board A is `bench-C822`, board B is `bench-341C`.
@@ -64,7 +64,7 @@ only covers the time since its restart.
 
 ### 1-soak-sf7
 
-`phase 1-soak-sf7: env=t3_scanner flags='' duration=3600s started 2026-10-03 18:18:04`
+`phase 1-soak-sf7: env=wireless_shell_v3 flags='' duration=3600s started 2026-10-03 18:18:04`
 
 | Board | Pings finished | Acknowledged | Needed a retransmission | Failed | Time to ACK ms (median / 95% / max) | Pings received | Delivered twice |
 |---|---|---|---|---|---|---|---|
@@ -120,7 +120,7 @@ Received signal strength over the phase: -116 to -113 dBm (median -115).
 
 ### 2-same-name
 
-`phase 2-same-name: env=t3_scanner flags='-D BENCH_SAME_NAME=1' duration=240s started 2026-10-03 19:18:16`
+`phase 2-same-name: env=wireless_shell_v3 flags='-D BENCH_SAME_NAME=1' duration=240s started 2026-10-03 19:18:16`
 
 | Board | Pings finished | Acknowledged | Needed a retransmission | Failed | Time to ACK ms (median / 95% / max) | Pings received | Delivered twice |
 |---|---|---|---|---|---|---|---|
@@ -170,7 +170,7 @@ Received signal strength over the phase: -116 to -114 dBm (median -115).
 
 ### 3-sf10
 
-`phase 3-sf10: env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000' duration=900s started 2026-10-03 19:22:31`
+`phase 3-sf10: env=wireless_shell_v3 flags='-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000' duration=900s started 2026-10-03 19:22:31`
 
 | Board | Pings finished | Acknowledged | Needed a retransmission | Failed | Time to ACK ms (median / 95% / max) | Pings received | Delivered twice |
 |---|---|---|---|---|---|---|---|
@@ -224,7 +224,7 @@ Received signal strength over the phase: -116 to -114 dBm (median -115).
 
 ### 4-sf12
 
-`phase 4-sf12: env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000' duration=600s started 2026-10-03 19:37:45`
+`phase 4-sf12: env=wireless_shell_v3 flags='-D BENCH_SPREADING_FACTOR=12 -D BENCH_PING_INTERVAL_MS=20000' duration=600s started 2026-10-03 19:37:45`
 
 | Board | Pings finished | Acknowledged | Needed a retransmission | Failed | Time to ACK ms (median / 95% / max) | Pings received | Delivered twice |
 |---|---|---|---|---|---|---|---|
@@ -276,7 +276,7 @@ Received signal strength over the phase: -115 to -114 dBm (median -115).
 
 ### 5-encrypted-sf7
 
-`phase 5-encrypted-sf7: env=t3_scanner_encrypted flags='' duration=1200s started 2026-10-03 19:48:00`
+`phase 5-encrypted-sf7: env=wireless_shell_v3_encrypted flags='' duration=1200s started 2026-10-03 19:48:00`
 
 | Board | Pings finished | Acknowledged | Needed a retransmission | Failed | Time to ACK ms (median / 95% / max) | Pings received | Delivered twice |
 |---|---|---|---|---|---|---|---|
