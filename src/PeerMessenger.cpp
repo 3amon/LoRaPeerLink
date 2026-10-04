@@ -1,27 +1,30 @@
 /**
  * @file PeerMessenger.cpp
- * @brief Implementation of high-level peer-to-peer messaging interface
+ * @brief High-level text messaging between named LoRa nodes
  * @author LoRaPeerLink Project
- * @version 1.0
- * 
- * This file implements the PeerMessenger class, providing a user-friendly
- * interface for sending and receiving messages in LoRa peer-to-peer networks.
- * It manages application-level messaging while delegating node discovery
- * and network management to the RollCall layer.
+ * @version 2.0
  */
 
 #include "PeerMessenger.h"
-#include "LoraBasicLink.h"  // For MAX_PAYLOAD constant
+
+#include <cstdio>
 #include <cstring>
-#include <cstdio>  // For printf
+
+constexpr size_t PeerMessenger::MESSAGE_PREFIX_LEN;
 
 PeerMessenger::PeerMessenger(RollCall* rollCall, log_fn logMessage)
-    : _rollCall(rollCall), _logMessage(logMessage) {
+    : _rollCall(rollCall), _logMessage(logMessage), _received(0), _dropped(0) {
     if (!_rollCall) {
-        if (_logMessage) {
-            _logMessage("[PeerMessenger] Error: RollCall instance is null");
-        }
+        log("[PeerMessenger] Error: RollCall instance is null");
         return;
+    }
+    // Receive every non-RollCall payload, whoever is listening at the time.
+    _rollCall->setDataHandler(&PeerMessenger::onData, this);
+}
+
+PeerMessenger::~PeerMessenger() {
+    if (_rollCall && _rollCall->dataHandlerContext() == this) {
+        _rollCall->setDataHandler(nullptr, nullptr);
     }
 }
 
@@ -29,13 +32,8 @@ bool PeerMessenger::begin() {
     if (!_rollCall) {
         return false;
     }
-
-    if (_logMessage) {
-        std::string logMsg = "[PeerMessenger] Initialized for node: " + _rollCall->getNodeName() + 
-                           " (ID: " + std::to_string(_rollCall->getNodeId()) + ")";
-        _logMessage(logMsg.c_str());
-    }
-
+    log("[PeerMessenger] Initialized for node: " + _rollCall->getNodeName() +
+        " (ID: " + std::to_string(_rollCall->getNodeId()) + ")");
     return true;
 }
 
@@ -43,141 +41,121 @@ bool PeerMessenger::processMessages(uint32_t timeoutMs) {
     if (!_rollCall) {
         return false;
     }
-    
-    // Get access to the underlying link
-    uint16_t srcId;
-    uint8_t buffer[MAX_PAYLOAD];
-    
-    // Try to receive a packet with the specified timeout
-    int len = _rollCall->getLink().receivePacket(&srcId, buffer, MAX_PAYLOAD, timeoutMs);
-    if (len <= 0) {
-        return false;
+    // RollCall does the receiving: it handles its own messages, sends the
+    // periodic announcements, and passes everything else to onData().
+    const uint32_t before = _received;
+    const bool handledRollCall = _rollCall->processMessages(timeoutMs);
+    return handledRollCall || _received != before;
+}
+
+void PeerMessenger::onData(void* context, uint16_t srcId, const uint8_t* data, size_t len) {
+    static_cast<PeerMessenger*>(context)->handleData(srcId, data, len);
+}
+
+void PeerMessenger::handleData(uint16_t srcId, const uint8_t* data, size_t len) {
+    if (len < MESSAGE_PREFIX_LEN || memcmp(data, MESSAGE_PREFIX, MESSAGE_PREFIX_LEN) != 0) {
+        return;     // Not a user message
     }
-    
-    // Convert buffer to string
-    std::string message(reinterpret_cast<const char*>(buffer), len);
-    
-    // Check if this is a RollCall message
-    if (_rollCall->isRollCallMessage(message)) {
-        // Let RollCall process it
-        return _rollCall->processRollCallMessage(message, srcId);
+
+    QueuedMessage msg;
+    msg.srcId = srcId;
+    msg.content.assign(reinterpret_cast<const char*>(data) + MESSAGE_PREFIX_LEN, len - MESSAGE_PREFIX_LEN);
+
+    if (_queue.size() >= PEER_MESSENGER_MAX_QUEUE) {
+        _queue.pop_front();     // Keep the newest messages
+        ++_dropped;
     }
-    
-    // Check if this is a user message
-    if (message.find(MESSAGE_PREFIX) == 0) {
-        // Handle user message
-        size_t prefixLen = strlen(MESSAGE_PREFIX);
-        std::string content = message.substr(prefixLen);
-        
-        // Queue the user message
-        UserMessage_Internal userMsg;
-        userMsg.srcId = srcId;
-        userMsg.content = content;
-        _userMessageQueue.push(userMsg);
-        
-        // Log the received user message if logging is enabled
-        if (_logMessage) {
-            std::string logMsg = "[PeerMessenger] Received user message from ID " + std::to_string(srcId) + 
-                               ": " + content;
-            _logMessage(logMsg.c_str());
-        }
-        
-        return true;
-    }
-    
-    // Unknown message type
-    return false;
+    log("[PeerMessenger] Received user message from ID " + std::to_string(srcId) + ": " + msg.content);
+    _queue.push_back(std::move(msg));
+    ++_received;
+}
+
+size_t PeerMessenger::maxMessageLength() const {
+    if (!_rollCall) return 0;
+    const size_t linkMax = _rollCall->getLink().maxPayloadSize();
+    return linkMax > MESSAGE_PREFIX_LEN ? linkMax - MESSAGE_PREFIX_LEN : 0;
 }
 
 bool PeerMessenger::sendMessage(uint16_t destId, const std::string& message, bool requestAck) {
     if (!_rollCall) {
         return false;
     }
-
-    // Log the outgoing message if logging is enabled
-    if (_logMessage) {
-        std::string logMsg = "[PeerMessenger] Sending to ID " + std::to_string(destId) + 
-                           ": " + message;
-        _logMessage(logMsg.c_str());
+    if (message.size() > maxMessageLength()) {
+        log("[PeerMessenger] Message too long (" + std::to_string(message.size()) + " bytes, limit " +
+            std::to_string(maxMessageLength()) + ")");
+        return false;
     }
-    
-    // Send through our own user message capability
-    return sendUserMessage(destId, message, requestAck);
+
+    log("[PeerMessenger] Sending to ID " + std::to_string(destId) + ": " + message);
+
+    const std::string payload = std::string(MESSAGE_PREFIX) + message;
+    return _rollCall->getLink().sendPacket(_rollCall->getNodeId(), destId,
+                                           reinterpret_cast<const uint8_t*>(payload.data()),
+                                           static_cast<uint8_t>(payload.size()), requestAck);
 }
 
-bool PeerMessenger::sendMessage(const std::string& destName, const std::string& message, 
-                               bool requestAck, uint32_t timeoutMs) {
+bool PeerMessenger::sendMessage(const std::string& destName, const std::string& message,
+                                bool requestAck, uint32_t timeoutMs) {
     if (!_rollCall) {
         return false;
     }
-
-    // Resolve name to ID using RollCall
-    uint16_t destId = _rollCall->whoIs(destName, timeoutMs);
-    if (destId == 0) {
-        if (_logMessage) {
-            std::string logMsg = "[PeerMessenger] Failed to resolve name: " + destName;
-            _logMessage(logMsg.c_str());
-        }
+    if (message.size() > maxMessageLength()) {
+        log("[PeerMessenger] Message too long (" + std::to_string(message.size()) + " bytes, limit " +
+            std::to_string(maxMessageLength()) + ")");
         return false;
     }
 
-    // Send to the resolved ID
+    const uint16_t destId = _rollCall->whoIs(destName, timeoutMs);
+    if (destId == 0) {
+        log("[PeerMessenger] Failed to resolve name: " + destName);
+        return false;
+    }
     return sendMessage(destId, message, requestAck);
 }
 
 bool PeerMessenger::broadcastMessage(const std::string& message) {
-    return sendMessage(0xFFFF, message, false); // Broadcast to all nodes
+    return sendMessage(static_cast<uint16_t>(0xFFFF), message, false);
 }
 
 bool PeerMessenger::hasMessage() const {
-    return !_userMessageQueue.empty();
+    return !_queue.empty();
 }
 
 UserMessage PeerMessenger::receiveMessage() {
-    if (_userMessageQueue.empty()) {
+    if (_queue.empty()) {
         return UserMessage{0, "", ""};
     }
-    
-    UserMessage_Internal userMsg = _userMessageQueue.front();
-    _userMessageQueue.pop();
-    
+
+    QueuedMessage queued = std::move(_queue.front());
+    _queue.pop_front();
+
     UserMessage msg;
-    msg.srcId = userMsg.srcId;
-    msg.content = userMsg.content;
-    
-    // Try to resolve the source ID to a name
-    auto& idToName = _rollCall->getIdToNameMap();
-    auto it = idToName.find(userMsg.srcId);
-    if (it != idToName.end()) {
-        msg.srcName = it->second;
-    } else {
-        msg.srcName = "";
-    }
-    
+    msg.srcId = queued.srcId;
+    msg.content = std::move(queued.content);
+
+    const auto& idToName = _rollCall->getIdToNameMap();
+    auto it = idToName.find(msg.srcId);
+    msg.srcName = (it != idToName.end()) ? it->second : "";
+
     if (_logMessage) {
-        std::string srcInfo = msg.srcName.empty() ? 
-            "ID " + std::to_string(msg.srcId) : 
-            msg.srcName + " (ID " + std::to_string(msg.srcId) + ")";
-        std::string logMsg = "[PeerMessenger] Received from " + srcInfo + ": " + msg.content;
-        _logMessage(logMsg.c_str());
+        const std::string srcInfo = msg.srcName.empty()
+            ? "ID " + std::to_string(msg.srcId)
+            : msg.srcName + " (ID " + std::to_string(msg.srcId) + ")";
+        log("[PeerMessenger] Received from " + srcInfo + ": " + msg.content);
     }
-    
     return msg;
 }
 
 size_t PeerMessenger::getMessageCount() const {
-    return _userMessageQueue.size();
+    return _queue.size();
+}
+
+void PeerMessenger::log(const std::string& text) {
+    if (_logMessage) {
+        _logMessage(text.c_str());
+    }
 }
 
 void PeerMessenger::consoleLog(const char* message) {
     printf("%s\n", message);
-}
-
-bool PeerMessenger::sendUserMessage(uint16_t destId, const std::string& message, bool requestAck) {
-    std::string fullMessage = std::string(MESSAGE_PREFIX) + message;
-    
-    // Send through the link layer
-    return _rollCall->getLink().sendPacket(_rollCall->getNodeId(), destId, 
-                                          reinterpret_cast<const uint8_t*>(fullMessage.c_str()), 
-                                          fullMessage.length(), requestAck);
 }

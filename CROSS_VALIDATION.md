@@ -1,72 +1,43 @@
-# Python-C++ Cross-Validation
+# Python / C++ Cross-Validation
 
-This document describes the cross-validation system that ensures compatibility between the Python and C++ encryption implementations in LoRaPeerLink.
+The library ships its own AES-128, SHA-256, HMAC and PBKDF2 so that it builds
+on a microcontroller without dependencies. Home-made cryptography has to be
+checked against something independent, so `validate_encryption.py` compares
+the C++ code with Python's `hashlib` and the `cryptography` package.
 
-## Overview
+## How it works
 
-The validation system directly tests the C++ EncryptedLoRaLink implementation against the Python encryption validation script to ensure both produce compatible results.
+`tests/encryption_cli_tool.cpp` is a small command line front end to the
+library's crypto (built as `build/tests/encryption_cli_tool`):
 
-## Components
-
-### C++ CLI Tool (`encryption_cli_tool`)
-
-A command-line interface to the C++ EncryptedLoRaLink class that provides:
-
-- **encrypt**: Encrypt hex data using C++ implementation
-- **decrypt**: Decrypt hex data using C++ implementation  
-- **test**: Round-trip test (encrypt then decrypt, verify integrity)
-
-```bash
-# Examples
-./build/tests/encryption_cli_tool encrypt TestNetwork Password123 48656c6c6f
-./build/tests/encryption_cli_tool decrypt TestNetwork Password123 <encrypted_hex>
-./build/tests/encryption_cli_tool test TestNetwork Password123 48656c6c6f
+```
+encryption_cli_tool keys   <network> <password> <iterations>
+encryption_cli_tool seal   <network> <password> <iterations> <srcId> <iv hex> <plaintext hex>
+encryption_cli_tool open   <network> <password> <iterations> <srcId> <wire hex>
+encryption_cli_tool sha256 <data hex>
+encryption_cli_tool hmac   <key hex> <data hex>
+encryption_cli_tool aes    <key hex> <block hex>
+encryption_cli_tool pbkdf2 <password hex> <salt hex> <iterations> <length>
 ```
 
-### Python Cross-Validation
+`validate_encryption.py` contains its own implementation of the packet format
+and, with random inputs, checks that:
 
-The `validate_encryption.py` script now includes a `test_python_cpp_cross_validation()` function that:
+- SHA-256, HMAC-SHA256, AES-128 and PBKDF2 give identical output;
+- both sides derive the same keys from a network name and password;
+- both sides produce byte-for-byte identical packets for the same IV;
+- packets made by Python open in C++ and return the plaintext;
+- a flipped bit, another sender ID or another password is rejected;
+- a packet with a valid tag but invalid padding is rejected.
 
-1. Calls the C++ CLI tool to perform round-trip tests
-2. Performs equivalent round-trip tests in Python
-3. Verifies both implementations work correctly with the same test data
-4. Compares key derivation between implementations
-
-## CI Integration
-
-The GitHub Actions workflow now includes both:
-
-1. **C++ Tests**: `./build/tests/test_all`
-2. **Python-C++ Cross-Validation**: `python3 validate_encryption.py`
-
-This ensures every commit is validated for compatibility between implementations.
-
-## Running Tests Locally
+## Running it
 
 ```bash
-# Build the project
-mkdir build && cd build
-cmake ..
-make
-
-# Run C++ tests
-./build/tests/test_all
-
-# Run cross-validation tests
-python3 validate_encryption.py
+cmake -S . -B build && cmake --build build -j
+python3 validate_encryption.py              # needs: pip install cryptography
+# or, without installing anything:
+uv run --with cryptography validate_encryption.py
 ```
 
-## What Gets Validated
-
-- **Round-trip compatibility**: Data encrypted in C++ can be decrypted correctly
-- **Round-trip compatibility**: Data encrypted in Python can be decrypted correctly  
-- **Key derivation consistency**: Both implementations derive the same keys from network name and password
-- **Binary data handling**: Both implementations handle binary data correctly
-- **Edge cases**: Empty data, large data, special characters
-
-## Benefits
-
-- **Direct validation**: No longer relies on assumed compatibility
-- **Regression detection**: Catches changes that break cross-compatibility
-- **CI enforcement**: Prevents merging incompatible implementations
-- **Real-world testing**: Uses actual C++ implementation, not just reimplementation
+Expected output ends with `1266 checks passed, 0 failed`. CI runs it after
+the C++ tests.

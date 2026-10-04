@@ -18,10 +18,10 @@ TEST_CASE("ILoRaLink interface works with both implementations", "[ILoRaLink]") 
         uint8_t msg[] = {'t', 'e', 's', 't'};
         REQUIRE(link->sendPacket(1, 2, msg, 4) == true);
         
-        // Verify packet was sent to radio
+        // Verify the packet went out: the other radio hears it
         uint8_t raw[256];
-        int len = radioA.receive(raw, 256);
-        REQUIRE(len > 0);
+        int len = radioB.receive(raw, 256);
+        REQUIRE(len == 4 + 9);
     }
     
     SECTION("LoRaBackoffLink through interface") {
@@ -31,10 +31,10 @@ TEST_CASE("ILoRaLink interface works with both implementations", "[ILoRaLink]") 
         uint8_t msg[] = {'t', 'e', 's', 't'};
         REQUIRE(link->sendPacket(2, 1, msg, 4) == true);
         
-        // Verify packet was sent to radio  
+        // Verify the packet went out: the other radio hears it
         uint8_t raw[256];
-        int len = radioB.receive(raw, 256);
-        REQUIRE(len > 0);
+        int len = radioA.receive(raw, 256);
+        REQUIRE(len == 4 + 9);
     }
 }
 
@@ -53,8 +53,17 @@ TEST_CASE("Interface enables polymorphic usage", "[ILoRaLink]") {
     links[1]->setLocalId(2);
     
     // Use both through the same interface
-    for (int i = 0; i < links.size(); i++) {
+    for (size_t i = 0; i < links.size(); i++) {
         uint8_t msg[] = {'h', 'i'};
-        REQUIRE(links[i]->sendPacket(i+1, 0xFFFF, msg, 2) == true); // Broadcast
+        REQUIRE(links[i]->sendPacket(static_cast<uint16_t>(i + 1), 0xFFFF, msg, 2) == true); // Broadcast
+        REQUIRE(links[i]->maxPayloadSize() == MAX_PAYLOAD);
     }
+
+    // Each implementation receives what the other one sent: same frame format.
+    uint16_t src = 0;
+    uint8_t buffer[16];
+    REQUIRE(links[1]->receivePacket(&src, buffer, 16, 0) == 2);
+    REQUIRE(src == 1);
+    REQUIRE(links[0]->receivePacket(&src, buffer, 16, 0) == 2);
+    REQUIRE(src == 2);
 }

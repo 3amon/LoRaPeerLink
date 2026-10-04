@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstring>
 #include "LoraBasicLink.h"
 #include "MockRadio.h"
 #include "TestUtils.h"
@@ -138,12 +139,13 @@ TEST_CASE("Buffer boundary testing", "[PacketFraming]") {
         
         uint16_t src = 0;
         uint8_t smallBuffer[10]; // Too small
+        memset(smallBuffer, 0xEE, sizeof(smallBuffer));
         int len = linkB.receivePacket(&src, smallBuffer, 10);
-        REQUIRE(len == 100); // Returns full payload length, not truncated
+        REQUIRE(len == 0); // Dropped: never reports more bytes than the buffer holds
         
-        // Verify truncated data is correct
+        // Nothing was written to the buffer
         for (int i = 0; i < 10; i++) {
-            REQUIRE(smallBuffer[i] == i);
+            REQUIRE(smallBuffer[i] == 0xEE);
         }
     }
     
@@ -159,8 +161,10 @@ TEST_CASE("Buffer boundary testing", "[PacketFraming]") {
         REQUIRE(linkA.sendPacket(1, 2, payload, 4) == true);
         
         uint16_t src = 0;
-        int len = linkB.receivePacket(&src, nullptr, 0);
-        REQUIRE(len == 4); // Should still return payload length
-        REQUIRE(src == 1); // Should still set source
+        uint8_t none[1];
+        int len = linkB.receivePacket(&src, none, 0);
+        REQUIRE(len == 0); // A 4 byte payload does not fit in 0 bytes
+        REQUIRE(src == 0); // And the source is only set for a delivered packet
+        REQUIRE(linkB.receivePacket(&src, nullptr, 0) == 0); // Null buffer is refused
     }
 }

@@ -1,6 +1,7 @@
 # Build directories
 .pio
 build/
+build-*/
 .build
 
 # Export directory

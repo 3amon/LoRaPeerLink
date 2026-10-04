@@ -1,183 +1,124 @@
 /**
  * @file PeerMessenger.h
- * @brief High-level peer-to-peer messaging interface for LoRa networks
+ * @brief High-level text messaging between named LoRa nodes
  * @author LoRaPeerLink Project
- * @version 1.0
- * 
- * This file defines the PeerMessenger class, which provides a user-friendly
- * interface for sending and receiving messages in a LoRa peer-to-peer network.
- * It sits above the RollCall layer and handles application-level messaging
- * while automatically managing node discovery and name resolution.
+ * @version 2.0
+ *
+ * PeerMessenger is the top of the stack: send a message to a node by name or
+ * ID, or to everyone, and read received messages from a queue. It uses
+ * RollCall for name resolution and shares RollCall's link.
+ *
+ * Messages travel as "MSG|<text>" payloads. PeerMessenger registers itself
+ * as RollCall's data handler, so a message is queued no matter which of the
+ * two objects happens to be listening when it arrives, including while a
+ * name is being resolved.
  */
 
 #ifndef PEER_MESSENGER_H
 #define PEER_MESSENGER_H
 
 #include "RollCall.h"
+
+#include <stddef.h>
+#include <stdint.h>
+#include <deque>
 #include <string>
-#include <memory>
-#include <queue>
+
+/** Largest number of received messages kept until the application reads them. */
+#ifndef PEER_MESSENGER_MAX_QUEUE
+#define PEER_MESSENGER_MAX_QUEUE 16
+#endif
 
 /**
  * @struct UserMessage
- * @brief Structure representing a received user message
+ * @brief A received user message
  */
 struct UserMessage {
     uint16_t srcId;           ///< Source node ID
-    std::string srcName;      ///< Source node name (if known)
-    std::string content;      ///< Message content
+    std::string srcName;      ///< Source node name ("" if unknown)
+    std::string content;      ///< Message text (may contain any bytes)
 };
 
-/**
- * @class PeerMessenger
- * @brief High-level interface for peer-to-peer messaging
- * 
- * PeerMessenger provides an intuitive API for sending and receiving messages
- * in a LoRa peer-to-peer network. It automatically handles:
- * 
- * **Key Features:**
- * - **Send by Name**: Send messages to nodes by their human-readable names
- * - **Send by ID**: Send messages directly to node IDs for efficiency
- * - **Broadcast Messages**: Send messages to all nodes in the network
- * - **Message Reception**: Receive messages addressed to this node or broadcasts
- * - **Automatic Discovery**: Leverages RollCall for seamless node discovery
- * - **Protocol Isolation**: Filters out discovery messages from user messages
- * 
- * **Usage Pattern:**
- * 1. Initialize with RollCall instance and call begin()
- * 2. Regularly call processMessages() to handle network traffic
- * 3. Use sendMessage() variants to send messages
- * 4. Use hasMessage()/receiveMessage() to handle incoming messages
- * 
- * @par Example:
- * @code
- * LoRaBasicLink link(&radio, getTime, sleep);
- * RollCall rollCall(&link, "sensor-1", getTime, sleep);
- * PeerMessenger messenger(&rollCall);
- * 
- * rollCall.begin();
- * messenger.begin();
- * 
- * // In main loop:
- * messenger.processMessages();
- * 
- * // Send messages:
- * messenger.sendMessage("gateway-main", "Temperature: 25.3C");
- * messenger.broadcastMessage("System startup complete");
- * 
- * // Receive messages:
- * if (messenger.hasMessage()) {
- *     UserMessage msg = messenger.receiveMessage();
- *     Serial.println("From " + msg.srcName + ": " + msg.content);
- * }
- * @endcode
- */
 class PeerMessenger {
 public:
     using log_fn = void (*)(const char*);
 
     /**
-     * Constructor
-     * @param rollCall Pointer to initialized RollCall instance for name resolution
-     * @param logMessage Function to log debug messages (optional, for debugging only)
+     * @param rollCall   RollCall instance to use (must outlive this object)
+     * @param logMessage Optional log sink
      */
     PeerMessenger(RollCall* rollCall, log_fn logMessage = nullptr);
+    ~PeerMessenger();
 
-    /**
-     * Initialize the PeerMessenger
-     * Must be called after RollCall::begin()
-     * @return true if initialization successful
-     */
+    PeerMessenger(const PeerMessenger&) = delete;
+    PeerMessenger& operator=(const PeerMessenger&) = delete;
+
+    /** @return false if there is no RollCall instance. RollCall::begin() must be called separately. */
     bool begin();
 
     /**
-     * Process incoming messages and handle network traffic
-     * Should be called regularly in the main loop
-     * @param timeoutMs Maximum time to wait for messages
-     * @return true if any message was processed
+     * @brief Listen for one message and keep RollCall running
+     * @param timeoutMs How long to listen
+     * @return true if a user message was queued or a RollCall message was handled
+     *
+     * This is the only call an application needs in its main loop; there is
+     * no need to call RollCall::processMessages() as well.
      */
     bool processMessages(uint32_t timeoutMs = 100);
 
     /**
-     * Send message to a specific node by ID
-     * @param destId Destination node ID
-     * @param message Message content to send
-     * @param requestAck Whether to request acknowledgment (default: false)
-     * @return true if message was sent successfully
+     * @brief Send a message to a node ID
+     * @return false if the message is too long (see maxMessageLength()), the
+     *         radio failed, or an acknowledgment was requested and none arrived
      */
     bool sendMessage(uint16_t destId, const std::string& message, bool requestAck = false);
 
     /**
-     * Send message to a specific node by name
-     * @param destName Destination node name
-     * @param message Message content to send
-     * @param requestAck Whether to request acknowledgment (default: false)
-     * @param timeoutMs Maximum time to wait for name resolution (default: 1000ms)
-     * @return true if message was sent successfully
+     * @brief Send a message to a node by name
+     * @param timeoutMs How long to wait for the name to be resolved
+     * @return false if the name could not be resolved or sending failed
      */
-    bool sendMessage(const std::string& destName, const std::string& message, 
-                    bool requestAck = false, uint32_t timeoutMs = 1000);
+    bool sendMessage(const std::string& destName, const std::string& message,
+                     bool requestAck = false, uint32_t timeoutMs = 1000);
 
-    /**
-     * Broadcast message to all nodes in the network
-     * @param message Message content to broadcast
-     * @return true if message was sent successfully
-     */
+    /** Send a message to every node in range (never acknowledged). */
     bool broadcastMessage(const std::string& message);
 
-    /**
-     * Check if any user messages are available
-     * @return true if messages are waiting to be received
-     */
     bool hasMessage() const;
 
-    /**
-     * Receive the next available user message
-     * @return UserMessage structure with sender info and content
-     * @note Call hasMessage() first to check availability
-     */
+    /** Remove and return the oldest received message (srcId 0 if the queue is empty). */
     UserMessage receiveMessage();
 
-    /**
-     * Get the number of queued messages waiting to be received
-     * @return Number of messages in receive queue
-     */
     size_t getMessageCount() const;
 
-    /**
-     * Get access to the underlying RollCall instance
-     * @return Reference to RollCall instance
-     */
+    /** Longest message text that fits in one packet on the current link. */
+    size_t maxMessageLength() const;
+
+    /** Messages discarded because the queue was full (oldest are dropped first). */
+    uint32_t droppedMessages() const { return _dropped; }
+
     RollCall& getRollCall() { return *_rollCall; }
 
-    /**
-     * Default console logging function for debugging
-     * @param message Message to log to console
-     */
     static void consoleLog(const char* message);
 
 private:
-    RollCall* _rollCall;              ///< RollCall instance for name resolution
-    log_fn _logMessage;               ///< Optional logging function
-
-    // User message queue structure
-    struct UserMessage_Internal {
+    struct QueuedMessage {
         uint16_t srcId;
         std::string content;
     };
-    std::queue<UserMessage_Internal> _userMessageQueue;
 
-    // Protocol constants for user messages
+    static void onData(void* context, uint16_t srcId, const uint8_t* data, size_t len);
+    void handleData(uint16_t srcId, const uint8_t* data, size_t len);
+    void log(const std::string& text);
+
+    RollCall* _rollCall;
+    log_fn _logMessage;
+    std::deque<QueuedMessage> _queue;
+    uint32_t _received;   ///< Total number of user messages queued so far
+    uint32_t _dropped;
+
     static constexpr const char* MESSAGE_PREFIX = "MSG|";
-
-    /**
-     * Send user message with prefix
-     * @param destId Destination node ID
-     * @param message Message content to send
-     * @param requestAck Whether to request acknowledgment
-     * @return true if message was sent successfully
-     */
-    bool sendUserMessage(uint16_t destId, const std::string& message, bool requestAck);
+    static constexpr size_t MESSAGE_PREFIX_LEN = 4;
 };
 
 #endif // PEER_MESSENGER_H
