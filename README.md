@@ -1,36 +1,46 @@
-# LoRaPeerLink Library
+# LoRaPeerLink
 
-**LoRaPeerLink** is a comprehensive, standalone LoRa peer-to-peer communication library for microcontrollers. It provides link layer implementations with acknowledgments and retries, hardware abstraction, authenticated encryption, and a device discovery protocol for building LoRa networks of nodes that talk directly to each other, without LoRaWAN overhead. (Nodes must be in radio range of each other: the library does not route or relay.)
+A C++ library for direct device-to-device LoRa links, without LoRaWAN or a
+gateway. Nodes find each other by name, send acknowledged messages with
+retries, and can encrypt and authenticate the link.
 
-## 🚀 Key Features
+It is hardware independent: you supply a small radio driver (`IRadio`), and
+the same code runs on a microcontroller or, for testing, on a simulated radio
+channel on a PC.
 
-- **Intuitive Messaging API**: Send messages by device name or ID with automatic discovery
-- **Hardware Agnostic**: Works with any LoRa radio through the IRadio interface
-- **Multi-Layer Architecture**: Use high-level messaging or low-level link protocols as needed
-- **Automatic Device Discovery**: Find and connect to devices by name with RollCall protocol
-- **Collision Handling**: Acknowledgments, retransmission with exponential backoff, and duplicate suppression
-- **Built-in Security**: AES-128 encryption with HMAC-SHA256 authentication, keys derived from a network password (PBKDF2)
-- **Flexible Link Protocols**: Choose from basic, backoff, or encrypted link implementations
-- **Tested Against a Radio Simulator**: 190+ test cases, most of them on a simulated half-duplex LoRa channel with real time-on-air, collisions and packet loss (see [TEST_PLAN.md](TEST_PLAN.md))
+## Status
 
----
+- **185 test cases**, most of them running the real library code on a
+  simulated half-duplex LoRa channel with time on air, collisions and packet
+  loss, plus seed sweeps of 200 random seeds per scenario. See
+  [TEST_PLAN.md](TEST_PLAN.md).
+- **Verified on hardware:** two SX1262 boards ran for 1 hour 50 minutes over a
+  very weak link (about -115 dBm). In the one-hour run 1,204 of 1,209
+  acknowledged pings were delivered, nothing was delivered twice, and the
+  encrypted link, SF10 and SF12 all worked. Results and raw logs:
+  [hardware-tests/2026-10-03-wireless-shell-v3](hardware-tests/2026-10-03-wireless-shell-v3/RESULTS.md).
+- **Not yet tested:** range with antennas, more than two boards on real
+  hardware, runs longer than an hour.
 
-## 🚀 Getting Started
+Version 1.0 passed all of its unit tests and did not work on real radios.
+[TEST_PLAN.md](TEST_PLAN.md) explains why, and [CHANGELOG.md](CHANGELOG.md)
+lists what version 2.0 fixed.
 
-### What You'll Build
-With LoRaPeerLink, you can create devices that talk directly to each other over long distances without needing internet, WiFi, or cell towers. Perfect for:
-- **IoT sensor networks** that report data to a central gateway
-- **Remote monitoring systems** for agriculture, weather, or equipment
-- **Mesh networks** where devices relay messages to extend range
-- **Emergency communication** systems that work when other networks fail
+## Layers
 
-### Basic Concept
-1. **Connect** a LoRa radio module to your microcontroller
-2. **Initialize** the LoRaPeerLink library with your radio
-3. **Send** messages to other devices using simple function calls
-4. **Receive** messages automatically in your main loop
+```
+Your application
+  PeerMessenger        send and receive text by node name or ID
+  RollCall             naming, ID assignment, discovery, collision handling
+  ILoRaLink            LoRaBasicLink      acknowledgments and retries
+                       LoRaBackoffLink    the same, with collision backoff
+                       EncryptedLoRaLink  AES-128-CBC + HMAC-SHA256, wraps another link
+  IRadio               your driver for the radio chip
+```
 
-### 5-Minute Quick Start
+Use the whole stack, or only the link layer.
+
+## Quick start
 
 ```cpp
 #include "PeerMessenger.h"
@@ -88,153 +98,11 @@ void loop() {
 }
 ```
 
-### What You Need
-- **Microcontroller**: ESP32, Arduino, STM32, Raspberry Pi Pico, etc.
-- **LoRa Module**: Any compatible LoRa radio module
-- **Radio Implementation**: You'll need to implement the `IRadio` interface for your specific hardware
-- **Connections**: Typically 4-6 wires depending on your radio module
+`processMessages()` is the only call the stack needs. Call it with a long
+timeout and do not sleep in the loop: the library can only hear packets while
+the radio is receiving.
 
----
-
-## 🏗️ Architecture Overview
-
-LoRaPeerLink uses a clean layered architecture that separates concerns and makes the library flexible and extensible:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Your Application                     │
-├─────────────────────────────────────────────────────────┤
-│  PeerMessenger (High-level messaging interface)        │
-│  • Send/receive by name or ID                          │
-│  • Automatic message queuing                           │
-│  • Protocol separation                                 │
-├─────────────────────────────────────────────────────────┤
-│  RollCall (Device discovery and name resolution)       │
-│  • Automatic node discovery                            │
-│  • Name-to-ID mapping                                  │
-│  • Network topology awareness                          │
-├─────────────────────────────────────────────────────────┤
-│  ILoRaLink (Link layer abstraction)                    │
-│  • LoRaBasicLink: Simple point-to-point                │
-│  • LoRaBackoffLink: Collision avoidance                │
-│  • EncryptedLoRaLink: Secure communication             │
-├─────────────────────────────────────────────────────────┤
-│  IRadio (Hardware abstraction layer)                   │
-│  • Your radio implementation (SemtechRadio, etc.)      │
-│  • Handles actual radio communication                  │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Key Benefits:**
-- **Modularity**: Use only the layers you need
-- **Flexibility**: Swap implementations at any layer
-- **Extensibility**: Add new protocols or radio support easily
-- **Testability**: Mock any layer for testing
-- **Hardware Independence**: Works with any radio through IRadio interface
-
----
-
-## 🛠️ Installation
-
-### For PlatformIO Users
-
-**Option 1: Download Latest Release** (Recommended)
-1. Go to [GitHub Actions](https://github.com/3amon/LoRaPeerLink/actions) 
-2. Download the `LoRaPeerLink-PlatformIO-Library` artifact
-3. Extract to your project's `lib/LoRaPeerLink/` folder
-
-**Option 2: Direct Git Reference**
-```ini
-[env:your_board]
-lib_deps = https://github.com/3amon/LoRaPeerLink.git
-```
-
-### For Arduino IDE Users
-
-1. Download this repository as ZIP
-2. Extract to your Arduino `libraries/` folder
-3. Restart Arduino IDE
-4. Include: `#include <LoraBasicLink.h>`
-
-### For Other Platforms
-
-Copy the `include/` and `src/` folders to your project and add to your build system.
-
----
-
-## 🎯 Advanced Usage
-
-### High-Level Messaging with PeerMessenger
-
-The recommended way to use LoRaPeerLink is through the PeerMessenger interface, which provides automatic discovery and intuitive messaging:
-
-```cpp
-#include "PeerMessenger.h"
-#include "RollCall.h"
-#include "LoraBasicLink.h"
-
-// Setup your radio implementation and link layer
-MyRadio radio;
-LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
-RollCall rollCall(&link, "sensor-01", get_time_ms, sleep_ms);
-PeerMessenger messenger(&rollCall);
-
-void setup() {
-    radio.begin();
-    rollCall.begin();
-    messenger.begin();
-}
-
-void loop() {
-    messenger.processMessages();
-    
-    // Send to specific device by name
-    messenger.sendMessage("gateway", "Temperature: 25.3°C");
-    
-    // Broadcast to all devices
-    messenger.broadcastMessage("System startup complete");
-    
-    // Handle incoming messages
-    if (messenger.hasMessage()) {
-        UserMessage msg = messenger.receiveMessage();
-        Serial.printf("From %s: %s\n", msg.srcName.c_str(), msg.content.c_str());
-    }
-}
-```
-
-### Device Discovery with RollCall
-
-Use RollCall when you need device discovery but want more control over messaging:
-
-```cpp
-#include "RollCall.h"
-#include "LoraBasicLink.h"
-
-LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
-RollCall discovery(&link, "sensor-01", get_time_ms, sleep_ms);
-
-void setup() {
-    radio.begin();
-    discovery.begin();  // Announces this device to the network
-}
-
-void loop() {
-    discovery.processMessages(100);  // Handle discovery protocol
-    
-    // Find a specific device
-    uint16_t gatewayId = discovery.whoIs("gateway");
-    if (gatewayId != 0) {
-        // Send sensor data to gateway using link layer directly
-        String data = "temperature:25.3";
-        link.sendPacket(discovery.getNodeId(), gatewayId, 
-                       (uint8_t*)data.c_str(), data.length(), true);
-    }
-}
-```
-
-### Direct Link Layer Usage
-
-For maximum control, use the link layer directly:
+## Using the link layer directly
 
 ```cpp
 #include "LoraBasicLink.h"      // Basic point-to-point
@@ -271,11 +139,10 @@ void loop() {
 }
 ```
 
----
+## Writing a radio driver
 
-## 🔧 Implementing Radio Support
-
-LoRaPeerLink doesn't directly support specific hardware. Instead, it provides the `IRadio` interface that you implement for your radio hardware:
+The library does not talk to any radio chip itself. Implement `IRadio` for
+your hardware:
 
 ```cpp
 #include "IRadio.h"
@@ -313,84 +180,54 @@ MyCustomRadio myRadio;
 LoRaBasicLink link(&myRadio, get_time_ms, sleep_ms);
 ```
 
-### Radio Implementation Examples
+Read the receive contract in [`include/IRadio.h`](include/IRadio.h) before
+writing a driver: a driver that keeps the radio in continuous receive loses
+the fewest packets. If the driver also implements `timeOnAirMs()`, the link
+sets its acknowledgment timeout from it, which matters at slow settings.
 
-For real hardware, you'll typically implement IRadio using existing libraries:
+[`examples/esp32_platformio/src/SemtechRadio.cpp`](examples/esp32_platformio/src/SemtechRadio.cpp)
+is a working driver for the SX1262 on Heltec ESP32-S3 boards.
 
-- **ESP32 with SX127x**: Use RadioLib or LoRa library with IRadio wrapper
-- **Arduino with RFM95W**: Use RadioHead or similar library with IRadio wrapper  
-- **STM32**: Use HAL or LL drivers with IRadio wrapper
-- **Raspberry Pi Pico**: Use SPI library with IRadio wrapper
+## Installation
 
-**Example Projects:**
-- Check `examples/esp32_platformio/` for a complete ESP32 implementation
-- See existing radio wrappers in the community for common platforms
+**PlatformIO**
 
-**Popular LoRa Modules:**
-- Heltec WiFi LoRa 32 (SX1276)
-- TTGO LoRa32 (SX1276) 
-- Adafruit RFM95W (SX1276)
-- RAK3172 (SX1262)
-- Any module with SX127x or SX126x chips
+```ini
+[env:your_board]
+lib_deps = https://github.com/3amon/LoRaPeerLink.git
+```
 
----
+**Arduino IDE:** download the repository as a ZIP and extract it into your
+`libraries/` folder.
 
-## 📖 Real-World Examples
+**Anything else:** add `include/` and `src/` to your build. The library needs
+C++11 and builds without exceptions or RTTI.
 
-### 🏡 Complete ESP32 Smart Sensor
-- **[ESP32 PlatformIO Example](examples/esp32_platformio/)**: Complete IoT device with OLED display
-- **Features**: PeerMessenger integration, sensor readings, command handling
-- **Use Case**: Temperature sensors, smart switches, garden monitoring
+## Examples
 
-### 🚀 High-Level Messaging  
-- **[PeerMessenger Example](examples/peer_messaging_example.cpp)**: Demonstrates the complete messaging stack
-- **Features**: Auto-discovery, name-based messaging, broadcast support
-- **Use Case**: User-friendly device communication, rapid prototyping
+| Example | What it shows |
+|---|---|
+| [examples/basic_communication.cpp](examples/basic_communication.cpp) | Two nodes on the link layer |
+| [examples/peer_messaging_example.cpp](examples/peer_messaging_example.cpp) | Discovery and messaging by name |
+| [examples/encryption_example.cpp](examples/encryption_example.cpp) | The encrypted link |
+| [examples/esp32_platformio](examples/esp32_platformio/) | A complete ESP32-S3 + SX1262 application with the radio driver |
+| [examples/esp32_bench_test](examples/esp32_bench_test/) | The firmware used for the hardware test: pings, counters, serial commands |
 
-### 🔗 Link Layer Examples
-- **[Basic Communication](examples/basic_communication.cpp)**: Simple point-to-point messaging
-- **[Encrypted Messages](examples/encryption_example.cpp)**: Secure communication demo
-- **Use Case**: Direct device control, security-critical applications
-
-### 💡 Project Ideas
-- **Smart Farm Network**: Soil sensors reporting to irrigation controller by name
-- **Emergency Mesh**: Devices automatically discover and relay emergency messages
-- **Asset Tracking**: Equipment reports location to "tracker-gateway" automatically
-- **Home Automation**: Switches send commands to "lighting-controller" by name
-
-### 📚 Getting Started Resources
-- **[PlatformIO Setup Guide](PLATFORMIO_USAGE.md)**: Complete installation and configuration
-- **[Interface Documentation](INTERFACE_USAGE.md)**: Detailed API reference
-- **[Architecture Guide](SEPARATION_SUMMARY.md)**: Understanding the layer separation
-
----
-
-## ✅ Testing and Project Status
+## Building and testing
 
 ```bash
 cmake -S . -B build && cmake --build build -j
 ./build/tests/test_all                 # unit tests and simulated-radio scenarios
 ./build/tests/test_all "[.stress]"     # seed sweeps: each scenario with 200 random seeds
-python3 validate_encryption.py         # crypto cross-check (pip install cryptography)
+python3 validate_encryption.py         # crypto cross-check (needs the `cryptography` package)
 ```
 
-Most tests run the real library code on a simulated radio channel
-(`tests/sim/`): virtual time, LoRa time-on-air, half-duplex radios, collisions,
-random loss, and both kinds of radio driver (one that only listens inside
-`receive()`, one that listens continuously). See **[TEST_PLAN.md](TEST_PLAN.md)**
-for what is covered and what is not, and **[CHANGELOG.md](CHANGELOG.md)** for
-the bugs version 2.0 fixed.
+The cryptography is self-contained (AES-128, SHA-256, HMAC, PBKDF2) and is
+checked against the standard test vectors and against Python's
+`cryptography` package; see [CROSS_VALIDATION.md](CROSS_VALIDATION.md) and
+[ENCRYPTION_REPORT.md](ENCRYPTION_REPORT.md).
 
-**Hardware status:** the library has run for 1 hour 50 minutes on two Heltec
-Wireless Shell V3 boards (ESP32-S3 + SX1262) with `examples/esp32_bench_test`,
-over a very weak link: 99.6% of 1,209 acknowledged pings delivered in an hour
-at SF7, nothing delivered twice, SF10 and SF12, and the encrypted link.
-Results and logs are in
-[hardware-tests/2026-10-03-wireless-shell-v3](hardware-tests/2026-10-03-wireless-shell-v3/RESULTS.md).
-Range with antennas, more than two boards and longer runs are still to be
-tested.
-
-### Things to know
+## Things to know
 
 - **Call `processMessages()` with long timeouts and do not sleep in between.**
   The library can only hear packets while your radio is receiving. See the
@@ -410,40 +247,6 @@ tested.
 - **All nodes must run the same major version.** The 2.0 frame format and
   encryption are not compatible with 1.0.
 
----
+## License
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass: `make test`
-5. Submit a pull request
-
----
-
-## 📄 License
-
-This library is released under the MIT License. See `LICENSE` file for details.
-
----
-
-## 🆘 Support
-
-- **Issues**: Report bugs and feature requests via GitHub Issues
-- **Questions**: Ask in GitHub Discussions
-- **Documentation**: See `examples/` directory and code comments
-- **Community**: Share your projects and get help from other users
-
----
-
-**Build powerful LoRa networks with intuitive, name-based messaging!** Perfect for IoT sensors, remote monitoring, emergency communication, and any project where devices need reliable, long-range communication without infrastructure.
-
-## ⭐ Why Choose LoRaPeerLink?
-
-✅ **Intuitive**: Send messages by device name, not complex IDs  
-✅ **Flexible**: Use high-level messaging or low-level protocols as needed  
-✅ **Hardware Agnostic**: Implement once, run on any LoRa radio  
-✅ **Tested**: Protocol behaviour verified on a simulated half-duplex LoRa channel; cryptography verified against standard test vectors and an independent implementation  
-✅ **Layered Design**: Clean architecture that separates concerns
-
+MIT. See [LICENSE.md](LICENSE.md).
