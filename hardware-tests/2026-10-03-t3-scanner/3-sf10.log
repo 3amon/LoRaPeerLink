@@ -1,0 +1,1229 @@
+# phase 3-sf10: env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000' duration=900s started 2026-10-03 19:22:31
+# flash /dev/ttyACM0 env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000': ok
+# flash /dev/ttyACM1 env=t3_scanner flags='-D BENCH_SPREADING_FACTOR=10 -D BENCH_PING_INTERVAL_MS=8000': ok
+     0.1 B| not encrypted)
+     0.1 B|  node: bench-341C
+     0.1 B|  radio: 915.000 MHz, SF10, 125 kHz, 14 dBm
+     0.1 B| ======================================ESP-ROM:esp32s3-20210327
+     0.1 B| Build:Mar 27 2021
+     0.1 B| rst:0x15 (USB_UART_CHIP_RESET),boot:0x29 (SPI_FAST_FLASH_BOOT)
+     0.1 B| Saved PC:0x4202d3ba
+     0.1 B| SPIWP:0xee
+     0.1 B| mode:DIO, clock div:1
+     0.1 B| load:0x3fce3808,len:0x4bc
+     0.1 B| load:0x403c9700,len:0xbd8
+     0.1 B| load:0x403cc700,len:0x2a0c
+     0.1 B| entry 0x403c98d0
+     0.1 A| ESP-ROM:esp32s3-20210327
+     0.1 A| Build:Mar 27 2021
+     0.1 A| rst:0x15 (USB_UART_CHIP_RESET),boot:0x9 (SPI_FAST_FLASH_BOOT)
+     0.1 A| Saved PC:0x4202d3ba
+     0.1 A| SPIWP:0xee
+     0.1 A| mode:DIO, clock div:1
+     0.1 A| load:0x3fce3808,len:0x4bc
+     0.1 A| load:0x403c9700,len:0xbd8
+     0.1 A| load:0x403cc700,len:0x2a0c
+     0.1 A| entry 0x403c98d0
+     0.4 B| ========================================
+     0.4 B|  LoRaPeerLink bench test
+     0.4 B|  link: LoRaBackoffLink (not encrypted)
+     0.4 B|  node: bench-341C
+     0.4 B|  radio: 915.000 MHz, SF10, 125 kHz, 14 dBm
+     0.4 B| ========================================
+     0.4 A| ========================================
+     0.4 A|  LoRaPeerLink bench test
+     0.4 A|  link: LoRaBackoffLink (not encrypted)
+     0.4 A|  node: bench-C822
+     0.4 A|  radio: 915.000 MHz, SF10, 125 kHz, 14 dBm
+     0.4 A| ========================================
+     0.5 B|  time on air: 9 byte ACK 281 ms, 25 byte frame 445 ms, 255 byte frame 2329 ms
+     0.5 B|  ACK timeout configured: 300 ms
+     0.5 B|  joining (about 1.5 s)...
+     0.5 A|  time on air: 9 byte ACK 281 ms, 25 byte frame 445 ms, 255 byte frame 2329 ms
+     0.5 A|  ACK timeout configured: 300 ms
+     0.5 A|  joining (about 1.5 s)...
+     2.4 A|  joined as bench-C822, id 39789
+     2.4 A|  largest message: 242 bytes
+     2.4 A| Commands:
+     2.4 A|   s  statistics now
+     2.4 A|   n  list known peers
+     2.4 A|   p  ping all peers now
+     2.4 A|   f  flood: 10 pings in a row to every peer (do it on two boards at once to force collisions)
+     2.4 A|   b  send a broadcast (the button on GPIO0 does the same)
+     2.4 A|   m  send a maximum-length message to every peer and check it arrives intact
+     2.4 A|   q  RF check: sample the channel signal level for 6 s
+     2.4 A|   x  RF check: transmit a burst of 30 broadcast frames
+     2.4 A|   v  toggle verbose library log
+     2.4 A|   r  reset counters
+     2.4 A|   h  this help
+     2.9 B|  joined as bench-341C, id 63502
+     2.9 B|  largest message: 242 bytes
+     2.9 B| Commands:
+     2.9 B|   s  statistics now
+     2.9 B|   n  list known peers
+     2.9 B|   p  ping all peers now
+     2.9 B|   f  flood: 10 pings in a row to every peer (do it on two boards at once to force collisions)
+     2.9 B|   b  send a broadcast (the button on GPIO0 does the same)
+     2.9 B|   m  send a maximum-length message to every peer and check it arrives intact
+     2.9 B|   q  RF check: sample the channel signal level for 6 s
+     2.9 B|   x  RF check: transmit a burst of 30 broadcast frames
+     2.9 B|   v  toggle verbose library log
+     2.9 B|   r  reset counters
+     2.9 B|   h  this help
+     7.4 A| [    7.348] RX   PING 1 <- bench-341C (63502)  rssi -114 dBm
+    10.7 A| [   10.701] TX   PING 1 -> bench-341C (63502)  ACK after 3103 ms  (1 retransmission)
+    10.7 B| [    7.350] TX   PING 1 -> bench-C822 (39789)  ACK after 934 ms
+    10.7 B| [   10.700] RX   PING 1 <- bench-C822 (39789)  rssi -115 dBm
+    16.6 A| [   16.554] RX   PING 2 <- bench-341C (63502)  rssi -114 dBm
+    20.5 B| [   16.556] TX   PING 2 -> bench-C822 (39789)  ACK after 856 ms
+    20.5 B| [   20.490] RX   PING 2 <- bench-C822 (39789)  rssi -115 dBm
+    26.0 A| [   20.491] TX   PING 2 -> bench-341C (63502)  ACK after 937 ms
+    26.0 A| [   25.935] RX   PING 3 <- bench-341C (63502)  rssi -114 dBm
+    30.6 B| [   25.937] TX   PING 3 -> bench-C822 (39789)  ACK after 947 ms
+    30.6 B| [   30.560] RX   PING 3 <- bench-C822 (39789)  rssi -115 dBm
+    30.6 A| [   30.561] TX   PING 3 -> bench-341C (63502)  ACK after 876 ms
+    32.6 A| ==== bench-C822 (id 39789)  up 33 s  SF10 ====
+    32.7 A|   peers known: 1
+    32.7 A|     bench-341C           id 63502
+    32.7 A|   pings sent        3   acked 3   failed 0   (100.0% delivered)
+    32.7 A|   time to ACK       min 876 ms   avg 1638 ms   max 3103 ms
+    32.7 A|   pings received    3   duplicates 0 (must be 0)   missing 0
+    32.7 A|   broadcasts        sent 0   received 0
+    32.7 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    32.7 A|   RSSI              -114 to -114 dBm
+    32.7 A|   link  tx frames 6  retransmits 1  acks sent 3  sends failed 0
+    32.7 A|   link  rx frames 4  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    32.7 A|   radio frames sent 9  received 7  crc errors 0  tx timeouts 0
+    32.7 A|   free heap         365116 bytes
+    33.1 B| ==== bench-341C (id 63502)  up 33 s  SF10 ====
+    33.1 B|   peers known: 1
+    33.1 B|     bench-C822           id 39789
+    33.1 B|   pings sent        3   acked 3   failed 0   (100.0% delivered)
+    33.1 B|   time to ACK       min 856 ms   avg 912 ms   max 947 ms
+    33.1 B|   pings received    3   duplicates 0 (must be 0)   missing 0
+    33.1 B|   broadcasts        sent 0   received 0
+    33.1 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    33.1 B|   RSSI              -115 to -115 dBm
+    33.1 B|   link  tx frames 5  retransmits 0  acks sent 3  sends failed 0
+    33.1 B|   link  rx frames 4  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    33.1 B|   radio frames sent 8  received 7  crc errors 0  tx timeouts 0
+    33.1 B|   free heap         365260 bytes
+    40.3 B| [   35.904] TX   PING 4 -> bench-C822 (39789)  ACK after 841 ms
+    40.3 B| [   40.182] RX   PING 4 <- bench-C822 (39789)  rssi -115 dBm
+    40.3 A| [   35.902] RX   PING 4 <- bench-341C (63502)  rssi -114 dBm
+    40.3 A| [   40.183] TX   PING 4 -> bench-341C (63502)  ACK after 860 ms
+    45.1 A| [   45.032] RX   PING 5 <- bench-341C (63502)  rssi -114 dBm
+    49.5 B| [   45.034] TX   PING 5 -> bench-C822 (39789)  ACK after 852 ms
+    49.5 B| [   49.394] RX   PING 5 <- bench-C822 (39789)  rssi -115 dBm
+    55.1 A| [   49.395] TX   PING 5 -> bench-341C (63502)  ACK after 863 ms
+    55.1 A| [   55.001] RX   PING 6 <- bench-341C (63502)  rssi -114 dBm
+    59.5 B| [   55.003] TX   PING 6 -> bench-C822 (39789)  ACK after 859 ms
+    63.3 B| [   59.474] RX   PING 6 <- bench-C822 (39789)  rssi -115 dBm
+    63.3 B| ==== bench-341C (id 63502)  up 63 s  SF10 ====
+    63.3 B|   peers known: 1
+    63.3 B|     bench-C822           id 39789
+    63.3 B|   pings sent        6   acked 6   failed 0   (100.0% delivered)
+    63.3 B|   time to ACK       min 841 ms   avg 881 ms   max 947 ms
+    63.3 B|   pings received    6   duplicates 0 (must be 0)   missing 0
+    63.3 B|   broadcasts        sent 0   received 0
+    63.3 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    63.3 B|   RSSI              -115 to -115 dBm
+    63.3 B|   link  tx frames 9  retransmits 0  acks sent 6  sends failed 0
+    63.3 B|   link  rx frames 8  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    63.3 B|   radio frames sent 15  received 14  crc errors 0  tx timeouts 0
+    63.3 B|   free heap         365260 bytes
+    63.4 A| [   59.475] TX   PING 6 -> bench-341C (63502)  ACK after 974 ms
+    63.4 A| ==== bench-C822 (id 39789)  up 63 s  SF10 ====
+    63.4 A|   peers known: 1
+    63.4 A|     bench-341C           id 63502
+    63.4 A|   pings sent        6   acked 6   failed 0   (100.0% delivered)
+    63.4 A|   time to ACK       min 860 ms   avg 1268 ms   max 3103 ms
+    63.4 A|   pings received    6   duplicates 0 (must be 0)   missing 0
+    63.4 A|   broadcasts        sent 0   received 0
+    63.4 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    63.4 A|   RSSI              -114 to -114 dBm
+    63.4 A|   link  tx frames 11  retransmits 1  acks sent 6  sends failed 0
+    63.4 A|   link  rx frames 8  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    63.4 A|   radio frames sent 17  received 14  crc errors 0  tx timeouts 0
+    63.4 A|   free heap         365116 bytes
+    64.4 B| [   64.374] TX   PING 7 -> bench-C822 (39789)  ACK after 803 ms
+    64.4 A| [   64.372] RX   PING 7 <- bench-341C (63502)  rssi -114 dBm
+    68.4 B| [   68.363] RX   PING 7 <- bench-C822 (39789)  rssi -115 dBm
+    73.6 A| [   68.364] TX   PING 7 -> bench-341C (63502)  ACK after 812 ms
+    73.6 A| [   73.496] RX   PING 8 <- bench-341C (63502)  rssi -115 dBm
+    78.0 B| [   73.498] TX   PING 8 -> bench-C822 (39789)  ACK after 885 ms
+    82.7 B| [   77.951] RX   PING 8 <- bench-C822 (39789)  rssi -115 dBm
+    82.7 B| [   82.692] TX   PING 9 -> bench-C822 (39789)  ACK after 741 ms
+    82.7 A| [   77.952] TX   PING 8 -> bench-341C (63502)  ACK after 956 ms
+    82.7 A| [   82.690] RX   PING 9 <- bench-341C (63502)  rssi -114 dBm
+    87.1 B| [   87.016] RX   PING 9 <- bench-C822 (39789)  rssi -115 dBm
+    92.0 B| [   91.931] TX   PING 10 -> bench-C822 (39789)  ACK after 915 ms
+    92.0 A| [   87.017] TX   PING 9 -> bench-341C (63502)  ACK after 827 ms
+    92.0 A| [   91.929] RX   PING 10 <- bench-341C (63502)  rssi -114 dBm
+    93.5 B| ==== bench-341C (id 63502)  up 93 s  SF10 ====
+    93.5 B|   peers known: 1
+    93.5 B|     bench-C822           id 39789
+    93.5 B|   pings sent        10   acked 10   failed 0   (100.0% delivered)
+    93.5 B|   time to ACK       min 741 ms   avg 863 ms   max 947 ms
+    93.5 B|   pings received    9   duplicates 0 (must be 0)   missing 0
+    93.5 B|   broadcasts        sent 0   received 0
+    93.5 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    93.5 B|   RSSI              -115 to -115 dBm
+    93.5 B|   link  tx frames 14  retransmits 0  acks sent 9  sends failed 0
+    93.5 B|   link  rx frames 12  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    93.5 B|   radio frames sent 23  received 22  crc errors 0  tx timeouts 0
+    93.5 B|   free heap         365260 bytes
+    93.5 A| ==== bench-C822 (id 39789)  up 93 s  SF10 ====
+    93.5 A|   peers known: 1
+    93.5 A|     bench-341C           id 63502
+    93.5 A|   pings sent        9   acked 9   failed 0   (100.0% delivered)
+    93.5 A|   time to ACK       min 812 ms   avg 1134 ms   max 3103 ms
+    93.5 A|   pings received    10   duplicates 0 (must be 0)   missing 0
+    93.5 A|   broadcasts        sent 0   received 0
+    93.5 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    93.5 A|   RSSI              -115 to -114 dBm
+    93.5 A|   link  tx frames 14  retransmits 1  acks sent 10  sends failed 0
+    93.5 A|   link  rx frames 13  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    93.5 A|   radio frames sent 24  received 22  crc errors 0  tx timeouts 0
+    93.5 A|   free heap         365116 bytes
+    96.5 B| [   96.444] RX   PING 10 <- bench-C822 (39789)  rssi -115 dBm
+    96.5 A| [   96.445] TX   PING 10 -> bench-341C (63502)  ACK after 908 ms
+   101.5 B| [  101.454] TX   PING 11 -> bench-C822 (39789)  ACK after 990 ms
+   101.5 A| [  101.452] RX   PING 11 <- bench-341C (63502)  rssi -114 dBm
+   105.6 B| [  105.614] RX   PING 11 <- bench-C822 (39789)  rssi -115 dBm
+   105.6 A| [  105.616] TX   PING 11 -> bench-341C (63502)  ACK after 914 ms
+   110.9 B| [  110.867] TX   PING 12 -> bench-C822 (39789)  ACK after 1003 ms
+   115.4 A| [  110.865] RX   PING 12 <- bench-341C (63502)  rssi -114 dBm
+   115.4 A| [  115.349] TX   PING 12 -> bench-341C (63502)  ACK after 984 ms
+   115.4 B| [  115.348] RX   PING 12 <- bench-C822 (39789)  rssi -115 dBm
+   120.1 B| [  120.025] TX   PING 13 -> bench-C822 (39789)  ACK after 927 ms
+   120.1 A| [  120.023] RX   PING 13 <- bench-341C (63502)  rssi -114 dBm
+   121.3 B| [  121.200] RX   BCAST 1 from bench-C822  rssi -115 dBm
+   123.5 A| [  121.197] TX   BCAST 1 from bench-C822  sent
+   123.5 A| ==== bench-C822 (id 39789)  up 123 s  SF10 ====
+   123.5 A|   peers known: 1
+   123.5 A|     bench-341C           id 63502
+   123.5 A|   pings sent        12   acked 12   failed 0   (100.0% delivered)
+   123.5 A|   time to ACK       min 812 ms   avg 1084 ms   max 3103 ms
+   123.5 A|   pings received    13   duplicates 0 (must be 0)   missing 0
+   123.5 A|   broadcasts        sent 1   received 0
+   123.5 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   123.5 A|   RSSI              -115 to -114 dBm
+   123.5 A|   link  tx frames 19  retransmits 1  acks sent 13  sends failed 0
+   123.5 A|   link  rx frames 17  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   123.5 A|   radio frames sent 32  received 29  crc errors 0  tx timeouts 0
+   123.5 A|   free heap         365116 bytes
+   123.5 B| ==== bench-341C (id 63502)  up 123 s  SF10 ====
+   123.5 B|   peers known: 1
+   123.5 B|     bench-C822           id 39789
+   123.5 B|   pings sent        13   acked 13   failed 0   (100.0% delivered)
+   123.5 B|   time to ACK       min 741 ms   avg 888 ms   max 1003 ms
+   123.5 B|   pings received    12   duplicates 0 (must be 0)   missing 0
+   123.5 B|   broadcasts        sent 0   received 1
+   123.5 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   123.5 B|   RSSI              -115 to -115 dBm
+   123.5 B|   link  tx frames 18  retransmits 0  acks sent 12  sends failed 0
+   123.5 B|   link  rx frames 17  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   123.5 B|   radio frames sent 30  received 30  crc errors 0  tx timeouts 0
+   123.5 B|   free heap         365260 bytes
+   124.9 B| [  124.799] RX   PING 13 <- bench-C822 (39789)  rssi -115 dBm
+   124.9 A| [  124.801] TX   PING 13 -> bench-341C (63502)  ACK after 852 ms
+   130.1 B| [  129.968] TX   PING 14 -> bench-C822 (39789)  ACK after 890 ms
+   130.1 A| [  129.966] RX   PING 14 <- bench-341C (63502)  rssi -115 dBm
+   134.3 A| [  134.211] TX   PING 14 -> bench-341C (63502)  ACK after 995 ms
+   134.3 B| [  134.209] RX   PING 14 <- bench-C822 (39789)  rssi -115 dBm
+   139.1 B| [  139.039] TX   PING 15 -> bench-C822 (39789)  ACK after 830 ms
+   143.4 B| [  143.350] RX   PING 15 <- bench-C822 (39789)  rssi -115 dBm
+   143.4 A| [  139.037] RX   PING 15 <- bench-341C (63502)  rssi -115 dBm
+   143.4 A| [  143.351] TX   PING 15 -> bench-341C (63502)  ACK after 814 ms
+   148.4 B| [  148.293] TX   PING 16 -> bench-C822 (39789)  ACK after 943 ms
+   148.4 A| [  148.291] RX   PING 16 <- bench-341C (63502)  rssi -114 dBm
+   153.2 B| [  153.189] RX   PING 16 <- bench-C822 (39789)  rssi -115 dBm
+   153.2 A| [  153.190] TX   PING 16 -> bench-341C (63502)  ACK after 899 ms
+   153.7 B| ==== bench-341C (id 63502)  up 154 s  SF10 ====
+   153.7 B|   peers known: 1
+   153.7 B|     bench-C822           id 39789
+   153.7 B|   pings sent        16   acked 16   failed 0   (100.0% delivered)
+   153.7 B|   time to ACK       min 741 ms   avg 888 ms   max 1003 ms
+   153.7 B|   pings received    16   duplicates 0 (must be 0)   missing 0
+   153.7 B|   broadcasts        sent 0   received 1
+   153.7 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   153.7 B|   RSSI              -115 to -115 dBm
+   153.7 B|   link  tx frames 22  retransmits 0  acks sent 16  sends failed 0
+   153.7 B|   link  rx frames 22  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   153.7 B|   radio frames sent 38  received 38  crc errors 0  tx timeouts 0
+   153.7 B|   free heap         365260 bytes
+   153.7 A| ==== bench-C822 (id 39789)  up 154 s  SF10 ====
+   153.7 A|   peers known: 1
+   153.7 A|     bench-341C           id 63502
+   153.7 A|   pings sent        16   acked 16   failed 0   (100.0% delivered)
+   153.7 A|   time to ACK       min 812 ms   avg 1035 ms   max 3103 ms
+   153.7 A|   pings received    16   duplicates 0 (must be 0)   missing 0
+   153.7 A|   broadcasts        sent 1   received 0
+   153.7 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   153.7 A|   RSSI              -115 to -114 dBm
+   153.7 A|   link  tx frames 24  retransmits 1  acks sent 16  sends failed 0
+   153.7 A|   link  rx frames 21  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   153.7 A|   radio frames sent 40  received 37  crc errors 0  tx timeouts 0
+   153.7 A|   free heap         365116 bytes
+   159.6 B| [  159.533] TX   PING 17 -> bench-C822 (39789)  ACK after 3091 ms  (1 retransmission)
+   159.6 A| [  159.531] RX   PING 17 <- bench-341C (63502)  rssi -114 dBm
+   162.5 A| [  162.443] TX   PING 17 -> bench-341C (63502)  ACK after 1040 ms
+   162.5 B| [  162.442] RX   PING 17 <- bench-C822 (39789)  rssi -115 dBm
+   169.3 B| [  169.247] TX   PING 18 -> bench-C822 (39789)  ACK after 805 ms
+   169.3 A| [  169.245] RX   PING 18 <- bench-341C (63502)  rssi -114 dBm
+   179.3 A| [  171.892] TX   PING 18 -> bench-341C (63502)  ACK after 897 ms
+   179.3 A| [  179.226] RX   PING 19 <- bench-341C (63502)  rssi -115 dBm
+   179.3 B| [  171.891] RX   PING 18 <- bench-C822 (39789)  rssi -115 dBm
+   179.3 B| [  179.228] TX   PING 19 -> bench-C822 (39789)  ACK after 837 ms
+   181.7 B| [  181.713] RX   PING 19 <- bench-C822 (39789)  rssi -115 dBm
+   181.7 A| [  181.714] TX   PING 19 -> bench-341C (63502)  ACK after 988 ms
+   183.7 B| ==== bench-341C (id 63502)  up 184 s  SF10 ====
+   183.7 B|   peers known: 1
+   183.7 B|     bench-C822           id 39789
+   183.7 B|   pings sent        19   acked 19   failed 0   (100.0% delivered)
+   183.7 B|   time to ACK       min 741 ms   avg 997 ms   max 3091 ms
+   183.7 B|   pings received    19   duplicates 0 (must be 0)   missing 0
+   183.7 B|   broadcasts        sent 0   received 1
+   183.7 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   183.7 B|   RSSI              -115 to -115 dBm
+   183.7 B|   link  tx frames 27  retransmits 1  acks sent 19  sends failed 0
+   183.7 B|   link  rx frames 25  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   183.7 B|   radio frames sent 46  received 44  crc errors 0  tx timeouts 0
+   183.7 B|   free heap         365260 bytes
+   183.7 A| ==== bench-C822 (id 39789)  up 184 s  SF10 ====
+   183.7 A|   peers known: 1
+   183.7 A|     bench-341C           id 63502
+   183.7 A|   pings sent        19   acked 19   failed 0   (100.0% delivered)
+   183.7 A|   time to ACK       min 812 ms   avg 1026 ms   max 3103 ms
+   183.7 A|   pings received    19   duplicates 0 (must be 0)   missing 0
+   183.7 A|   broadcasts        sent 1   received 0
+   183.7 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   183.7 A|   RSSI              -115 to -114 dBm
+   183.7 A|   link  tx frames 28  retransmits 1  acks sent 19  sends failed 0
+   183.7 A|   link  rx frames 25  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   183.7 A|   radio frames sent 47  received 44  crc errors 0  tx timeouts 0
+   183.7 A|   free heap         365116 bytes
+   188.9 A| [  188.906] RX   PING 20 <- bench-341C (63502)  rssi -114 dBm
+   188.9 B| [  188.908] TX   PING 20 -> bench-C822 (39789)  ACK after 942 ms
+   194.2 B| [  194.070] RX   PING 20 <- bench-C822 (39789)  rssi -115 dBm
+   194.2 A| [  194.071] TX   PING 20 -> bench-341C (63502)  ACK after 3392 ms  (1 retransmission)
+   198.2 B| [  198.108] TX   PING 21 -> bench-C822 (39789)  ACK after 788 ms
+   200.9 A| [  198.106] RX   PING 21 <- bench-341C (63502)  rssi -115 dBm
+   200.9 A| [  200.767] RX   BCAST 1 from bench-341C  rssi -114 dBm
+   200.9 B| [  200.765] TX   BCAST 1 from bench-341C  sent
+   203.9 B| [  203.804] RX   PING 21 <- bench-C822 (39789)  rssi -115 dBm
+   203.9 A| [  203.805] TX   PING 21 -> bench-341C (63502)  ACK after 1038 ms
+   207.5 A| [  207.431] RX   PING 22 <- bench-341C (63502)  rssi -114 dBm
+   213.4 A| [  213.367] TX   PING 22 -> bench-341C (63502)  ACK after 936 ms
+   213.4 B| [  207.433] TX   PING 22 -> bench-C822 (39789)  ACK after 879 ms
+   213.4 B| [  213.365] RX   PING 22 <- bench-C822 (39789)  rssi -115 dBm
+   213.9 B| ==== bench-341C (id 63502)  up 214 s  SF10 ====
+   213.9 B|   peers known: 1
+   213.9 B|     bench-C822           id 39789
+   213.9 B|   pings sent        22   acked 22   failed 0   (100.0% delivered)
+   213.9 B|   time to ACK       min 741 ms   avg 979 ms   max 3091 ms
+   213.9 B|   pings received    22   duplicates 0 (must be 0)   missing 0
+   213.9 B|   broadcasts        sent 1   received 1
+   213.9 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   213.9 B|   RSSI              -115 to -115 dBm
+   213.9 B|   link  tx frames 32  retransmits 1  acks sent 22  sends failed 0
+   213.9 B|   link  rx frames 29  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   213.9 B|   radio frames sent 54  received 51  crc errors 0  tx timeouts 0
+   213.9 B|   free heap         365260 bytes
+   213.9 A| ==== bench-C822 (id 39789)  up 214 s  SF10 ====
+   213.9 A|   peers known: 1
+   213.9 A|     bench-341C           id 63502
+   213.9 A|   pings sent        22   acked 22   failed 0   (100.0% delivered)
+   213.9 A|   time to ACK       min 812 ms   avg 1130 ms   max 3392 ms
+   213.9 A|   pings received    22   duplicates 0 (must be 0)   missing 0
+   213.9 A|   broadcasts        sent 1   received 1
+   213.9 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   213.9 A|   RSSI              -115 to -114 dBm
+   213.9 A|   link  tx frames 33  retransmits 2  acks sent 22  sends failed 0
+   213.9 A|   link  rx frames 29  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   213.9 A|   radio frames sent 55  received 51  crc errors 0  tx timeouts 0
+   213.9 A|   free heap         365116 bytes
+   217.3 A| [  217.189] RX   PING 23 <- bench-341C (63502)  rssi -114 dBm
+   217.3 B| [  217.191] TX   PING 23 -> bench-C822 (39789)  ACK after 823 ms
+   223.4 B| [  223.369] RX   PING 23 <- bench-C822 (39789)  rssi -115 dBm
+   226.8 B| [  226.735] TX   PING 24 -> bench-C822 (39789)  ACK after 866 ms
+   226.8 A| [  223.370] TX   PING 23 -> bench-341C (63502)  ACK after 969 ms
+   226.8 A| [  226.733] RX   PING 24 <- bench-341C (63502)  rssi -114 dBm
+   233.2 A| [  233.121] TX   PING 24 -> bench-341C (63502)  ACK after 888 ms
+   233.2 B| [  233.119] RX   PING 24 <- bench-C822 (39789)  rssi -115 dBm
+   235.8 A| [  235.741] RX   PING 25 <- bench-341C (63502)  rssi -114 dBm
+   235.8 B| [  235.743] TX   PING 25 -> bench-C822 (39789)  ACK after 874 ms
+   242.5 A| [  242.436] TX   PING 25 -> bench-341C (63502)  ACK after 945 ms
+   242.5 B| [  242.434] RX   PING 25 <- bench-C822 (39789)  rssi -115 dBm
+   244.0 A| ==== bench-C822 (id 39789)  up 244 s  SF10 ====
+   244.0 A|   peers known: 1
+   244.0 A|     bench-341C           id 63502
+   244.0 A|   pings sent        25   acked 25   failed 0   (100.0% delivered)
+   244.0 A|   time to ACK       min 812 ms   avg 1106 ms   max 3392 ms
+   244.0 A|   pings received    25   duplicates 0 (must be 0)   missing 0
+   244.0 A|   broadcasts        sent 1   received 1
+   244.0 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   244.0 A|   RSSI              -115 to -114 dBm
+   244.0 A|   link  tx frames 37  retransmits 2  acks sent 25  sends failed 0
+   244.0 A|   link  rx frames 32  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   244.0 A|   radio frames sent 62  received 57  crc errors 0  tx timeouts 0
+   244.0 A|   free heap         365116 bytes
+   244.0 B| ==== bench-341C (id 63502)  up 244 s  SF10 ====
+   244.0 B|   peers known: 1
+   244.0 B|     bench-C822           id 39789
+   244.0 B|   pings sent        25   acked 25   failed 0   (100.0% delivered)
+   244.0 B|   time to ACK       min 741 ms   avg 964 ms   max 3091 ms
+   244.0 B|   pings received    25   duplicates 0 (must be 0)   missing 0
+   244.0 B|   broadcasts        sent 1   received 1
+   244.0 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   244.0 B|   RSSI              -115 to -115 dBm
+   244.0 B|   link  tx frames 36  retransmits 1  acks sent 25  sends failed 0
+   244.0 B|   link  rx frames 33  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   244.0 B|   radio frames sent 61  received 58  crc errors 0  tx timeouts 0
+   244.0 B|   free heap         365260 bytes
+   245.6 B| [  245.518] TX   PING 26 -> bench-C822 (39789)  ACK after 833 ms
+   251.7 B| [  251.675] RX   PING 26 <- bench-C822 (39789)  rssi -115 dBm
+   251.7 A| [  245.516] RX   PING 26 <- bench-341C (63502)  rssi -114 dBm
+   251.7 A| [  251.676] TX   PING 26 -> bench-341C (63502)  ACK after 858 ms
+   255.1 B| [  255.061] TX   PING 27 -> bench-C822 (39789)  ACK after 821 ms
+   261.3 A| [  255.059] RX   PING 27 <- bench-341C (63502)  rssi -114 dBm
+   261.3 A| [  261.240] TX   PING 27 -> bench-341C (63502)  ACK after 931 ms
+   261.3 B| [  261.238] RX   PING 27 <- bench-C822 (39789)  rssi -115 dBm
+   271.0 A| [  264.209] RX   PING 28 <- bench-341C (63502)  rssi -114 dBm
+   271.0 A| [  270.989] TX   PING 28 -> bench-341C (63502)  ACK after 780 ms
+   271.0 B| [  264.211] TX   PING 28 -> bench-C822 (39789)  ACK after 973 ms
+   271.0 B| [  270.987] RX   PING 28 <- bench-C822 (39789)  rssi -115 dBm
+   274.2 A| [  274.051] RX   PING 29 <- bench-341C (63502)  rssi -115 dBm
+   274.2 B| [  274.053] TX   PING 29 -> bench-C822 (39789)  ACK after 816 ms
+   274.2 A| ==== bench-C822 (id 39789)  up 274 s  SF10 ====
+   274.2 A|   peers known: 1
+   274.2 A|     bench-341C           id 63502
+   274.2 A|   pings sent        28   acked 28   failed 0   (100.0% delivered)
+   274.2 A|   time to ACK       min 780 ms   avg 1079 ms   max 3392 ms
+   274.2 A|   pings received    29   duplicates 0 (must be 0)   missing 0
+   274.2 A|   broadcasts        sent 1   received 1
+   274.2 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   274.2 A|   RSSI              -115 to -114 dBm
+   274.2 A|   link  tx frames 41  retransmits 2  acks sent 29  sends failed 0
+   274.2 A|   link  rx frames 37  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   274.2 A|   radio frames sent 70  received 65  crc errors 0  tx timeouts 0
+   274.2 A|   free heap         365116 bytes
+   274.4 B| ==== bench-341C (id 63502)  up 274 s  SF10 ====
+   274.4 B|   peers known: 1
+   274.4 B|     bench-C822           id 39789
+   274.4 B|   pings sent        29   acked 29   failed 0   (100.0% delivered)
+   274.4 B|   time to ACK       min 741 ms   avg 950 ms   max 3091 ms
+   274.4 B|   pings received    28   duplicates 0 (must be 0)   missing 0
+   274.4 B|   broadcasts        sent 1   received 1
+   274.4 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   274.4 B|   RSSI              -115 to -115 dBm
+   274.4 B|   link  tx frames 41  retransmits 1  acks sent 28  sends failed 0
+   274.4 B|   link  rx frames 37  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   274.4 B|   radio frames sent 69  received 66  crc errors 0  tx timeouts 0
+   274.4 B|   free heap         365260 bytes
+   280.4 B| [  280.322] RX   PING 29 <- bench-C822 (39789)  rssi -115 dBm
+   280.4 A| [  280.324] TX   PING 29 -> bench-341C (63502)  ACK after 1022 ms
+   283.6 B| [  283.471] TX   PING 30 -> bench-C822 (39789)  ACK after 804 ms
+   283.6 A| [  283.469] RX   PING 30 <- bench-341C (63502)  rssi -114 dBm
+   290.3 A| [  290.175] TX   PING 30 -> bench-341C (63502)  ACK after 930 ms
+   290.3 B| [  290.173] RX   PING 30 <- bench-C822 (39789)  rssi -115 dBm
+   293.4 B| [  293.306] TX   PING 31 -> bench-C822 (39789)  ACK after 883 ms
+   293.4 A| [  293.304] RX   PING 31 <- bench-341C (63502)  rssi -114 dBm
+   299.5 B| [  299.446] RX   PING 31 <- bench-C822 (39789)  rssi -115 dBm
+   304.6 B| [  304.512] TX   PING 32 -> bench-C822 (39789)  ACK after 2316 ms  (1 retransmission)
+   304.8 B| ==== bench-341C (id 63502)  up 305 s  SF10 ====
+   304.8 B|   peers known: 1
+   304.8 B|     bench-C822           id 39789
+   304.8 B|   pings sent        32   acked 32   failed 0   (100.0% delivered)
+   304.8 B|   time to ACK       min 741 ms   avg 986 ms   max 3091 ms
+   304.8 B|   pings received    31   duplicates 0 (must be 0)   missing 0
+   304.8 B|   broadcasts        sent 1   received 1
+   304.8 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   304.8 B|   RSSI              -115 to -115 dBm
+   304.8 B|   link  tx frames 46  retransmits 2  acks sent 31  sends failed 0
+   304.8 B|   link  rx frames 41  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   304.8 B|   radio frames sent 77  received 73  crc errors 0  tx timeouts 0
+   304.8 B|   free heap         365260 bytes
+   313.6 B| [  313.559] TX   PING 33 -> bench-C822 (39789)  ACK after 842 ms
+   316.6 A| [  299.448] TX   PING 31 -> bench-341C (63502)  ACK after 894 ms
+   316.6 A| [  316.563] TX   BIG 1 (242 bytes) -> bench-341C (63502)  NO ACK after 16364 ms
+   317.5 A| [  317.480] TX   PING 32 -> bench-341C (63502)  ACK after 916 ms
+   317.5 A| ==== bench-C822 (id 39789)  up 317 s  SF10 ====
+   317.5 A|   peers known: 1
+   317.5 A|     bench-341C           id 63502
+   317.5 A|   pings sent        32   acked 32   failed 0   (100.0% delivered)
+   317.5 A|   time to ACK       min 780 ms   avg 1062 ms   max 3392 ms
+   317.5 A|   pings received    31   duplicates 0 (must be 0)   missing 0
+   317.5 A|   broadcasts        sent 1   received 1
+   317.5 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   317.5 A|   RSSI              -115 to -114 dBm
+   317.5 A|   link  tx frames 49  retransmits 4  acks sent 33  sends failed 1
+   317.5 A|   link  rx frames 43  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   317.5 A|   radio frames sent 82  received 75  crc errors 0  tx timeouts 0
+   317.5 A|   free heap         365116 bytes
+   317.5 B| [  317.479] RX   PING 32 <- bench-C822 (39789)  rssi -115 dBm
+   318.4 A| [  318.369] RX   PING 32 <- bench-341C (63502)  rssi -114 dBm
+   318.4 A| [  318.369] RX   PING 33 <- bench-341C (63502)  rssi -114 dBm
+   323.1 A| [  323.065] RX   PING 34 <- bench-341C (63502)  rssi -114 dBm
+   323.1 B| [  323.067] TX   PING 34 -> bench-C822 (39789)  ACK after 946 ms
+   327.2 A| [  327.122] TX   PING 33 -> bench-341C (63502)  ACK after 807 ms
+   327.2 B| [  327.120] RX   PING 33 <- bench-C822 (39789)  rssi -115 dBm
+   332.2 A| [  332.157] RX   PING 35 <- bench-341C (63502)  rssi -114 dBm
+   332.2 B| [  332.159] TX   PING 35 -> bench-C822 (39789)  ACK after 789 ms
+   334.9 B| ==== bench-341C (id 63502)  up 335 s  SF10 ====
+   334.9 B|   peers known: 1
+   334.9 B|     bench-C822           id 39789
+   334.9 B|   pings sent        35   acked 35   failed 0   (100.0% delivered)
+   334.9 B|   time to ACK       min 741 ms   avg 975 ms   max 3091 ms
+   334.9 B|   pings received    33   duplicates 0 (must be 0)   missing 0
+   334.9 B|   broadcasts        sent 1   received 1
+   334.9 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   334.9 B|   RSSI              -115 to -115 dBm
+   334.9 B|   link  tx frames 50  retransmits 2  acks sent 33  sends failed 0
+   334.9 B|   link  rx frames 44  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   334.9 B|   radio frames sent 83  received 79  crc errors 2  tx timeouts 0
+   334.9 B|   free heap         365260 bytes
+   336.6 A| [  336.610] TX   PING 34 -> bench-341C (63502)  ACK after 953 ms
+   336.6 B| [  336.608] RX   PING 34 <- bench-C822 (39789)  rssi -115 dBm
+   341.5 B| [  341.499] TX   PING 36 -> bench-C822 (39789)  ACK after 891 ms
+   346.1 A| [  341.497] RX   PING 36 <- bench-341C (63502)  rssi -115 dBm
+   346.1 A| [  345.986] TX   PING 35 -> bench-341C (63502)  ACK after 1021 ms
+   346.1 B| [  345.985] RX   PING 35 <- bench-C822 (39789)  rssi -115 dBm
+   347.8 A| ==== bench-C822 (id 39789)  up 348 s  SF10 ====
+   347.8 A|   peers known: 1
+   347.8 A|     bench-341C           id 63502
+   347.8 A|   pings sent        35   acked 35   failed 0   (100.0% delivered)
+   347.8 A|   time to ACK       min 780 ms   avg 1050 ms   max 3392 ms
+   347.8 A|   pings received    36   duplicates 0 (must be 0)   missing 0
+   347.8 A|   broadcasts        sent 1   received 1
+   347.8 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   347.8 A|   RSSI              -115 to -114 dBm
+   347.8 A|   link  tx frames 54  retransmits 4  acks sent 36  sends failed 1
+   347.8 A|   link  rx frames 47  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   347.8 A|   radio frames sent 90  received 82  crc errors 0  tx timeouts 0
+   347.8 A|   free heap         365116 bytes
+   351.3 A| [  351.152] RX   PING 37 <- bench-341C (63502)  rssi -115 dBm
+   351.3 B| [  351.154] TX   PING 37 -> bench-C822 (39789)  ACK after 952 ms
+   355.7 A| [  355.625] TX   PING 36 -> bench-341C (63502)  ACK after 973 ms
+   360.9 B| [  355.623] RX   PING 36 <- bench-C822 (39789)  rssi -115 dBm
+   360.9 B| [  360.823] TX   PING 38 -> bench-C822 (39789)  ACK after 950 ms
+   360.9 A| [  360.821] RX   PING 38 <- bench-341C (63502)  rssi -114 dBm
+   364.8 A| [  364.739] TX   PING 37 -> bench-341C (63502)  ACK after 918 ms
+   365.1 B| [  364.737] RX   PING 37 <- bench-C822 (39789)  rssi -115 dBm
+   365.1 B| ==== bench-341C (id 63502)  up 365 s  SF10 ====
+   365.1 B|   peers known: 1
+   365.1 B|     bench-C822           id 39789
+   365.1 B|   pings sent        38   acked 38   failed 0   (100.0% delivered)
+   365.1 B|   time to ACK       min 741 ms   avg 972 ms   max 3091 ms
+   365.1 B|   pings received    37   duplicates 0 (must be 0)   missing 0
+   365.1 B|   broadcasts        sent 1   received 1
+   365.1 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   365.1 B|   RSSI              -115 to -115 dBm
+   365.1 B|   link  tx frames 54  retransmits 2  acks sent 37  sends failed 0
+   365.1 B|   link  rx frames 49  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   365.1 B|   radio frames sent 91  received 87  crc errors 2  tx timeouts 0
+   365.1 B|   free heap         365260 bytes
+   370.6 A| [  370.555] RX   PING 39 <- bench-341C (63502)  rssi -114 dBm
+   370.6 B| [  370.557] TX   PING 39 -> bench-C822 (39789)  ACK after 817 ms
+   374.3 B| [  374.235] RX   PING 38 <- bench-C822 (39789)  rssi -115 dBm
+   374.3 A| [  374.237] TX   PING 38 -> bench-341C (63502)  ACK after 932 ms
+   378.0 A| ==== bench-C822 (id 39789)  up 378 s  SF10 ====
+   378.0 A|   peers known: 1
+   378.0 A|     bench-341C           id 63502
+   378.0 A|   pings sent        38   acked 38   failed 0   (100.0% delivered)
+   378.0 A|   time to ACK       min 780 ms   avg 1042 ms   max 3392 ms
+   378.0 A|   pings received    39   duplicates 0 (must be 0)   missing 0
+   378.0 A|   broadcasts        sent 1   received 1
+   378.0 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   378.0 A|   RSSI              -115 to -114 dBm
+   378.0 A|   link  tx frames 57  retransmits 4  acks sent 39  sends failed 1
+   378.0 A|   link  rx frames 51  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   378.0 A|   radio frames sent 96  received 89  crc errors 0  tx timeouts 0
+   378.0 A|   free heap         365116 bytes
+   382.7 B| [  382.612] TX   PING 40 -> bench-C822 (39789)  ACK after 3465 ms  (1 retransmission)
+   382.7 A| [  382.610] RX   PING 40 <- bench-341C (63502)  rssi -114 dBm
+   384.1 B| [  384.024] RX   PING 39 <- bench-C822 (39789)  rssi -115 dBm
+   384.1 A| [  384.026] TX   PING 39 -> bench-341C (63502)  ACK after 916 ms
+   392.0 B| [  391.957] TX   PING 41 -> bench-C822 (39789)  ACK after 933 ms
+   392.0 A| [  391.955] RX   PING 41 <- bench-341C (63502)  rssi -114 dBm
+   393.8 A| [  393.787] TX   PING 40 -> bench-341C (63502)  ACK after 832 ms
+   393.8 B| [  393.785] RX   PING 40 <- bench-C822 (39789)  rssi -115 dBm
+   395.1 B| ==== bench-341C (id 63502)  up 395 s  SF10 ====
+   395.1 B|   peers known: 1
+   395.1 B|     bench-C822           id 39789
+   395.1 B|   pings sent        41   acked 41   failed 0   (100.0% delivered)
+   395.1 B|   time to ACK       min 741 ms   avg 1028 ms   max 3465 ms
+   395.1 B|   pings received    40   duplicates 0 (must be 0)   missing 0
+   395.1 B|   broadcasts        sent 1   received 1
+   395.1 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   395.1 B|   RSSI              -115 to -115 dBm
+   395.1 B|   link  tx frames 59  retransmits 3  acks sent 40  sends failed 0
+   395.1 B|   link  rx frames 52  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   395.1 B|   radio frames sent 99  received 93  crc errors 2  tx timeouts 0
+   395.1 B|   free heap         365260 bytes
+   401.6 B| [  401.567] TX   PING 42 -> bench-C822 (39789)  ACK after 779 ms
+   401.6 A| [  401.565] RX   PING 42 <- bench-341C (63502)  rssi -114 dBm
+   403.1 B| [  403.099] RX   PING 41 <- bench-C822 (39789)  rssi -115 dBm
+   408.0 A| [  403.101] TX   PING 41 -> bench-341C (63502)  ACK after 786 ms
+   408.0 A| ==== bench-C822 (id 39789)  up 408 s  SF10 ====
+   408.0 A|   peers known: 1
+   408.0 A|     bench-341C           id 63502
+   408.0 A|   pings sent        41   acked 41   failed 0   (100.0% delivered)
+   408.0 A|   time to ACK       min 780 ms   avg 1027 ms   max 3392 ms
+   408.0 A|   pings received    42   duplicates 0 (must be 0)   missing 0
+   408.0 A|   broadcasts        sent 1   received 1
+   408.0 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   408.0 A|   RSSI              -115 to -114 dBm
+   408.0 A|   link  tx frames 62  retransmits 4  acks sent 42  sends failed 1
+   408.0 A|   link  rx frames 54  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   408.0 A|   radio frames sent 104  received 95  crc errors 0  tx timeouts 0
+   408.0 A|   free heap         365116 bytes
+   410.7 A| [  410.723] RX   PING 43 <- bench-341C (63502)  rssi -114 dBm
+   410.8 B| [  410.725] TX   PING 43 -> bench-C822 (39789)  ACK after 813 ms
+   413.3 A| [  413.238] TX   PING 42 -> bench-341C (63502)  ACK after 1015 ms
+   413.3 B| [  413.236] RX   PING 42 <- bench-C822 (39789)  rssi -115 dBm
+   420.1 A| [  420.070] RX   PING 44 <- bench-341C (63502)  rssi -115 dBm
+   420.1 B| [  420.072] TX   PING 44 -> bench-C822 (39789)  ACK after 836 ms
+   422.9 B| [  422.785] RX   PING 43 <- bench-C822 (39789)  rssi -115 dBm
+   422.9 A| [  422.787] TX   PING 43 -> bench-341C (63502)  ACK after 967 ms
+   425.4 B| ==== bench-341C (id 63502)  up 425 s  SF10 ====
+   425.4 B|   peers known: 1
+   425.4 B|     bench-C822           id 39789
+   425.4 B|   pings sent        44   acked 44   failed 0   (100.0% delivered)
+   425.4 B|   time to ACK       min 741 ms   avg 1013 ms   max 3465 ms
+   425.4 B|   pings received    43   duplicates 0 (must be 0)   missing 0
+   425.4 B|   broadcasts        sent 1   received 1
+   425.4 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   425.4 B|   RSSI              -115 to -115 dBm
+   425.4 B|   link  tx frames 63  retransmits 3  acks sent 43  sends failed 0
+   425.4 B|   link  rx frames 55  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   425.4 B|   radio frames sent 106  received 99  crc errors 2  tx timeouts 0
+   425.4 B|   free heap         365260 bytes
+   430.2 B| [  430.073] TX   PING 45 -> bench-C822 (39789)  ACK after 1037 ms
+   432.1 A| [  430.071] RX   PING 45 <- bench-341C (63502)  rssi -115 dBm
+   432.1 A| [  431.976] TX   PING 44 -> bench-341C (63502)  ACK after 905 ms
+   438.1 A| ==== bench-C822 (id 39789)  up 438 s  SF10 ====
+   438.1 A|   peers known: 1
+   438.1 A|     bench-341C           id 63502
+   438.1 A|   pings sent        44   acked 44   failed 0   (100.0% delivered)
+   438.1 A|   time to ACK       min 780 ms   avg 1023 ms   max 3392 ms
+   438.1 A|   pings received    45   duplicates 0 (must be 0)   missing 0
+   438.1 A|   broadcasts        sent 1   received 1
+   438.1 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   438.1 A|   RSSI              -115 to -114 dBm
+   438.1 A|   link  tx frames 66  retransmits 4  acks sent 45  sends failed 1
+   438.1 A|   link  rx frames 57  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   438.1 A|   radio frames sent 111  received 101  crc errors 0  tx timeouts 0
+   438.1 A|   free heap         365116 bytes
+   439.5 B| [  431.974] RX   PING 44 <- bench-C822 (39789)  rssi -115 dBm
+   439.5 B| [  439.444] TX   PING 46 -> bench-C822 (39789)  ACK after 938 ms
+   442.9 B| [  442.849] RX   PING 45 <- bench-C822 (39789)  rssi -115 dBm
+   442.9 A| [  439.442] RX   PING 46 <- bench-341C (63502)  rssi -114 dBm
+   442.9 A| [  442.850] TX   PING 45 -> bench-341C (63502)  ACK after 2658 ms  (1 retransmission)
+   449.1 A| [  449.046] RX   PING 47 <- bench-341C (63502)  rssi -114 dBm
+   449.1 B| [  449.048] TX   PING 47 -> bench-C822 (39789)  ACK after 949 ms
+   452.6 B| [  452.546] RX   PING 46 <- bench-C822 (39789)  rssi -115 dBm
+   455.4 B| ==== bench-341C (id 63502)  up 455 s  SF10 ====
+   455.4 B|   peers known: 1
+   455.4 B|     bench-C822           id 39789
+   455.4 B|   pings sent        47   acked 47   failed 0   (100.0% delivered)
+   455.4 B|   time to ACK       min 741 ms   avg 1010 ms   max 3465 ms
+   455.4 B|   pings received    46   duplicates 0 (must be 0)   missing 0
+   455.4 B|   broadcasts        sent 1   received 1
+   455.4 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   455.4 B|   RSSI              -115 to -115 dBm
+   455.4 B|   link  tx frames 67  retransmits 3  acks sent 46  sends failed 0
+   455.4 B|   link  rx frames 59  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   455.4 B|   radio frames sent 113  received 106  crc errors 2  tx timeouts 0
+   455.4 B|   free heap         365260 bytes
+   458.8 B| [  458.690] TX   PING 48 -> bench-C822 (39789)  ACK after 891 ms
+   458.8 A| [  452.548] TX   PING 46 -> bench-341C (63502)  ACK after 1002 ms
+   458.8 A| [  458.688] RX   PING 48 <- bench-341C (63502)  rssi -115 dBm
+   462.7 B| [  462.606] RX   PING 47 <- bench-C822 (39789)  rssi -115 dBm
+   462.7 A| [  462.608] TX   PING 47 -> bench-341C (63502)  ACK after 920 ms
+   467.9 B| [  467.869] TX   PING 49 -> bench-C822 (39789)  ACK after 948 ms
+   467.9 A| [  467.867] RX   PING 49 <- bench-341C (63502)  rssi -115 dBm
+   468.2 A| ==== bench-C822 (id 39789)  up 468 s  SF10 ====
+   468.2 A|   peers known: 1
+   468.2 A|     bench-341C           id 63502
+   468.2 A|   pings sent        47   acked 47   failed 0   (100.0% delivered)
+   468.2 A|   time to ACK       min 780 ms   avg 1055 ms   max 3392 ms
+   468.2 A|   pings received    49   duplicates 0 (must be 0)   missing 0
+   468.2 A|   broadcasts        sent 1   received 1
+   468.2 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   468.2 A|   RSSI              -115 to -114 dBm
+   468.2 A|   link  tx frames 71  retransmits 5  acks sent 49  sends failed 1
+   468.2 A|   link  rx frames 61  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   468.2 A|   radio frames sent 120  received 108  crc errors 0  tx timeouts 0
+   468.2 A|   free heap         365116 bytes
+   472.6 B| [  472.534] RX   PING 48 <- bench-C822 (39789)  rssi -115 dBm
+   472.6 A| [  472.535] TX   PING 48 -> bench-341C (63502)  ACK after 986 ms
+   476.9 A| [  476.885] RX   PING 50 <- bench-341C (63502)  rssi -114 dBm
+   476.9 B| [  476.887] TX   PING 50 -> bench-C822 (39789)  ACK after 853 ms
+   481.7 A| [  481.667] TX   PING 49 -> bench-341C (63502)  ACK after 1032 ms
+   481.7 B| [  481.665] RX   PING 49 <- bench-C822 (39789)  rssi -115 dBm
+   486.0 A| [  486.008] RX   PING 51 <- bench-341C (63502)  rssi -114 dBm
+   486.0 B| [  486.010] TX   PING 51 -> bench-C822 (39789)  ACK after 845 ms
+   486.3 B| ==== bench-341C (id 63502)  up 486 s  SF10 ====
+   486.3 B|   peers known: 1
+   486.3 B|     bench-C822           id 39789
+   486.3 B|   pings sent        51   acked 51   failed 0   (100.0% delivered)
+   486.3 B|   time to ACK       min 741 ms   avg 1000 ms   max 3465 ms
+   486.3 B|   pings received    49   duplicates 0 (must be 0)   missing 0
+   486.3 B|   broadcasts        sent 1   received 1
+   486.3 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   486.3 B|   RSSI              -115 to -115 dBm
+   486.3 B|   link  tx frames 72  retransmits 3  acks sent 49  sends failed 0
+   486.3 B|   link  rx frames 63  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   486.3 B|   radio frames sent 121  received 114  crc errors 2  tx timeouts 0
+   486.3 B|   free heap         365260 bytes
+   496.0 B| [  490.903] RX   PING 50 <- bench-C822 (39789)  rssi -115 dBm
+   496.0 B| [  496.004] TX   PING 52 -> bench-C822 (39789)  ACK after 1006 ms
+   496.0 A| [  490.905] TX   PING 50 -> bench-341C (63502)  ACK after 897 ms
+   496.0 A| [  496.002] RX   PING 52 <- bench-341C (63502)  rssi -114 dBm
+   498.3 A| ==== bench-C822 (id 39789)  up 498 s  SF10 ====
+   498.3 A|   peers known: 1
+   498.3 A|     bench-341C           id 63502
+   498.3 A|   pings sent        50   acked 50   failed 0   (100.0% delivered)
+   498.3 A|   time to ACK       min 780 ms   avg 1050 ms   max 3392 ms
+   498.3 A|   pings received    52   duplicates 0 (must be 0)   missing 0
+   498.3 A|   broadcasts        sent 1   received 1
+   498.3 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   498.3 A|   RSSI              -115 to -114 dBm
+   498.3 A|   link  tx frames 75  retransmits 5  acks sent 52  sends failed 1
+   498.3 A|   link  rx frames 65  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   498.3 A|   radio frames sent 127  received 115  crc errors 0  tx timeouts 0
+   498.3 A|   free heap         365116 bytes
+   502.9 B| [  502.744] RX   PING 51 <- bench-C822 (39789)  rssi -115 dBm
+   502.9 A| [  502.745] TX   PING 51 -> bench-341C (63502)  ACK after 3491 ms  (1 retransmission)
+   506.0 B| [  505.876] TX   PING 53 -> bench-C822 (39789)  ACK after 882 ms
+   512.3 B| [  512.166] RX   PING 52 <- bench-C822 (39789)  rssi -115 dBm
+   512.3 A| [  505.874] RX   PING 53 <- bench-341C (63502)  rssi -114 dBm
+   512.3 A| [  512.168] TX   PING 52 -> bench-341C (63502)  ACK after 1044 ms
+   515.2 A| [  515.084] RX   PING 54 <- bench-341C (63502)  rssi -114 dBm
+   516.4 B| [  515.086] TX   PING 54 -> bench-C822 (39789)  ACK after 920 ms
+   516.4 B| ==== bench-341C (id 63502)  up 516 s  SF10 ====
+   516.4 B|   peers known: 1
+   516.4 B|     bench-C822           id 39789
+   516.4 B|   pings sent        54   acked 54   failed 0   (100.0% delivered)
+   516.4 B|   time to ACK       min 741 ms   avg 997 ms   max 3465 ms
+   516.4 B|   pings received    52   duplicates 0 (must be 0)   missing 0
+   516.4 B|   broadcasts        sent 1   received 1
+   516.4 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   516.4 B|   RSSI              -115 to -115 dBm
+   516.4 B|   link  tx frames 76  retransmits 3  acks sent 52  sends failed 0
+   516.4 B|   link  rx frames 67  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   516.4 B|   radio frames sent 128  received 121  crc errors 2  tx timeouts 0
+   516.4 B|   free heap         365260 bytes
+   522.2 B| [  522.089] RX   PING 53 <- bench-C822 (39789)  rssi -115 dBm
+   522.2 A| [  522.091] TX   PING 53 -> bench-341C (63502)  ACK after 1007 ms
+   524.6 B| [  524.556] TX   PING 55 -> bench-C822 (39789)  ACK after 967 ms
+   525.3 A| [  525.204] RX   PING 55 <- bench-341C (63502)  rssi -114 dBm
+   528.5 A| ==== bench-C822 (id 39789)  up 528 s  SF10 ====
+   528.5 A|   peers known: 1
+   528.5 A|     bench-341C           id 63502
+   528.5 A|   pings sent        53   acked 53   failed 0   (100.0% delivered)
+   528.5 A|   time to ACK       min 780 ms   avg 1095 ms   max 3491 ms
+   528.5 A|   pings received    55   duplicates 0 (must be 0)   missing 0
+   528.5 A|   broadcasts        sent 1   received 1
+   528.5 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   528.5 A|   RSSI              -115 to -114 dBm
+   528.5 A|   link  tx frames 80  retransmits 6  acks sent 55  sends failed 1
+   528.5 A|   link  rx frames 68  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   528.5 A|   radio frames sent 135  received 121  crc errors 0  tx timeouts 0
+   528.5 A|   free heap         365116 bytes
+   531.7 B| [  531.645] RX   PING 54 <- bench-C822 (39789)  rssi -115 dBm
+   533.7 A| [  531.647] TX   PING 54 -> bench-341C (63502)  ACK after 942 ms
+   533.7 A| [  533.636] RX   PING 56 <- bench-341C (63502)  rssi -115 dBm
+   541.0 B| [  533.638] TX   PING 56 -> bench-C822 (39789)  ACK after 817 ms
+   541.0 B| [  540.954] RX   PING 55 <- bench-C822 (39789)  rssi -115 dBm
+   541.0 A| [  540.956] TX   PING 55 -> bench-341C (63502)  ACK after 820 ms
+   543.3 A| [  543.229] RX   PING 57 <- bench-341C (63502)  rssi -114 dBm
+   543.3 B| [  543.231] TX   PING 57 -> bench-C822 (39789)  ACK after 1027 ms
+   546.5 B| ==== bench-341C (id 63502)  up 546 s  SF10 ====
+   546.5 B|   peers known: 1
+   546.5 B|     bench-C822           id 39789
+   546.5 B|   pings sent        57   acked 57   failed 0   (100.0% delivered)
+   546.5 B|   time to ACK       min 741 ms   avg 994 ms   max 3465 ms
+   546.5 B|   pings received    55   duplicates 0 (must be 0)   missing 0
+   546.5 B|   broadcasts        sent 1   received 1
+   546.5 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   546.5 B|   RSSI              -115 to -115 dBm
+   546.5 B|   link  tx frames 80  retransmits 3  acks sent 55  sends failed 0
+   546.5 B|   link  rx frames 71  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   546.5 B|   radio frames sent 135  received 128  crc errors 2  tx timeouts 0
+   546.5 B|   free heap         365260 bytes
+   550.9 A| [  550.821] TX   PING 56 -> bench-341C (63502)  ACK after 842 ms
+   550.9 B| [  550.819] RX   PING 56 <- bench-C822 (39789)  rssi -115 dBm
+   552.7 B| [  552.626] TX   PING 58 -> bench-C822 (39789)  ACK after 1057 ms
+   558.6 A| [  552.624] RX   PING 58 <- bench-341C (63502)  rssi -114 dBm
+   558.6 A| ==== bench-C822 (id 39789)  up 559 s  SF10 ====
+   558.6 A|   peers known: 1
+   558.6 A|     bench-341C           id 63502
+   558.6 A|   pings sent        56   acked 56   failed 0   (100.0% delivered)
+   558.6 A|   time to ACK       min 780 ms   avg 1083 ms   max 3491 ms
+   558.6 A|   pings received    58   duplicates 0 (must be 0)   missing 0
+   558.6 A|   broadcasts        sent 1   received 1
+   558.6 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   558.6 A|   RSSI              -115 to -114 dBm
+   558.6 A|   link  tx frames 84  retransmits 6  acks sent 58  sends failed 1
+   558.6 A|   link  rx frames 72  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   558.6 A|   radio frames sent 142  received 128  crc errors 0  tx timeouts 0
+   558.6 A|   free heap         365116 bytes
+   560.8 B| [  560.757] RX   PING 57 <- bench-C822 (39789)  rssi -115 dBm
+   561.7 A| [  560.759] TX   PING 57 -> bench-341C (63502)  ACK after 920 ms
+   561.7 A| [  561.642] RX   PING 59 <- bench-341C (63502)  rssi -114 dBm
+   561.7 B| [  561.644] TX   PING 59 -> bench-C822 (39789)  ACK after 887 ms
+   570.3 A| [  570.229] TX   PING 58 -> bench-341C (63502)  ACK after 869 ms
+   570.3 B| [  570.228] RX   PING 58 <- bench-C822 (39789)  rssi -115 dBm
+   571.4 B| [  571.393] TX   PING 60 -> bench-C822 (39789)  ACK after 915 ms
+   571.4 A| [  571.391] RX   PING 60 <- bench-341C (63502)  rssi -114 dBm
+   576.7 B| ==== bench-341C (id 63502)  up 577 s  SF10 ====
+   576.7 B|   peers known: 1
+   576.7 B|     bench-C822           id 39789
+   576.7 B|   pings sent        60   acked 60   failed 0   (100.0% delivered)
+   576.7 B|   time to ACK       min 741 ms   avg 991 ms   max 3465 ms
+   576.7 B|   pings received    58   duplicates 0 (must be 0)   missing 0
+   576.7 B|   broadcasts        sent 1   received 1
+   576.7 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   576.7 B|   RSSI              -115 to -115 dBm
+   576.7 B|   link  tx frames 84  retransmits 3  acks sent 58  sends failed 0
+   576.7 B|   link  rx frames 75  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   576.7 B|   radio frames sent 142  received 135  crc errors 2  tx timeouts 0
+   576.7 B|   free heap         365260 bytes
+   579.3 B| [  579.233] RX   PING 59 <- bench-C822 (39789)  rssi -115 dBm
+   580.6 A| [  579.235] TX   PING 59 -> bench-341C (63502)  ACK after 844 ms
+   580.6 A| [  580.531] RX   PING 61 <- bench-341C (63502)  rssi -114 dBm
+   580.6 B| [  580.533] TX   PING 61 -> bench-C822 (39789)  ACK after 800 ms
+   588.6 A| [  588.527] TX   PING 60 -> bench-341C (63502)  ACK after 996 ms
+   588.6 B| [  588.525] RX   PING 60 <- bench-C822 (39789)  rssi -115 dBm
+   589.5 A| ==== bench-C822 (id 39789)  up 589 s  SF10 ====
+   589.5 A|   peers known: 1
+   589.5 A|     bench-341C           id 63502
+   589.5 A|   pings sent        60   acked 60   failed 0   (100.0% delivered)
+   589.5 A|   time to ACK       min 780 ms   avg 1071 ms   max 3491 ms
+   589.5 A|   pings received    61   duplicates 0 (must be 0)   missing 0
+   589.5 A|   broadcasts        sent 1   received 1
+   589.5 A|   max-size messages sent 1   acked 0   received intact 0   corrupt 0 (must be 0)
+   589.5 A|   RSSI              -115 to -114 dBm
+   589.5 A|   link  tx frames 89  retransmits 6  acks sent 61  sends failed 1
+   589.5 A|   link  rx frames 76  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   589.5 A|   radio frames sent 150  received 136  crc errors 0  tx timeouts 0
+   589.5 A|   free heap         365116 bytes
+   591.4 B| [  591.253] TX   PING 62 -> bench-C822 (39789)  ACK after 1036 ms
+   598.1 A| [  591.251] RX   PING 62 <- bench-341C (63502)  rssi -114 dBm
+   598.1 A| [  598.009] TX   PING 61 -> bench-341C (63502)  ACK after 1008 ms
+   598.1 B| [  598.007] RX   PING 61 <- bench-C822 (39789)  rssi -116 dBm
+   600.6 B| [  600.539] TX   PING 63 -> bench-C822 (39789)  ACK after 782 ms
+   607.2 A| [  600.537] RX   PING 63 <- bench-341C (63502)  rssi -115 dBm
+   607.2 A| [  607.103] TX   PING 62 -> bench-341C (63502)  ACK after 816 ms
+   612.7 A| [  612.614] RX   BIG 1 (242 bytes) <- bench-341C (63502)  rssi -114 dBm  content intact
+   612.7 B| [  612.616] TX   BIG 1 (242 bytes) -> bench-C822 (39789)  ACK after 11827 ms
+   613.6 B| [  613.538] TX   PING 64 -> bench-C822 (39789)  ACK after 922 ms
+   613.6 B| ==== bench-341C (id 63502)  up 614 s  SF10 ====
+   613.6 B|   peers known: 1
+   613.6 B|     bench-C822           id 39789
+   613.6 B|   pings sent        64   acked 64   failed 0   (100.0% delivered)
+   613.6 B|   time to ACK       min 741 ms   avg 985 ms   max 3465 ms
+   613.6 B|   pings received    61   duplicates 0 (must be 0)   missing 0
+   613.6 B|   broadcasts        sent 1   received 1
+   613.6 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   613.6 B|   RSSI              -116 to -115 dBm
+   613.6 B|   link  tx frames 91  retransmits 4  acks sent 62  sends failed 0
+   613.6 B|   link  rx frames 80  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   613.6 B|   radio frames sent 153  received 145  crc errors 2  tx timeouts 0
+   613.6 B|   free heap         365260 bytes
+   613.6 B| [  613.540] RX   PING 62 <- bench-C822 (39789)  rssi -115 dBm
+   616.9 B| [  616.870] RX   PING 63 <- bench-C822 (39789)  rssi -115 dBm
+   616.9 A| [  613.536] RX   PING 64 <- bench-341C (63502)  rssi -114 dBm
+   616.9 A| [  616.872] TX   PING 63 -> bench-341C (63502)  ACK after 836 ms
+   619.6 A| ==== bench-C822 (id 39789)  up 620 s  SF10 ====
+   619.6 A|   peers known: 1
+   619.6 A|     bench-341C           id 63502
+   619.6 A|   pings sent        63   acked 63   failed 0   (100.0% delivered)
+   619.6 A|   time to ACK       min 780 ms   avg 1062 ms   max 3491 ms
+   619.6 A|   pings received    64   duplicates 0 (must be 0)   missing 0
+   619.6 A|   broadcasts        sent 1   received 1
+   619.6 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   619.6 A|   RSSI              -115 to -114 dBm
+   619.6 A|   link  tx frames 93  retransmits 6  acks sent 65  sends failed 1
+   619.6 A|   link  rx frames 81  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   619.6 A|   radio frames sent 158  received 144  crc errors 2  tx timeouts 0
+   619.6 A|   free heap         365116 bytes
+   623.0 B| [  622.913] TX   PING 65 -> bench-C822 (39789)  ACK after 899 ms
+   623.0 A| [  622.911] RX   PING 65 <- bench-341C (63502)  rssi -114 dBm
+   626.1 A| [  626.013] TX   PING 64 -> bench-341C (63502)  ACK after 852 ms
+   626.1 B| [  626.011] RX   PING 64 <- bench-C822 (39789)  rssi -115 dBm
+   633.0 B| [  632.985] TX   PING 66 -> bench-C822 (39789)  ACK after 974 ms
+   633.0 A| [  632.983] RX   PING 66 <- bench-341C (63502)  rssi -114 dBm
+   635.3 B| [  635.301] RX   PING 65 <- bench-C822 (39789)  rssi -115 dBm
+   635.3 A| [  635.303] TX   PING 65 -> bench-341C (63502)  ACK after 820 ms
+   642.2 B| [  642.155] TX   PING 67 -> bench-C822 (39789)  ACK after 854 ms
+   642.2 A| [  642.153] RX   PING 67 <- bench-341C (63502)  rssi -114 dBm
+   643.7 B| ==== bench-341C (id 63502)  up 644 s  SF10 ====
+   643.7 B|   peers known: 1
+   643.7 B|     bench-C822           id 39789
+   643.7 B|   pings sent        67   acked 67   failed 0   (100.0% delivered)
+   643.7 B|   time to ACK       min 741 ms   avg 981 ms   max 3465 ms
+   643.7 B|   pings received    65   duplicates 0 (must be 0)   missing 0
+   643.7 B|   broadcasts        sent 1   received 1
+   643.7 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   643.7 B|   RSSI              -116 to -115 dBm
+   643.7 B|   link  tx frames 95  retransmits 4  acks sent 65  sends failed 0
+   643.7 B|   link  rx frames 84  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   643.7 B|   radio frames sent 160  received 152  crc errors 2  tx timeouts 0
+   643.7 B|   free heap         365260 bytes
+   645.2 A| [  645.135] TX   PING 66 -> bench-341C (63502)  ACK after 982 ms
+   649.7 A| ==== bench-C822 (id 39789)  up 650 s  SF10 ====
+   649.7 A|   peers known: 1
+   649.7 A|     bench-341C           id 63502
+   649.7 A|   pings sent        66   acked 66   failed 0   (100.0% delivered)
+   649.7 A|   time to ACK       min 780 ms   avg 1054 ms   max 3491 ms
+   649.7 A|   pings received    67   duplicates 0 (must be 0)   missing 0
+   649.7 A|   broadcasts        sent 1   received 1
+   649.7 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   649.7 A|   RSSI              -115 to -114 dBm
+   649.7 A|   link  tx frames 96  retransmits 6  acks sent 68  sends failed 1
+   649.7 A|   link  rx frames 85  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   649.7 A|   radio frames sent 164  received 151  crc errors 2  tx timeouts 0
+   649.7 A|   free heap         365116 bytes
+   653.9 B| [  645.133] RX   PING 66 <- bench-C822 (39789)  rssi -115 dBm
+   653.9 B| [  653.834] TX   PING 68 -> bench-C822 (39789)  ACK after 2946 ms  (1 retransmission)
+   653.9 A| [  653.832] RX   PING 68 <- bench-341C (63502)  rssi -114 dBm
+   655.0 B| [  654.959] RX   PING 67 <- bench-C822 (39789)  rssi -115 dBm
+   663.8 A| [  654.961] TX   PING 67 -> bench-341C (63502)  ACK after 879 ms
+   663.8 A| [  663.736] RX   PING 69 <- bench-341C (63502)  rssi -114 dBm
+   664.8 A| [  664.662] TX   PING 68 -> bench-341C (63502)  ACK after 926 ms
+   664.8 B| [  663.738] TX   PING 69 -> bench-C822 (39789)  ACK after 1029 ms
+   664.8 B| [  664.660] RX   PING 68 <- bench-C822 (39789)  rssi -115 dBm
+   673.5 A| [  673.427] RX   PING 70 <- bench-341C (63502)  rssi -115 dBm
+   673.5 B| [  673.429] TX   PING 70 -> bench-C822 (39789)  ACK after 1019 ms
+   673.8 B| ==== bench-341C (id 63502)  up 674 s  SF10 ====
+   673.8 B|   peers known: 1
+   673.8 B|     bench-C822           id 39789
+   673.8 B|   pings sent        70   acked 70   failed 0   (100.0% delivered)
+   673.8 B|   time to ACK       min 741 ms   avg 1011 ms   max 3465 ms
+   673.8 B|   pings received    68   duplicates 0 (must be 0)   missing 0
+   673.8 B|   broadcasts        sent 1   received 1
+   673.8 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   673.8 B|   RSSI              -116 to -115 dBm
+   673.8 B|   link  tx frames 100  retransmits 5  acks sent 68  sends failed 0
+   673.8 B|   link  rx frames 87  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   673.8 B|   radio frames sent 168  received 158  crc errors 2  tx timeouts 0
+   673.8 B|   free heap         365260 bytes
+   679.8 A| [  674.221] TX   PING 69 -> bench-341C (63502)  ACK after 794 ms
+   679.8 A| ==== bench-C822 (id 39789)  up 680 s  SF10 ====
+   679.8 A|   peers known: 1
+   679.8 A|     bench-341C           id 63502
+   679.8 A|   pings sent        69   acked 69   failed 0   (100.0% delivered)
+   679.8 A|   time to ACK       min 780 ms   avg 1046 ms   max 3491 ms
+   679.8 A|   pings received    70   duplicates 0 (must be 0)   missing 0
+   679.8 A|   broadcasts        sent 1   received 1
+   679.8 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   679.8 A|   RSSI              -115 to -114 dBm
+   679.8 A|   link  tx frames 101  retransmits 6  acks sent 71  sends failed 1
+   679.8 A|   link  rx frames 88  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   679.8 A|   radio frames sent 172  received 157  crc errors 2  tx timeouts 0
+   679.8 A|   free heap         365116 bytes
+   683.2 B| [  674.219] RX   PING 69 <- bench-C822 (39789)  rssi -115 dBm
+   683.2 B| [  683.137] TX   PING 71 -> bench-C822 (39789)  ACK after 1002 ms
+   683.9 B| [  683.845] RX   PING 70 <- bench-C822 (39789)  rssi -115 dBm
+   683.9 A| [  683.847] TX   PING 70 -> bench-341C (63502)  ACK after 1124 ms
+   683.9 A| [  683.848] RX   PING 71 <- bench-341C (63502)  rssi -114 dBm
+   692.9 B| [  692.857] TX   PING 72 -> bench-C822 (39789)  ACK after 1012 ms
+   693.6 A| [  693.567] TX   PING 71 -> bench-341C (63502)  ACK after 1218 ms
+   693.6 A| [  693.568] RX   PING 72 <- bench-341C (63502)  rssi -114 dBm
+   693.6 B| [  693.565] RX   PING 71 <- bench-C822 (39789)  rssi -115 dBm
+   702.9 B| [  702.808] TX   PING 73 -> bench-C822 (39789)  ACK after 993 ms
+   702.9 A| [  702.806] RX   PING 73 <- bench-341C (63502)  rssi -114 dBm
+   703.9 B| [  703.857] RX   PING 72 <- bench-C822 (39789)  rssi -115 dBm
+   703.9 B| ==== bench-341C (id 63502)  up 704 s  SF10 ====
+   703.9 B|   peers known: 1
+   703.9 B|     bench-C822           id 39789
+   703.9 B|   pings sent        73   acked 73   failed 0   (100.0% delivered)
+   703.9 B|   time to ACK       min 741 ms   avg 1010 ms   max 3465 ms
+   703.9 B|   pings received    72   duplicates 0 (must be 0)   missing 0
+   703.9 B|   broadcasts        sent 1   received 1
+   703.9 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   703.9 B|   RSSI              -116 to -115 dBm
+   703.9 B|   link  tx frames 104  retransmits 5  acks sent 72  sends failed 0
+   703.9 B|   link  rx frames 91  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   703.9 B|   radio frames sent 176  received 165  crc errors 2  tx timeouts 0
+   703.9 B|   free heap         365260 bytes
+   703.9 A| [  703.859] TX   PING 72 -> bench-341C (63502)  ACK after 1053 ms
+   709.8 A| ==== bench-C822 (id 39789)  up 710 s  SF10 ====
+   709.8 A|   peers known: 1
+   709.8 A|     bench-341C           id 63502
+   709.8 A|   pings sent        72   acked 72   failed 0   (100.0% delivered)
+   709.8 A|   time to ACK       min 780 ms   avg 1050 ms   max 3491 ms
+   709.8 A|   pings received    73   duplicates 0 (must be 0)   missing 0
+   709.8 A|   broadcasts        sent 1   received 1
+   709.8 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   709.8 A|   RSSI              -115 to -114 dBm
+   709.8 A|   link  tx frames 105  retransmits 6  acks sent 74  sends failed 1
+   709.8 A|   link  rx frames 92  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   709.8 A|   radio frames sent 179  received 164  crc errors 2  tx timeouts 0
+   709.8 A|   free heap         365116 bytes
+   711.8 A| [  711.714] RX   PING 74 <- bench-341C (63502)  rssi -114 dBm
+   711.8 B| [  711.716] TX   PING 74 -> bench-C822 (39789)  ACK after 779 ms
+   713.5 B| [  713.445] RX   PING 73 <- bench-C822 (39789)  rssi -115 dBm
+   713.5 A| [  713.447] TX   PING 73 -> bench-341C (63502)  ACK after 983 ms
+   721.7 B| [  721.663] TX   PING 75 -> bench-C822 (39789)  ACK after 968 ms
+   721.7 A| [  721.661] RX   PING 75 <- bench-341C (63502)  rssi -114 dBm
+   723.2 A| [  723.165] TX   PING 74 -> bench-341C (63502)  ACK after 1004 ms
+   731.3 B| [  723.163] RX   PING 74 <- bench-C822 (39789)  rssi -115 dBm
+   731.3 B| [  731.321] TX   PING 76 -> bench-C822 (39789)  ACK after 908 ms
+   731.3 A| [  731.319] RX   PING 76 <- bench-341C (63502)  rssi -115 dBm
+   733.1 A| [  733.060] TX   PING 75 -> bench-341C (63502)  ACK after 991 ms
+   733.1 B| [  733.058] RX   PING 75 <- bench-C822 (39789)  rssi -115 dBm
+   734.2 B| ==== bench-341C (id 63502)  up 734 s  SF10 ====
+   734.2 B|   peers known: 1
+   734.2 B|     bench-C822           id 39789
+   734.2 B|   pings sent        76   acked 76   failed 0   (100.0% delivered)
+   734.2 B|   time to ACK       min 741 ms   avg 1005 ms   max 3465 ms
+   734.2 B|   pings received    75   duplicates 0 (must be 0)   missing 0
+   734.2 B|   broadcasts        sent 1   received 1
+   734.2 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   734.2 B|   RSSI              -116 to -115 dBm
+   734.2 B|   link  tx frames 108  retransmits 5  acks sent 75  sends failed 0
+   734.2 B|   link  rx frames 94  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   734.2 B|   radio frames sent 183  received 171  crc errors 3  tx timeouts 0
+   734.2 B|   free heap         365260 bytes
+   739.9 A| ==== bench-C822 (id 39789)  up 740 s  SF10 ====
+   739.9 A|   peers known: 1
+   739.9 A|     bench-341C           id 63502
+   739.9 A|   pings sent        75   acked 75   failed 0   (100.0% delivered)
+   739.9 A|   time to ACK       min 780 ms   avg 1047 ms   max 3491 ms
+   739.9 A|   pings received    76   duplicates 0 (must be 0)   missing 0
+   739.9 A|   broadcasts        sent 1   received 1
+   739.9 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   739.9 A|   RSSI              -115 to -114 dBm
+   739.9 A|   link  tx frames 108  retransmits 6  acks sent 77  sends failed 1
+   739.9 A|   link  rx frames 96  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   739.9 A|   radio frames sent 185  received 171  crc errors 2  tx timeouts 0
+   739.9 A|   free heap         365116 bytes
+   741.0 B| [  740.928] TX   PING 77 -> bench-C822 (39789)  ACK after 887 ms
+   741.0 A| [  740.926] RX   PING 77 <- bench-341C (63502)  rssi -115 dBm
+   742.2 A| [  742.066] TX   PING 76 -> bench-341C (63502)  ACK after 890 ms
+   742.2 B| [  742.064] RX   PING 76 <- bench-C822 (39789)  rssi -115 dBm
+   750.2 B| [  750.118] TX   PING 78 -> bench-C822 (39789)  ACK after 796 ms
+   751.3 A| [  750.116] RX   PING 78 <- bench-341C (63502)  rssi -114 dBm
+   751.3 A| [  751.236] TX   PING 77 -> bench-341C (63502)  ACK after 870 ms
+   751.3 B| [  751.234] RX   PING 77 <- bench-C822 (39789)  rssi -116 dBm
+   759.7 A| [  759.581] RX   PING 79 <- bench-341C (63502)  rssi -115 dBm
+   759.7 B| [  759.583] TX   PING 79 -> bench-C822 (39789)  ACK after 849 ms
+   760.7 A| [  760.635] TX   PING 78 -> bench-341C (63502)  ACK after 804 ms
+   760.7 B| [  760.633] RX   PING 78 <- bench-C822 (39789)  rssi -115 dBm
+   765.0 B| ==== bench-341C (id 63502)  up 765 s  SF10 ====
+   765.0 B|   peers known: 1
+   765.0 B|     bench-C822           id 39789
+   765.0 B|   pings sent        79   acked 79   failed 0   (100.0% delivered)
+   765.0 B|   time to ACK       min 741 ms   avg 999 ms   max 3465 ms
+   765.0 B|   pings received    78   duplicates 0 (must be 0)   missing 0
+   765.0 B|   broadcasts        sent 1   received 1
+   765.0 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   765.0 B|   RSSI              -116 to -115 dBm
+   765.0 B|   link  tx frames 113  retransmits 5  acks sent 78  sends failed 0
+   765.0 B|   link  rx frames 98  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   765.0 B|   radio frames sent 191  received 178  crc errors 3  tx timeouts 0
+   765.0 B|   free heap         365260 bytes
+   769.0 A| [  768.947] RX   PING 80 <- bench-341C (63502)  rssi -114 dBm
+   769.0 B| [  768.949] TX   PING 80 -> bench-C822 (39789)  ACK after 1004 ms
+   770.8 A| [  770.723] TX   PING 79 -> bench-341C (63502)  ACK after 1026 ms
+   770.8 B| [  770.721] RX   PING 79 <- bench-C822 (39789)  rssi -115 dBm
+   771.0 A| ==== bench-C822 (id 39789)  up 771 s  SF10 ====
+   771.0 A|   peers known: 1
+   771.0 A|     bench-341C           id 63502
+   771.0 A|   pings sent        79   acked 79   failed 0   (100.0% delivered)
+   771.0 A|   time to ACK       min 780 ms   avg 1040 ms   max 3491 ms
+   771.0 A|   pings received    80   duplicates 0 (must be 0)   missing 0
+   771.0 A|   broadcasts        sent 1   received 1
+   771.0 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   771.0 A|   RSSI              -115 to -114 dBm
+   771.0 A|   link  tx frames 113  retransmits 6  acks sent 81  sends failed 1
+   771.0 A|   link  rx frames 101  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   771.0 A|   radio frames sent 194  received 180  crc errors 2  tx timeouts 0
+   771.0 A|   free heap         365116 bytes
+   778.9 B| [  778.835] TX   PING 81 -> bench-C822 (39789)  ACK after 858 ms
+   780.5 A| [  778.833] RX   PING 81 <- bench-341C (63502)  rssi -114 dBm
+   780.5 A| [  780.423] TX   PING 80 -> bench-341C (63502)  ACK after 840 ms
+   788.5 B| [  780.421] RX   PING 80 <- bench-C822 (39789)  rssi -115 dBm
+   788.5 B| [  788.407] TX   PING 82 -> bench-C822 (39789)  ACK after 986 ms
+   788.5 A| [  788.405] RX   PING 82 <- bench-341C (63502)  rssi -115 dBm
+   789.6 B| [  789.529] RX   PING 81 <- bench-C822 (39789)  rssi -115 dBm
+   789.6 A| [  789.531] TX   PING 81 -> bench-341C (63502)  ACK after 876 ms
+   795.1 B| ==== bench-341C (id 63502)  up 795 s  SF10 ====
+   795.1 B|   peers known: 1
+   795.1 B|     bench-C822           id 39789
+   795.1 B|   pings sent        82   acked 82   failed 0   (100.0% delivered)
+   795.1 B|   time to ACK       min 741 ms   avg 997 ms   max 3465 ms
+   795.1 B|   pings received    81   duplicates 0 (must be 0)   missing 0
+   795.1 B|   broadcasts        sent 1   received 1
+   795.1 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   795.1 B|   RSSI              -116 to -115 dBm
+   795.1 B|   link  tx frames 116  retransmits 5  acks sent 81  sends failed 0
+   795.1 B|   link  rx frames 102  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   795.1 B|   radio frames sent 197  received 185  crc errors 3  tx timeouts 0
+   795.1 B|   free heap         365260 bytes
+   798.4 A| [  798.375] RX   PING 83 <- bench-341C (63502)  rssi -115 dBm
+   800.2 A| [  800.122] TX   PING 82 -> bench-341C (63502)  ACK after 1011 ms
+   800.2 B| [  798.377] TX   PING 83 -> bench-C822 (39789)  ACK after 1038 ms
+   800.2 B| [  800.120] RX   PING 82 <- bench-C822 (39789)  rssi -115 dBm
+   801.2 A| ==== bench-C822 (id 39789)  up 801 s  SF10 ====
+   801.2 A|   peers known: 1
+   801.2 A|     bench-341C           id 63502
+   801.2 A|   pings sent        82   acked 82   failed 0   (100.0% delivered)
+   801.2 A|   time to ACK       min 780 ms   avg 1035 ms   max 3491 ms
+   801.2 A|   pings received    83   duplicates 0 (must be 0)   missing 0
+   801.2 A|   broadcasts        sent 1   received 1
+   801.2 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   801.2 A|   RSSI              -115 to -114 dBm
+   801.2 A|   link  tx frames 118  retransmits 6  acks sent 84  sends failed 1
+   801.2 A|   link  rx frames 105  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   801.2 A|   radio frames sent 202  received 187  crc errors 2  tx timeouts 0
+   801.2 A|   free heap         365116 bytes
+   807.5 B| [  807.456] TX   PING 84 -> bench-C822 (39789)  ACK after 836 ms
+   810.2 A| [  807.454] RX   PING 84 <- bench-341C (63502)  rssi -114 dBm
+   810.2 A| [  810.153] TX   PING 83 -> bench-341C (63502)  ACK after 949 ms
+   816.8 B| [  810.151] RX   PING 83 <- bench-C822 (39789)  rssi -115 dBm
+   816.8 B| [  816.652] TX   PING 85 -> bench-C822 (39789)  ACK after 1001 ms
+   816.8 A| [  816.650] RX   PING 85 <- bench-341C (63502)  rssi -114 dBm
+   820.3 B| [  820.178] RX   PING 84 <- bench-C822 (39789)  rssi -115 dBm
+   826.1 A| [  820.180] TX   PING 84 -> bench-341C (63502)  ACK after 1030 ms
+   826.1 A| [  826.048] RX   PING 86 <- bench-341C (63502)  rssi -114 dBm
+   826.2 B| [  826.050] TX   PING 86 -> bench-C822 (39789)  ACK after 844 ms
+   826.2 B| ==== bench-341C (id 63502)  up 826 s  SF10 ====
+   826.2 B|   peers known: 1
+   826.2 B|     bench-C822           id 39789
+   826.2 B|   pings sent        86   acked 86   failed 0   (100.0% delivered)
+   826.2 B|   time to ACK       min 741 ms   avg 994 ms   max 3465 ms
+   826.2 B|   pings received    84   duplicates 0 (must be 0)   missing 0
+   826.2 B|   broadcasts        sent 1   received 1
+   826.2 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   826.2 B|   RSSI              -116 to -115 dBm
+   826.2 B|   link  tx frames 122  retransmits 5  acks sent 84  sends failed 0
+   826.2 B|   link  rx frames 106  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   826.2 B|   radio frames sent 206  received 193  crc errors 3  tx timeouts 0
+   826.2 B|   free heap         365260 bytes
+   830.2 A| [  830.059] TX   PING 85 -> bench-341C (63502)  ACK after 884 ms
+   830.2 B| [  830.057] RX   PING 85 <- bench-C822 (39789)  rssi -115 dBm
+   831.4 A| ==== bench-C822 (id 39789)  up 831 s  SF10 ====
+   831.4 A|   peers known: 1
+   831.4 A|     bench-341C           id 63502
+   831.4 A|   pings sent        85   acked 85   failed 0   (100.0% delivered)
+   831.4 A|   time to ACK       min 780 ms   avg 1032 ms   max 3491 ms
+   831.4 A|   pings received    86   duplicates 0 (must be 0)   missing 0
+   831.4 A|   broadcasts        sent 1   received 1
+   831.4 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   831.4 A|   RSSI              -115 to -114 dBm
+   831.4 A|   link  tx frames 122  retransmits 6  acks sent 87  sends failed 1
+   831.4 A|   link  rx frames 109  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   831.4 A|   radio frames sent 209  received 194  crc errors 2  tx timeouts 0
+   831.4 A|   free heap         365116 bytes
+   836.1 A| [  836.007] RX   PING 87 <- bench-341C (63502)  rssi -114 dBm
+   836.1 B| [  836.009] TX   PING 87 -> bench-C822 (39789)  ACK after 952 ms
+   840.0 B| [  839.939] RX   PING 86 <- bench-C822 (39789)  rssi -115 dBm
+   840.0 A| [  839.941] TX   PING 86 -> bench-341C (63502)  ACK after 934 ms
+   845.8 B| [  845.714] TX   PING 88 -> bench-C822 (39789)  ACK after 1025 ms
+   845.8 A| [  845.712] RX   PING 88 <- bench-341C (63502)  rssi -115 dBm
+   849.6 B| [  849.481] RX   PING 87 <- bench-C822 (39789)  rssi -115 dBm
+   849.6 A| [  849.483] TX   PING 87 -> bench-341C (63502)  ACK after 1021 ms
+   855.3 B| [  855.284] TX   PING 89 -> bench-C822 (39789)  ACK after 1053 ms
+   855.3 A| [  855.282] RX   PING 89 <- bench-341C (63502)  rssi -114 dBm
+   856.3 B| ==== bench-341C (id 63502)  up 856 s  SF10 ====
+   856.3 B|   peers known: 1
+   856.3 B|     bench-C822           id 39789
+   856.3 B|   pings sent        89   acked 89   failed 0   (100.0% delivered)
+   856.3 B|   time to ACK       min 741 ms   avg 995 ms   max 3465 ms
+   856.3 B|   pings received    87   duplicates 0 (must be 0)   missing 0
+   856.3 B|   broadcasts        sent 1   received 1
+   856.3 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   856.3 B|   RSSI              -116 to -115 dBm
+   856.3 B|   link  tx frames 126  retransmits 5  acks sent 87  sends failed 0
+   856.3 B|   link  rx frames 110  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   856.3 B|   radio frames sent 213  received 200  crc errors 3  tx timeouts 0
+   856.3 B|   free heap         365260 bytes
+   858.7 B| [  858.634] RX   PING 88 <- bench-C822 (39789)  rssi -115 dBm
+   861.5 A| [  858.636] TX   PING 88 -> bench-341C (63502)  ACK after 917 ms
+   861.5 A| ==== bench-C822 (id 39789)  up 861 s  SF10 ====
+   861.5 A|   peers known: 1
+   861.5 A|     bench-341C           id 63502
+   861.5 A|   pings sent        88   acked 88   failed 0   (100.0% delivered)
+   861.5 A|   time to ACK       min 780 ms   avg 1029 ms   max 3491 ms
+   861.5 A|   pings received    89   duplicates 0 (must be 0)   missing 0
+   861.5 A|   broadcasts        sent 1   received 1
+   861.5 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   861.5 A|   RSSI              -115 to -114 dBm
+   861.5 A|   link  tx frames 126  retransmits 6  acks sent 90  sends failed 1
+   861.5 A|   link  rx frames 113  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   861.5 A|   radio frames sent 216  received 201  crc errors 2  tx timeouts 0
+   861.5 A|   free heap         365116 bytes
+   865.0 B| [  864.939] TX   PING 90 -> bench-C822 (39789)  ACK after 957 ms
+   867.5 A| [  864.937] RX   PING 90 <- bench-341C (63502)  rssi -114 dBm
+   867.5 A| [  867.465] TX   PING 89 -> bench-341C (63502)  ACK after 778 ms
+   867.5 B| [  867.463] RX   PING 89 <- bench-C822 (39789)  rssi -115 dBm
+   874.8 B| [  874.712] TX   PING 91 -> bench-C822 (39789)  ACK after 999 ms
+   874.8 A| [  874.710] RX   PING 91 <- bench-341C (63502)  rssi -114 dBm
+   877.0 B| [  876.964] RX   PING 90 <- bench-C822 (39789)  rssi -115 dBm
+   884.0 A| [  876.966] TX   PING 90 -> bench-341C (63502)  ACK after 1006 ms
+   884.0 A| [  884.015] RX   PING 92 <- bench-341C (63502)  rssi -115 dBm
+   884.0 B| [  884.017] TX   PING 92 -> bench-C822 (39789)  ACK after 1053 ms
+   886.6 B| [  886.552] RX   PING 91 <- bench-C822 (39789)  rssi -115 dBm
+   886.6 B| ==== bench-341C (id 63502)  up 887 s  SF10 ====
+   886.6 B|   peers known: 1
+   886.6 B|     bench-C822           id 39789
+   886.6 B|   pings sent        92   acked 92   failed 0   (100.0% delivered)
+   886.6 B|   time to ACK       min 741 ms   avg 995 ms   max 3465 ms
+   886.6 B|   pings received    91   duplicates 0 (must be 0)   missing 0
+   886.6 B|   broadcasts        sent 1   received 1
+   886.6 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   886.6 B|   RSSI              -116 to -115 dBm
+   886.6 B|   link  tx frames 129  retransmits 5  acks sent 91  sends failed 0
+   886.6 B|   link  rx frames 115  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   886.6 B|   radio frames sent 220  received 208  crc errors 3  tx timeouts 0
+   886.6 B|   free heap         365260 bytes
+   886.6 A| [  886.554] TX   PING 91 -> bench-341C (63502)  ACK after 1039 ms
+   890.4 A| ==== bench-C822 (id 39789)  up 890 s  SF10 ====
+   890.4 A|   peers known: 1
+   890.4 A|     bench-341C           id 63502
+   890.4 A|   pings sent        91   acked 91   failed 0   (100.0% delivered)
+   890.4 A|   time to ACK       min 778 ms   avg 1026 ms   max 3491 ms
+   890.4 A|   pings received    92   duplicates 0 (must be 0)   missing 0
+   890.4 A|   broadcasts        sent 1   received 1
+   890.4 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   890.4 A|   RSSI              -115 to -114 dBm
+   890.4 A|   link  tx frames 130  retransmits 6  acks sent 93  sends failed 1
+   890.4 A|   link  rx frames 116  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   890.4 A|   radio frames sent 223  received 207  crc errors 2  tx timeouts 0
+   890.4 A|   free heap         365116 bytes
+   891.6 A| ==== bench-C822 (id 39789)  up 892 s  SF10 ====
+   891.6 A|   peers known: 1
+   891.6 A|     bench-341C           id 63502
+   891.6 A|   pings sent        91   acked 91   failed 0   (100.0% delivered)
+   891.6 A|   time to ACK       min 778 ms   avg 1026 ms   max 3491 ms
+   891.6 A|   pings received    92   duplicates 0 (must be 0)   missing 0
+   891.6 A|   broadcasts        sent 1   received 1
+   891.6 A|   max-size messages sent 1   acked 0   received intact 1   corrupt 0 (must be 0)
+   891.6 A|   RSSI              -115 to -114 dBm
+   891.6 A|   link  tx frames 130  retransmits 6  acks sent 93  sends failed 1
+   891.6 A|   link  rx frames 116  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   891.6 A|   radio frames sent 223  received 207  crc errors 2  tx timeouts 0
+   891.6 A|   free heap         365116 bytes
+   893.7 B| [  893.584] TX   PING 93 -> bench-C822 (39789)  ACK after 872 ms
+   893.7 A| [  893.582] RX   PING 93 <- bench-341C (63502)  rssi -114 dBm
+   894.0 B| ==== bench-341C (id 63502)  up 894 s  SF10 ====
+   894.0 B|   peers known: 1
+   894.0 B|     bench-C822           id 39789
+   894.0 B|   pings sent        93   acked 93   failed 0   (100.0% delivered)
+   894.0 B|   time to ACK       min 741 ms   avg 994 ms   max 3465 ms
+   894.0 B|   pings received    91   duplicates 0 (must be 0)   missing 0
+   894.0 B|   broadcasts        sent 1   received 1
+   894.0 B|   max-size messages sent 1   acked 1   received intact 0   corrupt 0 (must be 0)
+   894.0 B|   RSSI              -116 to -115 dBm
+   894.0 B|   link  tx frames 131  retransmits 5  acks sent 91  sends failed 0
+   894.0 B|   link  rx frames 115  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   894.0 B|   radio frames sent 222  received 209  crc errors 3  tx timeouts 0
+   894.0 B|   free heap         365260 bytes
+   896.3 B| [  896.178] RX   PING 92 <- bench-C822 (39789)  rssi -115 dBm
+# phase 3-sf10 finished 2026-10-03 19:37:45

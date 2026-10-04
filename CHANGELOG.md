@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- **`library.json` built none of the library's source files.** Its source
+  filter was relative to the wrong directory, so a PlatformIO project that
+  depended on the library (by Git URL, as the README suggests) compiled and
+  then failed to link with every library symbol undefined. Fixed.
+- New `examples/esp32_bench_test`: a serial-console bench test for checking
+  the library on real radios (T3 scanner board and Heltec V3 boards).
+- **First hardware results.** The library and the rewritten `SemtechRadio`
+  driver ran for 1 hour 50 minutes on two Heltec Wireless Shell V3 boards
+  over a very weak link: 1,204 of 1,209 acknowledged pings in an hour at SF7,
+  nothing delivered twice, full-size frames intact, recovery from a board
+  restart, name collision resolved, SF10 and SF12, and the encrypted link.
+  Results and raw logs are in `hardware-tests/2026-10-03-t3-scanner/`;
+  `hardware-tests/run_bench.py` and `summarize.py` reproduce the run.
+- `SemtechRadio`: the transmit timeout is now derived from the longest
+  frame's time on air (it was fixed at 3 s, which aborted long frames at SF11
+  and SF12).
+- `SemtechRadio`: `channelRssi()`, optional bring-up trace
+  (`-D SEMTECH_RADIO_TRACE`), and documentation of the vendor library's
+  license requirement (without a license `begin()` never returns).
+
 ## 2.0.0
 
 Version 1.0 passed its unit tests but did not work reliably on real radios.
@@ -109,8 +131,8 @@ does not protect against (replay, traffic analysis).
 - `SemtechRadio.h/.cpp` were missing, so the example did not build. They are
   back, rewritten to keep the radio in continuous receive instead of
   restarting the receiver on every `receive()` call (which aborted frames in
-  flight) and leaving it idle after every transmission. **Compiled, not yet
-  run on hardware.**
+  flight) and leaving it idle after every transmission. (Not run on hardware
+  at the time of the 2.0.0 release; see the unreleased notes above.)
 - `main.cpp` now uses `PeerMessenger` for everything. The old loop read
   packets with the link directly, then called RollCall, then slept for a
   second with the radio idle.

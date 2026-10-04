@@ -1,0 +1,446 @@
+# phase 2-same-name: env=t3_scanner flags='-D BENCH_SAME_NAME=1' duration=240s started 2026-10-03 19:18:16
+# flash /dev/ttyACM0 env=t3_scanner flags='-D BENCH_SAME_NAME=1': ok
+# flash /dev/ttyACM1 env=t3_scanner flags='-D BENCH_SAME_NAME=1': ok
+     0.1 B| oes the same)
+     0.1 B|   m  send a maximum-length message to every peer and check it arrives intact
+     0.1 B|   q  RF check: sample ESP-ROM:esp32s3-20210327
+     0.1 B| Build:Mar 27 2021
+     0.1 B| rst:0x15 (USB_UART_CHIP_RESET),boot:0x29 (SPI_FAST_FLASH_BOOT)
+     0.1 B| Saved PC:0x4202d3b2
+     0.1 B| SPIWP:0xee
+     0.1 B| mode:DIO, clock div:1
+     0.1 B| load:0x3fce3808,len:0x4bc
+     0.1 B| load:0x403c9700,len:0xbd8
+     0.1 B| load:0x403cc700,len:0x2a0c
+     0.1 B| entry 0x403c98d0
+     0.1 A| ESP-ROM:esp32s3-20210327
+     0.1 A| Build:Mar 27 2021
+     0.1 A| rst:0x15 (USB_UART_CHIP_RESET),boot:0x9 (SPI_FAST_FLASH_BOOT)
+     0.1 A| Saved PC:0x4202d3b2
+     0.1 A| SPIWP:0xee
+     0.1 A| mode:DIO, clock div:1
+     0.1 A| load:0x3fce3808,len:0x4bc
+     0.1 A| load:0x403c9700,len:0xbd8
+     0.1 A| load:0x403cc700,len:0x2a0c
+     0.1 A| entry 0x403c98d0
+     0.4 A| ========================================
+     0.4 A|  LoRaPeerLink bench test
+     0.4 A|  link: LoRaBackoffLink (not encrypted)
+     0.4 A|  node: twin
+     0.4 A|  radio: 915.000 MHz, SF7, 125 kHz, 14 dBm
+     0.4 A| ========================================
+     0.4 B| ========================================
+     0.4 B|  LoRaPeerLink bench test
+     0.4 B|  link: LoRaBackoffLink (not encrypted)
+     0.4 B|  node: twin
+     0.4 B|  radio: 915.000 MHz, SF7, 125 kHz, 14 dBm
+     0.4 B| ========================================
+     0.5 A|  time on air: 9 byte ACK 46 ms, 25 byte frame 66 ms, 255 byte frame 404 ms
+     0.5 A|  ACK timeout configured: 300 ms
+     0.5 A|  joining (about 1.5 s)...
+     0.5 B|  time on air: 9 byte ACK 46 ms, 25 byte frame 66 ms, 255 byte frame 404 ms
+     0.5 B|  ACK timeout configured: 300 ms
+     0.5 B|  joining (about 1.5 s)...
+     1.9 A|  joined as twin, id 63626
+     1.9 A|  largest message: 242 bytes
+     1.9 A| Commands:
+     1.9 A|   s  statistics now
+     1.9 A|   n  list known peers
+     1.9 A|   p  ping all peers now
+     1.9 A|   f  flood: 10 pings in a row to every peer (do it on two boards at once to force collisions)
+     1.9 A|   b  send a broadcast (the button on GPIO0 does the same)
+     1.9 A|   m  send a maximum-length message to every peer and check it arrives intact
+     1.9 A|   q  RF check: sample the channel signal level for 6 s
+     1.9 A|   x  RF check: transmit a burst of 30 broadcast frames
+     1.9 A|   v  toggle verbose library log
+     1.9 A|   r  reset counters
+     1.9 A|   h  this help
+     1.9 B|  joined as twin, id 42396
+     1.9 B|  largest message: 242 bytes
+     1.9 B| Commands:
+     1.9 B|   s  statistics now
+     1.9 B|   n  list known peers
+     1.9 B|   p  ping all peers now
+     1.9 B|   f  flood: 10 pings in a row to every peer (do it on two boards at once to force collisions)
+     1.9 B|   b  send a broadcast (the button on GPIO0 does the same)
+     1.9 B|   m  send a maximum-length message to every peer and check it arrives intact
+     1.9 B|   q  RF check: sample the channel signal level for 6 s
+     1.9 B|   x  RF check: transmit a burst of 30 broadcast frames
+     1.9 B|   v  toggle verbose library log
+     1.9 B|   r  reset counters
+     1.9 B|   h  this help
+     5.5 B| [    5.506] RX   PING 1 <- twin-2834 (63626)  rssi -115 dBm
+     5.5 A| [    5.501] TX   PING 1 -> twin (42396)  ACK after 135 ms
+     6.4 B| [    6.405] TX   PING 1 -> twin-2834 (63626)  ACK after 149 ms
+     6.5 A| [    6.409] RX   PING 1 <- twin (42396)  rssi -114 dBm
+    11.5 B| [   11.509] RX   PING 2 <- twin-2834 (63626)  rssi -115 dBm
+    11.5 A| [   11.504] TX   PING 2 -> twin (42396)  ACK after 171 ms
+    12.4 B| [   12.400] TX   PING 2 -> twin-2834 (63626)  ACK after 141 ms
+    17.3 B| [   17.318] RX   PING 3 <- twin-2834 (63626)  rssi -115 dBm
+    17.3 A| [   12.404] RX   PING 2 <- twin (42396)  rssi -114 dBm
+    17.3 A| [   17.313] TX   PING 3 -> twin (42396)  ACK after 159 ms
+    18.2 B| [   18.209] TX   PING 3 -> twin-2834 (63626)  ACK after 141 ms
+    23.1 B| [   23.098] RX   PING 4 <- twin-2834 (63626)  rssi -115 dBm
+    23.1 A| [   18.213] RX   PING 3 <- twin (42396)  rssi -115 dBm
+    23.1 A| [   23.093] TX   PING 4 -> twin (42396)  ACK after 130 ms
+    24.0 B| [   23.990] TX   PING 4 -> twin-2834 (63626)  ACK after 142 ms
+    24.0 A| [   23.994] RX   PING 4 <- twin (42396)  rssi -115 dBm
+    29.9 B| [   29.900] TX   PING 5 -> twin-2834 (63626)  ACK after 660 ms  (1 retransmission)
+    30.0 A| [   30.020] TX   PING 5 -> twin (42396)  ACK after 776 ms  (1 retransmission)
+    30.0 A| [   30.021] RX   PING 5 <- twin (42396)  rssi -115 dBm
+    32.0 A| ==== twin-2834 (id 63626)  up 32 s  SF7 ====
+    32.0 A|   peers known: 1
+    32.0 A|     twin                 id 42396
+    32.0 A|   pings sent        5   acked 5   failed 0   (100.0% delivered)
+    32.0 A|   time to ACK       min 130 ms   avg 274 ms   max 776 ms
+    32.0 A|   pings received    5   duplicates 0 (must be 0)   missing 0
+    32.0 A|   broadcasts        sent 0   received 0
+    32.0 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    32.0 A|   RSSI              -115 to -114 dBm
+    32.0 A|   link  tx frames 9  retransmits 1  acks sent 5  sends failed 0
+    32.0 A|   link  rx frames 7  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    32.0 A|   radio frames sent 14  received 12  crc errors 0  tx timeouts 0
+    32.0 A|   free heap         365120 bytes
+    32.0 B| [   30.025] RX   PING 5 <- twin-2834 (63626)  rssi -115 dBm
+    32.0 B| ==== twin (id 42396)  up 32 s  SF7 ====
+    32.0 B|   peers known: 1
+    32.0 B|     twin-2834            id 63626
+    32.0 B|   pings sent        5   acked 5   failed 0   (100.0% delivered)
+    32.0 B|   time to ACK       min 141 ms   avg 246 ms   max 660 ms
+    32.0 B|   pings received    5   duplicates 0 (must be 0)   missing 0
+    32.0 B|   broadcasts        sent 0   received 0
+    32.0 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    32.0 B|   RSSI              -115 to -115 dBm
+    32.0 B|   link  tx frames 9  retransmits 1  acks sent 5  sends failed 0
+    32.0 B|   link  rx frames 7  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    32.0 B|   radio frames sent 14  received 12  crc errors 0  tx timeouts 0
+    32.0 B|   free heap         365260 bytes
+    35.2 A| [   35.229] RX   PING 6 <- twin (42396)  rssi -114 dBm
+    35.2 B| [   35.225] TX   PING 6 -> twin-2834 (63626)  ACK after 133 ms
+    36.4 A| [   36.390] TX   PING 6 -> twin (42396)  ACK after 161 ms
+    36.4 B| [   36.395] RX   PING 6 <- twin-2834 (63626)  rssi -115 dBm
+    40.9 B| [   40.777] TX   PING 7 -> twin-2834 (63626)  ACK after 132 ms
+    41.8 A| [   40.781] RX   PING 7 <- twin (42396)  rssi -114 dBm
+    41.8 A| [   41.674] TX   PING 7 -> twin (42396)  ACK after 143 ms
+    41.8 B| [   41.679] RX   PING 7 <- twin-2834 (63626)  rssi -115 dBm
+    46.2 A| [   46.071] RX   PING 8 <- twin (42396)  rssi -115 dBm
+    46.2 B| [   46.067] TX   PING 8 -> twin-2834 (63626)  ACK after 138 ms
+    48.1 B| [   47.972] RX   PING 8 <- twin-2834 (63626)  rssi -115 dBm
+    48.1 A| [   47.967] TX   PING 8 -> twin (42396)  ACK after 146 ms
+    51.5 A| [   51.367] RX   PING 9 <- twin (42396)  rssi -115 dBm
+    54.1 A| [   54.016] TX   PING 9 -> twin (42396)  ACK after 149 ms
+    54.1 B| [   51.363] TX   PING 9 -> twin-2834 (63626)  ACK after 141 ms
+    54.1 B| [   54.021] RX   PING 9 <- twin-2834 (63626)  rssi -115 dBm
+    57.3 A| [   57.181] RX   PING 10 <- twin (42396)  rssi -115 dBm
+    59.7 B| [   57.177] TX   PING 10 -> twin-2834 (63626)  ACK after 156 ms
+    59.7 A| [   59.600] TX   PING 10 -> twin (42396)  ACK after 169 ms
+    59.7 B| [   59.605] RX   PING 10 <- twin-2834 (63626)  rssi -115 dBm
+    62.2 A| ==== twin-2834 (id 63626)  up 62 s  SF7 ====
+    62.2 A|   peers known: 1
+    62.2 A|     twin                 id 42396
+    62.2 A|   pings sent        10   acked 10   failed 0   (100.0% delivered)
+    62.2 A|   time to ACK       min 130 ms   avg 213 ms   max 776 ms
+    62.2 A|   pings received    10   duplicates 0 (must be 0)   missing 0
+    62.2 A|   broadcasts        sent 0   received 0
+    62.2 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    62.2 A|   RSSI              -115 to -114 dBm
+    62.2 A|   link  tx frames 15  retransmits 1  acks sent 10  sends failed 0
+    62.2 A|   link  rx frames 13  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    62.2 A|   radio frames sent 25  received 23  crc errors 0  tx timeouts 0
+    62.2 A|   free heap         365120 bytes
+    62.2 B| ==== twin (id 42396)  up 62 s  SF7 ====
+    62.2 B|   peers known: 1
+    62.2 B|     twin-2834            id 63626
+    62.2 B|   pings sent        10   acked 10   failed 0   (100.0% delivered)
+    62.2 B|   time to ACK       min 132 ms   avg 193 ms   max 660 ms
+    62.2 B|   pings received    10   duplicates 0 (must be 0)   missing 0
+    62.2 B|   broadcasts        sent 0   received 0
+    62.2 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    62.2 B|   RSSI              -115 to -115 dBm
+    62.2 B|   link  tx frames 15  retransmits 1  acks sent 10  sends failed 0
+    62.2 B|   link  rx frames 13  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    62.2 B|   radio frames sent 25  received 23  crc errors 0  tx timeouts 0
+    62.2 B|   free heap         365260 bytes
+    63.4 A| [   63.351] RX   PING 11 <- twin (42396)  rssi -115 dBm
+    65.8 A| [   65.775] TX   PING 11 -> twin (42396)  ACK after 174 ms
+    65.8 B| [   63.241] TX   PING 11 -> twin-2834 (63626)  ACK after 134 ms
+    65.8 B| [   65.780] RX   PING 11 <- twin-2834 (63626)  rssi -115 dBm
+    71.2 B| [   68.707] TX   PING 12 -> twin-2834 (63626)  ACK after 177 ms
+    71.2 B| [   71.101] RX   PING 12 <- twin-2834 (63626)  rssi -115 dBm
+    71.2 A| [   68.711] RX   PING 12 <- twin (42396)  rssi -115 dBm
+    71.2 A| [   71.096] TX   PING 12 -> twin (42396)  ACK after 135 ms
+    74.3 A| [   74.267] RX   PING 13 <- twin (42396)  rssi -115 dBm
+    76.7 A| [   76.679] TX   PING 13 -> twin (42396)  ACK after 162 ms
+    76.7 B| [   74.263] TX   PING 13 -> twin-2834 (63626)  ACK after 162 ms
+    76.7 B| [   76.684] RX   PING 13 <- twin-2834 (63626)  rssi -116 dBm
+    79.6 A| [   79.600] RX   PING 14 <- twin (42396)  rssi -114 dBm
+    82.3 B| [   79.596] TX   PING 14 -> twin-2834 (63626)  ACK after 162 ms
+    82.3 B| [   82.266] RX   PING 14 <- twin-2834 (63626)  rssi -115 dBm
+    82.3 A| [   82.261] TX   PING 14 -> twin (42396)  ACK after 161 ms
+    84.9 A| [   84.913] RX   PING 15 <- twin (42396)  rssi -114 dBm
+    88.3 B| [   84.909] TX   PING 15 -> twin-2834 (63626)  ACK after 143 ms
+    88.3 B| [   88.313] RX   PING 15 <- twin-2834 (63626)  rssi -115 dBm
+    88.3 A| [   88.308] TX   PING 15 -> twin (42396)  ACK after 145 ms
+    90.5 A| [   90.468] RX   PING 16 <- twin (42396)  rssi -115 dBm
+    92.3 B| [   90.464] TX   PING 16 -> twin-2834 (63626)  ACK after 151 ms
+    92.3 B| ==== twin (id 42396)  up 92 s  SF7 ====
+    92.3 B|   peers known: 1
+    92.3 B|     twin-2834            id 63626
+    92.3 B|   pings sent        16   acked 16   failed 0   (100.0% delivered)
+    92.3 B|   time to ACK       min 132 ms   avg 178 ms   max 660 ms
+    92.3 B|   pings received    15   duplicates 0 (must be 0)   missing 0
+    92.3 B|   broadcasts        sent 0   received 0
+    92.3 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    92.3 B|   RSSI              -116 to -115 dBm
+    92.3 B|   link  tx frames 22  retransmits 1  acks sent 15  sends failed 0
+    92.3 B|   link  rx frames 20  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    92.3 B|   radio frames sent 37  received 36  crc errors 0  tx timeouts 0
+    92.3 B|   free heap         365260 bytes
+    92.3 A| ==== twin-2834 (id 63626)  up 92 s  SF7 ====
+    92.3 A|   peers known: 1
+    92.3 A|     twin                 id 42396
+    92.3 A|   pings sent        15   acked 15   failed 0   (100.0% delivered)
+    92.3 A|   time to ACK       min 130 ms   avg 194 ms   max 776 ms
+    92.3 A|   pings received    16   duplicates 0 (must be 0)   missing 0
+    92.3 A|   broadcasts        sent 0   received 0
+    92.3 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+    92.3 A|   RSSI              -115 to -114 dBm
+    92.3 A|   link  tx frames 22  retransmits 1  acks sent 16  sends failed 0
+    92.3 A|   link  rx frames 20  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+    92.3 A|   radio frames sent 38  received 35  crc errors 0  tx timeouts 0
+    92.3 A|   free heap         365120 bytes
+    94.6 A| [   94.580] TX   PING 16 -> twin (42396)  ACK after 177 ms
+    94.6 B| [   94.585] RX   PING 16 <- twin-2834 (63626)  rssi -115 dBm
+    96.0 A| [   96.011] RX   PING 17 <- twin (42396)  rssi -115 dBm
+   100.9 B| [   96.007] TX   PING 17 -> twin-2834 (63626)  ACK after 172 ms
+   100.9 B| [  100.931] RX   PING 17 <- twin-2834 (63626)  rssi -115 dBm
+   101.6 A| [  100.926] TX   PING 17 -> twin (42396)  ACK after 165 ms
+   101.6 A| [  101.596] RX   PING 18 <- twin (42396)  rssi -114 dBm
+   106.9 B| [  101.592] TX   PING 18 -> twin-2834 (63626)  ACK after 161 ms
+   106.9 B| [  106.901] RX   PING 18 <- twin-2834 (63626)  rssi -115 dBm
+   106.9 A| [  106.896] TX   PING 18 -> twin (42396)  ACK after 800 ms  (1 retransmission)
+   107.3 A| [  107.325] RX   PING 19 <- twin (42396)  rssi -115 dBm
+   112.3 A| [  112.241] TX   PING 19 -> twin (42396)  ACK after 166 ms
+   112.3 B| [  107.321] TX   PING 19 -> twin-2834 (63626)  ACK after 170 ms
+   113.3 B| [  112.246] RX   PING 19 <- twin-2834 (63626)  rssi -115 dBm
+   113.3 B| [  113.162] TX   PING 20 -> twin-2834 (63626)  ACK after 166 ms
+   113.3 A| [  113.166] RX   PING 20 <- twin (42396)  rssi -115 dBm
+   118.4 A| [  118.312] TX   PING 20 -> twin (42396)  ACK after 146 ms
+   118.4 B| [  118.317] RX   PING 20 <- twin-2834 (63626)  rssi -115 dBm
+   118.6 A| [  118.494] RX   PING 21 <- twin (42396)  rssi -115 dBm
+   120.3 A|   peers known: 1
+   120.3 A|     twin                 id 42396
+   121.3 B| [  118.490] TX   PING 21 -> twin-2834 (63626)  ACK after 173 ms
+   121.3 B|   peers known: 1
+   121.3 B|     twin-2834            id 63626
+   122.6 B| ==== twin (id 42396)  up 122 s  SF7 ====
+   122.6 B|   peers known: 1
+   122.6 B|     twin-2834            id 63626
+   122.6 B|   pings sent        21   acked 21   failed 0   (100.0% delivered)
+   122.6 B|   time to ACK       min 132 ms   avg 176 ms   max 660 ms
+   122.6 B|   pings received    20   duplicates 0 (must be 0)   missing 0
+   122.6 B|   broadcasts        sent 0   received 0
+   122.6 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   122.6 B|   RSSI              -116 to -115 dBm
+   122.6 B|   link  tx frames 28  retransmits 1  acks sent 20  sends failed 0
+   122.6 B|   link  rx frames 25  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   122.6 B|   radio frames sent 48  received 46  crc errors 0  tx timeouts 0
+   122.6 B|   free heap         365260 bytes
+   122.6 A| ==== twin-2834 (id 63626)  up 122 s  SF7 ====
+   122.6 A|   peers known: 1
+   122.6 A|     twin                 id 42396
+   122.6 A|   pings sent        20   acked 20   failed 0   (100.0% delivered)
+   122.6 A|   time to ACK       min 130 ms   avg 218 ms   max 800 ms
+   122.6 A|   pings received    21   duplicates 0 (must be 0)   missing 0
+   122.6 A|   broadcasts        sent 0   received 0
+   122.6 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   122.6 A|   RSSI              -115 to -114 dBm
+   122.6 A|   link  tx frames 28  retransmits 2  acks sent 21  sends failed 0
+   122.6 A|   link  rx frames 26  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   122.6 A|   radio frames sent 49  received 46  crc errors 0  tx timeouts 0
+   122.6 A|   free heap         365120 bytes
+   124.9 B| [  124.807] TX   PING 22 -> twin-2834 (63626)  ACK after 561 ms  (1 retransmission)
+   125.9 A| [  125.787] TX   PING 21 -> twin (42396)  ACK after 1538 ms  (2 retransmissions)
+   125.9 A| [  125.788] RX   PING 22 <- twin (42396)  rssi -115 dBm
+   125.9 B| [  125.792] RX   PING 21 <- twin-2834 (63626)  rssi -115 dBm
+   130.5 B| [  130.440] TX   PING 23 -> twin-2834 (63626)  ACK after 148 ms
+   130.5 A| [  130.444] RX   PING 23 <- twin (42396)  rssi -115 dBm
+   131.2 B| [  131.114] RX   PING 22 <- twin-2834 (63626)  rssi -115 dBm
+   131.2 A| [  131.109] TX   PING 22 -> twin (42396)  ACK after 165 ms
+   136.1 A| [  136.031] RX   PING 24 <- twin (42396)  rssi -114 dBm
+   137.5 A| [  137.415] TX   PING 23 -> twin (42396)  ACK after 134 ms
+   137.5 B| [  136.027] TX   PING 24 -> twin-2834 (63626)  ACK after 163 ms
+   137.5 B| [  137.420] RX   PING 23 <- twin-2834 (63626)  rssi -115 dBm
+   141.4 A| [  141.320] RX   PING 25 <- twin (42396)  rssi -115 dBm
+   142.0 B| [  141.962] TX   PING 25 -> twin-2834 (63626)  ACK after 792 ms  (1 retransmission)
+   143.5 B| [  143.480] RX   PING 24 <- twin-2834 (63626)  rssi -115 dBm
+   147.5 A| [  143.475] TX   PING 24 -> twin (42396)  ACK after 155 ms
+   147.5 A| [  147.400] RX   PING 26 <- twin (42396)  rssi -114 dBm
+   149.1 A| [  149.059] TX   PING 25 -> twin (42396)  ACK after 159 ms
+   149.1 B| [  147.396] TX   PING 26 -> twin-2834 (63626)  ACK after 166 ms
+   149.1 B| [  149.064] RX   PING 25 <- twin-2834 (63626)  rssi -115 dBm
+   152.6 A| ==== twin-2834 (id 63626)  up 153 s  SF7 ====
+   152.6 A|   peers known: 1
+   152.6 A|     twin                 id 42396
+   152.6 A|   pings sent        25   acked 25   failed 0   (100.0% delivered)
+   152.6 A|   time to ACK       min 130 ms   avg 260 ms   max 1538 ms
+   152.6 A|   pings received    26   duplicates 0 (must be 0)   missing 0
+   152.6 A|   broadcasts        sent 0   received 0
+   152.6 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   152.6 A|   RSSI              -115 to -114 dBm
+   152.6 A|   link  tx frames 36  retransmits 4  acks sent 27  sends failed 0
+   152.6 A|   link  rx frames 31  duplicates suppressed 1  invalid 0  foreign 0  dropped 0
+   152.6 A|   radio frames sent 63  received 57  crc errors 0  tx timeouts 0
+   152.6 A|   free heap         365120 bytes
+   152.8 B| [  152.728] TX   PING 27 -> twin-2834 (63626)  ACK after 164 ms
+   152.8 B| ==== twin (id 42396)  up 153 s  SF7 ====
+   152.8 B|   peers known: 1
+   152.8 B|     twin-2834            id 63626
+   152.8 B|   pings sent        27   acked 27   failed 0   (100.0% delivered)
+   152.8 B|   time to ACK       min 132 ms   avg 211 ms   max 792 ms
+   152.8 B|   pings received    25   duplicates 0 (must be 0)   missing 0
+   152.8 B|   broadcasts        sent 0   received 0
+   152.8 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   152.8 B|   RSSI              -116 to -115 dBm
+   152.8 B|   link  tx frames 37  retransmits 3  acks sent 25  sends failed 0
+   152.8 B|   link  rx frames 31  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   152.8 B|   radio frames sent 62  received 58  crc errors 0  tx timeouts 0
+   152.8 B|   free heap         365260 bytes
+   152.8 A| [  152.732] RX   PING 27 <- twin (42396)  rssi -115 dBm
+   154.9 B| [  154.872] RX   PING 26 <- twin-2834 (63626)  rssi -115 dBm
+   154.9 A| [  154.867] TX   PING 26 -> twin (42396)  ACK after 135 ms
+   158.7 A| [  158.699] RX   PING 28 <- twin (42396)  rssi -114 dBm
+   161.1 A| [  161.104] TX   PING 27 -> twin (42396)  ACK after 155 ms
+   161.1 B| [  158.695] TX   PING 28 -> twin-2834 (63626)  ACK after 138 ms
+   164.0 A| [  164.009] RX   PING 29 <- twin (42396)  rssi -114 dBm
+   164.0 B| [  161.109] RX   PING 27 <- twin-2834 (63626)  rssi -115 dBm
+   164.0 B| [  164.005] TX   PING 29 -> twin-2834 (63626)  ACK after 146 ms
+   166.7 B| [  166.688] RX   PING 28 <- twin-2834 (63626)  rssi -115 dBm
+   169.6 A| [  166.683] TX   PING 28 -> twin (42396)  ACK after 174 ms
+   169.6 A| [  169.589] RX   PING 30 <- twin (42396)  rssi -114 dBm
+   172.5 B| [  169.585] TX   PING 30 -> twin-2834 (63626)  ACK after 147 ms
+   172.5 B| [  172.509] RX   PING 29 <- twin-2834 (63626)  rssi -115 dBm
+   172.5 A| [  172.504] TX   PING 29 -> twin (42396)  ACK after 165 ms
+   175.4 A| [  175.412] RX   PING 31 <- twin (42396)  rssi -115 dBm
+   178.6 B| [  175.408] TX   PING 31 -> twin-2834 (63626)  ACK after 149 ms
+   178.6 B| [  178.565] RX   PING 30 <- twin-2834 (63626)  rssi -115 dBm
+   178.6 A| [  178.560] TX   PING 30 -> twin (42396)  ACK after 148 ms
+   181.2 A| [  181.222] RX   PING 32 <- twin (42396)  rssi -114 dBm
+   182.7 A| ==== twin-2834 (id 63626)  up 183 s  SF7 ====
+   182.7 A|   peers known: 1
+   182.7 A|     twin                 id 42396
+   182.7 A|   pings sent        30   acked 30   failed 0   (100.0% delivered)
+   182.7 A|   time to ACK       min 130 ms   avg 243 ms   max 1538 ms
+   182.7 A|   pings received    32   duplicates 0 (must be 0)   missing 0
+   182.7 A|   broadcasts        sent 0   received 0
+   182.7 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   182.7 A|   RSSI              -115 to -114 dBm
+   182.7 A|   link  tx frames 42  retransmits 4  acks sent 33  sends failed 0
+   182.7 A|   link  rx frames 38  duplicates suppressed 1  invalid 0  foreign 0  dropped 0
+   182.7 A|   radio frames sent 75  received 69  crc errors 0  tx timeouts 0
+   182.7 A|   free heap         365120 bytes
+   183.0 B| [  181.218] TX   PING 32 -> twin-2834 (63626)  ACK after 153 ms
+   183.0 B| ==== twin (id 42396)  up 183 s  SF7 ====
+   183.0 B|   peers known: 1
+   183.0 B|     twin-2834            id 63626
+   183.0 B|   pings sent        32   acked 32   failed 0   (100.0% delivered)
+   183.0 B|   time to ACK       min 132 ms   avg 200 ms   max 792 ms
+   183.0 B|   pings received    30   duplicates 0 (must be 0)   missing 0
+   183.0 B|   broadcasts        sent 0   received 0
+   183.0 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   183.0 B|   RSSI              -116 to -115 dBm
+   183.0 B|   link  tx frames 43  retransmits 3  acks sent 30  sends failed 0
+   183.0 B|   link  rx frames 37  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   183.0 B|   radio frames sent 73  received 69  crc errors 0  tx timeouts 0
+   183.0 B|   free heap         365260 bytes
+   184.9 A| [  184.882] TX   PING 31 -> twin (42396)  ACK after 159 ms
+   184.9 B| [  184.887] RX   PING 31 <- twin-2834 (63626)  rssi -115 dBm
+   187.4 A| [  187.435] RX   PING 33 <- twin (42396)  rssi -114 dBm
+   190.4 B| [  187.431] TX   PING 33 -> twin-2834 (63626)  ACK after 162 ms
+   190.4 B| [  190.344] RX   PING 32 <- twin-2834 (63626)  rssi -115 dBm
+   193.1 A| [  190.339] TX   PING 32 -> twin (42396)  ACK after 154 ms
+   193.1 A| [  193.019] RX   PING 34 <- twin (42396)  rssi -114 dBm
+   196.0 B| [  193.015] TX   PING 34 -> twin-2834 (63626)  ACK after 171 ms
+   196.0 B| [  195.917] RX   PING 33 <- twin-2834 (63626)  rssi -115 dBm
+   198.7 A| [  195.912] TX   PING 33 -> twin (42396)  ACK after 143 ms
+   198.7 A| [  198.563] RX   PING 35 <- twin (42396)  rssi -114 dBm
+   201.3 A| [  201.199] TX   PING 34 -> twin (42396)  ACK after 136 ms
+   201.3 B| [  198.559] TX   PING 35 -> twin-2834 (63626)  ACK after 142 ms
+   201.3 B| [  201.204] RX   PING 34 <- twin-2834 (63626)  rssi -115 dBm
+   204.9 A| [  204.852] RX   PING 36 <- twin (42396)  rssi -114 dBm
+   207.3 A| [  207.260] TX   PING 35 -> twin (42396)  ACK after 158 ms
+   207.3 B| [  204.848] TX   PING 36 -> twin-2834 (63626)  ACK after 144 ms
+   207.3 B| [  207.265] RX   PING 35 <- twin-2834 (63626)  rssi -115 dBm
+   210.8 A| [  210.675] RX   PING 37 <- twin (42396)  rssi -114 dBm
+   213.1 B| [  210.671] TX   PING 37 -> twin-2834 (63626)  ACK after 156 ms
+   213.1 B| [  213.064] RX   PING 36 <- twin-2834 (63626)  rssi -115 dBm
+   213.1 B| ==== twin (id 42396)  up 213 s  SF7 ====
+   213.1 B|   peers known: 1
+   213.1 B|     twin-2834            id 63626
+   213.1 B|   pings sent        37   acked 37   failed 0   (100.0% delivered)
+   213.1 B|   time to ACK       min 132 ms   avg 194 ms   max 792 ms
+   213.1 B|   pings received    36   duplicates 0 (must be 0)   missing 0
+   213.1 B|   broadcasts        sent 0   received 0
+   213.1 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   213.1 B|   RSSI              -116 to -115 dBm
+   213.1 B|   link  tx frames 49  retransmits 3  acks sent 36  sends failed 0
+   213.1 B|   link  rx frames 44  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   213.1 B|   radio frames sent 85  received 81  crc errors 0  tx timeouts 0
+   213.1 B|   free heap         365260 bytes
+   213.1 A| [  213.059] TX   PING 36 -> twin (42396)  ACK after 134 ms
+   213.1 A| ==== twin-2834 (id 63626)  up 213 s  SF7 ====
+   213.1 A|   peers known: 1
+   213.1 A|     twin                 id 42396
+   213.1 A|   pings sent        36   acked 36   failed 0   (100.0% delivered)
+   213.1 A|   time to ACK       min 130 ms   avg 227 ms   max 1538 ms
+   213.1 A|   pings received    37   duplicates 0 (must be 0)   missing 0
+   213.1 A|   broadcasts        sent 0   received 0
+   213.1 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   213.1 A|   RSSI              -115 to -114 dBm
+   213.1 A|   link  tx frames 49  retransmits 4  acks sent 38  sends failed 0
+   213.1 A|   link  rx frames 44  duplicates suppressed 1  invalid 0  foreign 0  dropped 0
+   213.1 A|   radio frames sent 87  received 81  crc errors 0  tx timeouts 0
+   213.1 A|   free heap         365120 bytes
+   216.9 A| [  216.809] RX   PING 38 <- twin (42396)  rssi -114 dBm
+   218.7 B| [  216.699] TX   PING 38 -> twin-2834 (63626)  ACK after 133 ms
+   218.7 B| [  218.672] RX   PING 37 <- twin-2834 (63626)  rssi -115 dBm
+   218.7 A| [  218.667] TX   PING 37 -> twin (42396)  ACK after 174 ms
+   222.9 A| [  222.840] RX   PING 39 <- twin (42396)  rssi -114 dBm
+   222.9 B| [  222.836] TX   PING 39 -> twin-2834 (63626)  ACK after 164 ms
+   224.5 B| [  224.474] RX   PING 38 <- twin-2834 (63626)  rssi -115 dBm
+   224.5 A| [  224.469] TX   PING 38 -> twin (42396)  ACK after 129 ms
+   228.9 A| [  228.891] RX   PING 40 <- twin (42396)  rssi -114 dBm
+   230.6 B| [  228.887] TX   PING 40 -> twin-2834 (63626)  ACK after 163 ms
+   230.6 B| [  230.567] RX   PING 39 <- twin-2834 (63626)  rssi -115 dBm
+   230.6 A| [  230.562] TX   PING 39 -> twin (42396)  ACK after 171 ms
+   232.1 A| ==== twin-2834 (id 63626)  up 232 s  SF7 ====
+   232.1 A|   peers known: 1
+   232.1 A|     twin                 id 42396
+   232.1 A|   pings sent        39   acked 39   failed 0   (100.0% delivered)
+   232.1 A|   time to ACK       min 129 ms   avg 221 ms   max 1538 ms
+   232.1 A|   pings received    40   duplicates 0 (must be 0)   missing 0
+   232.1 A|   broadcasts        sent 0   received 0
+   232.1 A|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   232.1 A|   RSSI              -115 to -114 dBm
+   232.1 A|   link  tx frames 53  retransmits 4  acks sent 41  sends failed 0
+   232.1 A|   link  rx frames 48  duplicates suppressed 1  invalid 0  foreign 0  dropped 0
+   232.1 A|   radio frames sent 94  received 88  crc errors 0  tx timeouts 0
+   232.1 A|   free heap         365120 bytes
+   234.5 B| [  234.467] TX   PING 41 -> twin-2834 (63626)  ACK after 150 ms
+   234.5 A| [  234.471] RX   PING 41 <- twin (42396)  rssi -115 dBm
+   235.3 B| ==== twin (id 42396)  up 235 s  SF7 ====
+   235.3 B|   peers known: 1
+   235.3 B|     twin-2834            id 63626
+   235.3 B|   pings sent        41   acked 41   failed 0   (100.0% delivered)
+   235.3 B|   time to ACK       min 132 ms   avg 190 ms   max 792 ms
+   235.3 B|   pings received    39   duplicates 0 (must be 0)   missing 0
+   235.3 B|   broadcasts        sent 0   received 0
+   235.3 B|   max-size messages sent 0   acked 0   received intact 0   corrupt 0 (must be 0)
+   235.3 B|   RSSI              -116 to -115 dBm
+   235.3 B|   link  tx frames 54  retransmits 3  acks sent 39  sends failed 0
+   235.3 B|   link  rx frames 48  duplicates suppressed 0  invalid 0  foreign 0  dropped 0
+   235.3 B|   radio frames sent 93  received 89  crc errors 0  tx timeouts 0
+   235.3 B|   free heap         365260 bytes
+   236.2 A| [  236.103] TX   PING 40 -> twin (42396)  ACK after 132 ms
+   236.2 B| [  236.108] RX   PING 40 <- twin-2834 (63626)  rssi -115 dBm
+# phase 2-same-name finished 2026-10-03 19:22:31
