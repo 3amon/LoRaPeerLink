@@ -28,8 +28,22 @@
  * receive() (through the link / RollCall / PeerMessenger processMessages
  * functions) regularly and with generous timeouts.
  *
- * NOTE: this version of the driver has been compiled for the ESP32-S3 but
- * not yet run on hardware.
+ * Hardware status: run on two Heltec Wireless Shell V3 modules (ESP32-S3 +
+ * SX1262) at SF7 / 125 kHz / 915 MHz with examples/esp32_bench_test. Other
+ * boards and settings have not been tried.
+ *
+ * Vendor license
+ * --------------
+ * The vendor stack (libheltec.a) only starts on a board that has a Heltec
+ * license stored in flash. Without one, Mcu.begin() prints
+ * "ESP32ChipID=XXXXXXXXXXXX" and then waits forever for a license on UART0.
+ * On a board whose console is the native USB port nothing more appears, so
+ * begin() simply never returns. Heltec development boards normally ship
+ * licensed; bare modules, and boards whose flash has been fully erased or
+ * re-partitioned, may not be. See examples/esp32_bench_test/README.md for
+ * how to look the license up and store it.
+ *
+ * Build with -D SEMTECH_RADIO_TRACE to print each bring-up step.
  */
 
 #ifndef SEMTECH_RADIO_H
@@ -84,6 +98,14 @@ public:
 
     /** Time on air for a frame of the given length with the current settings. */
     uint32_t timeOnAirMs(size_t length) override;
+
+    /**
+     * Signal level on the channel right now, in dBm (the radio must be
+     * receiving). A quiet 915 MHz channel reads around -100 dBm or lower; a
+     * nearby transmitter raises it well above that. Useful for telling an RF
+     * problem (antenna, power) from a protocol problem.
+     */
+    int channelRssi();
 
     // Diagnostics
     uint32_t framesReceived() const { return _framesReceived; }

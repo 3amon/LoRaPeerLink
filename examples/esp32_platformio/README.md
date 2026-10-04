@@ -46,9 +46,11 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 - `lib/`: Vendor libraries for the display and the LoRa radio
 - `platformio.ini`: Project configuration with the LoRaPeerLink Git dependency
 
-> **Status:** this example builds for the Heltec WiFi LoRa 32 V3. The 2.0
-> driver has not been run on hardware yet; the checklist in
-> [TEST_PLAN.md](../../TEST_PLAN.md) section 4 describes how to verify it.
+> **Status:** this example builds for the Heltec WiFi LoRa 32 V3. The radio
+> driver has been run on Heltec Wireless Shell V3 modules through
+> `../esp32_bench_test`; this display example itself has not been run on a
+> board yet. If the board prints `ESP32ChipID=...` and then nothing, it has no
+> Heltec license in flash: see `../esp32_bench_test/README.md`.
 
 ## Usage
 

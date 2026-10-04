@@ -381,9 +381,14 @@ random loss, and both kinds of radio driver (one that only listens inside
 for what is covered and what is not, and **[CHANGELOG.md](CHANGELOG.md)** for
 the bugs version 2.0 fixed.
 
-**Hardware status:** the library and the ESP32 example compile for the Heltec
-WiFi LoRa 32 V3 (ESP32-S3 + SX1262). Version 2.0 has not yet been validated on
-real radios; `TEST_PLAN.md` lists the on-air checks still to do.
+**Hardware status:** the library has run for 1 hour 50 minutes on two Heltec
+Wireless Shell V3 boards (ESP32-S3 + SX1262) with `examples/esp32_bench_test`,
+over a very weak link: 99.6% of 1,209 acknowledged pings delivered in an hour
+at SF7, nothing delivered twice, SF10 and SF12, and the encrypted link.
+Results and logs are in
+[hardware-tests/2026-10-03-t3-scanner](hardware-tests/2026-10-03-t3-scanner/RESULTS.md).
+Range with antennas, more than two boards and longer runs are still to be
+tested.
 
 ### Things to know
 

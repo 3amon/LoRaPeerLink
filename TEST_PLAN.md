@@ -135,6 +135,12 @@ UndefinedBehaviorSanitizer and ThreadSanitizer as well.
 The simulator models the channel, not the SX1262 or the vendor driver. These
 need two or three boards. Each step says what to look for.
 
+`examples/esp32_bench_test` is a firmware made for this: every board pings
+its peers with acknowledgments, counts gaps, duplicates and retransmissions,
+and prints the radio's time on air and the link statistics on the serial
+console. Steps 2 to 7 below can be read straight off its output; its README
+describes what a healthy run looks like.
+
 1. **Driver smoke test.** Flash `examples/esp32_platformio` to two boards.
    Both should print their name and ID; one of them renames itself (same
    firmware, same name). Expect each board to show the other within 5 s.
@@ -145,6 +151,7 @@ need two or three boards. Each step says what to look for.
    finished between two `receive()` calls being returned by the next one.
    If step 2 loses packets, print `radio.framesReceived()` and
    `radio.crcErrors()` on the receiver to see whether the radio heard them.
+   (Checked on two boards: frames are received between calls.)
 4. **Acknowledged unicast.** Change the button handler to
    `messenger.sendMessage("<other name>", "ping", true)` and print the result.
    Expect `true` nearly every time. `lora_link.stats().txRetransmits` shows
@@ -163,6 +170,38 @@ need two or three boards. Each step says what to look for.
    key derivation.
 9. **Long run.** Three boards, one message every 15 s each, for an hour.
    Count sent, acknowledged and received per board from the serial logs.
+
+### Hardware results (2026-10-03)
+
+Two T3 scanner boards (Heltec Wireless Shell V3: ESP32-S3 + SX1262) ran
+`examples/esp32_bench_test` for 1 hour 50 minutes under
+`hardware-tests/run_bench.py`. Full results and raw logs:
+[hardware-tests/2026-10-03-t3-scanner/RESULTS.md](hardware-tests/2026-10-03-t3-scanner/RESULTS.md).
+
+The link was very weak (about -115 dBm with the boards on one desk, so
+probably no antennas attached), which makes these results a test on a
+marginal link.
+
+| Check | Result |
+|---|---|
+| One hour of acknowledged pings at SF7, one every 5 s each way | 1,204 of 1,209 acknowledged (99.6%); median time to ACK 156 ms |
+| Messages delivered twice, in any phase | 0 (17 retransmissions suppressed at the receiver in the first hour) |
+| Maximum-size messages (255 byte frames, content checked) | 7 of 7 intact at SF7; 3 of 3 encrypted |
+| Both boards flooding each other | 25 of 38 acknowledged, no duplicates, no lock-up |
+| A board restarting with a new ID | Back in 2 s; the peer reached the new ID with its next ping |
+| Two boards asking for the same name | Exactly one renamed itself |
+| SF10 (281 ms ACK) and SF12 (1.1 s ACK), ACK timeout from the radio's time on air | 184 of 184 and 40 of 41 pings acknowledged |
+| Encrypted link, 20 minutes | 386 of 386 acknowledged at normal pace; key derivation 453 ms |
+| Time on air, 9 byte ACK at SF7 | 46 ms reported by the radio; the simulator uses 45.3 ms |
+
+Found on the way: the vendor radio library blocks forever in `Mcu.begin()` on
+a board without a Heltec license in flash
+(`examples/esp32_bench_test/README.md` describes the symptom and the fix), and
+its transmit timeout was fixed at 3 s, too short for long frames at SF11 and
+SF12 (the driver now derives it from the time on air).
+
+Still to do on hardware: repeat with antennas attached, three or more boards,
+range, the button broadcast, and runs longer than an hour.
 
 ## 5. Not covered
 
