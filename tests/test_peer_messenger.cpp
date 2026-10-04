@@ -80,26 +80,12 @@ TEST_CASE("PeerMessenger send message by ID", "[PeerMessenger]") {
     uint16_t idA = rollCallA.getNodeId();
     uint16_t idB = rollCallB.getNodeId();
     
-    // Let nodes discover each other through RollCall
-    MockRadio::clearChannel();
-    
-    // Exchange HELLOIAM messages so they know each other
-    std::string helloA = "HELLOIAM|alice AT " + std::to_string(idA);
-    std::string helloB = "HELLOIAM|bob AT " + std::to_string(idB);
-    
-    // A learns about B
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
-                            helloB.length()) == true);
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // B learns about A  
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloA.c_str()), 
-                            helloA.length()) == true);
-    REQUIRE(rollCallB.processMessages(100) == true);
-    
-    // Clear channel for user messages
+    // The nodes discover each other from their announcements: B heard A's
+    // while it was starting up, and A picks up B's now.
+    rollCallA.processMessages(100);
+    rollCallB.processMessages(100);
+    REQUIRE(rollCallA.getNameToIdMap().count("bob") == 1);
+    REQUIRE(rollCallB.getNameToIdMap().count("alice") == 1);
     MockRadio::clearChannel();
     
     // Send a message from A to B
@@ -143,26 +129,12 @@ TEST_CASE("PeerMessenger send message by name", "[PeerMessenger]") {
     uint16_t idA = rollCallA.getNodeId();
     uint16_t idB = rollCallB.getNodeId();
     
-    // Let nodes discover each other through RollCall
-    MockRadio::clearChannel();
-    
-    // Exchange HELLOIAM messages so they know each other
-    std::string helloA = "HELLOIAM|alice AT " + std::to_string(idA);
-    std::string helloB = "HELLOIAM|bob AT " + std::to_string(idB);
-    
-    // A learns about B
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
-                            helloB.length()) == true);
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // B learns about A  
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloA.c_str()), 
-                            helloA.length()) == true);
-    REQUIRE(rollCallB.processMessages(100) == true);
-    
-    // Clear channel for user messages
+    // The nodes discover each other from their announcements: B heard A's
+    // while it was starting up, and A picks up B's now.
+    rollCallA.processMessages(100);
+    rollCallB.processMessages(100);
+    REQUIRE(rollCallA.getNameToIdMap().count("bob") == 1);
+    REQUIRE(rollCallB.getNameToIdMap().count("alice") == 1);
     MockRadio::clearChannel();
     
     // Now send a message from A to B by name

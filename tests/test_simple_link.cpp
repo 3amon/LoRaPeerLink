@@ -2,6 +2,7 @@
 #include <chrono>
 #include <catch2/catch_test_macros.hpp>
 #include "LoraBasicLink.h"
+#include "RollCall.h"
 #include "TestUtils.h"
 
 
@@ -129,27 +130,38 @@ TEST_CASE("LoRaBasicLink maximum payload size", "[LoRaBasicLink]") {
     linkB.setLocalId(2);
 
     SECTION("Maximum payload succeeds") {
-        uint8_t maxPayload[247]; // MAX_PAYLOAD = 256 - 7 - 2 = 247 (with new 16-bit header)
-        for (int i = 0; i < 247; i++) {
+        // A LoRa frame holds at most 255 bytes: 246 of payload after the 7 byte
+        // header and the 2 byte CRC.
+        REQUIRE(MAX_PAYLOAD == 246);
+        REQUIRE(linkA.maxPayloadSize() == 246);
+        uint8_t maxPayload[MAX_PAYLOAD];
+        for (int i = 0; i < MAX_PAYLOAD; i++) {
             maxPayload[i] = i & 0xFF;
         }
         
-        REQUIRE(linkA.sendPacket(1, 2, maxPayload, 247) == true);
+        REQUIRE(linkA.sendPacket(1, 2, maxPayload, MAX_PAYLOAD) == true);
         
         uint16_t src = 0;
-        uint8_t out[247];
-        int len = linkB.receivePacket(&src, out, 247);
-        REQUIRE(len == 247);
+        uint8_t out[MAX_PAYLOAD];
+        int len = linkB.receivePacket(&src, out, MAX_PAYLOAD);
+        REQUIRE(len == MAX_PAYLOAD);
         REQUIRE(src == 1);
         
-        for (int i = 0; i < 247; i++) {
+        for (int i = 0; i < MAX_PAYLOAD; i++) {
             REQUIRE(out[i] == (i & 0xFF));
         }
     }
     
     SECTION("Oversized payload fails") {
-        uint8_t oversized[248]; // One byte too many (248 > 247)
-        REQUIRE(linkA.sendPacket(1, 2, oversized, 248) == false);
+        uint8_t oversized[255] = {0};
+        REQUIRE(linkA.sendPacket(1, 2, oversized, MAX_PAYLOAD + 1) == false);
+        REQUIRE(linkA.sendPacket(1, 2, oversized, 255) == false);
+        REQUIRE(radioB.pending() == 0); // Nothing was transmitted
+    }
+
+    SECTION("Null payload with a non-zero length fails") {
+        REQUIRE(linkA.sendPacket(1, 2, nullptr, 5) == false);
+        REQUIRE(radioB.pending() == 0);
     }
 }
 
@@ -242,11 +254,19 @@ TEST_CASE("LoRaBasicLink buffer overflow protection", "[LoRaBasicLink]") {
     uint16_t src = 0;
     uint8_t smallBuffer[5]; // Too small for the message
     
+    // A payload that does not fit the caller's buffer is dropped. (Version 1
+    // copied the first 5 bytes but returned 10, inviting the caller to read
+    // past the end of its buffer.)
+    memset(smallBuffer, 0xEE, sizeof(smallBuffer));
     int len = linkB.receivePacket(&src, smallBuffer, 5);
-    REQUIRE(len == 10); // Returns full payload length
-    REQUIRE(src == 1);
-    // But only the first 5 bytes should be copied
-    REQUIRE(memcmp(smallBuffer, msg, 5) == 0);
+    REQUIRE(len == 0);
+    REQUIRE(smallBuffer[0] == 0xEE); // Nothing was written
+    REQUIRE(linkB.stats().rxDropped == 1);
+
+    // Null arguments are refused rather than dereferenced.
+    REQUIRE(linkA.sendPacket(1, 2, msg, 10) == true);
+    REQUIRE(linkB.receivePacket(nullptr, smallBuffer, 5) == 0);
+    REQUIRE(linkB.receivePacket(&src, nullptr, 5) == 0);
 }
 
 TEST_CASE("LoRaBasicLink empty payload handling", "[LoRaBasicLink]") {
@@ -268,4 +288,28 @@ TEST_CASE("LoRaBasicLink empty payload handling", "[LoRaBasicLink]") {
     int len = linkB.receivePacket(&src, out, 10);
     REQUIRE(len == 0);
     REQUIRE(src == 1);
+}
+
+TEST_CASE("A clock that never advances cannot hang the library", "[LoRaBasicLink][robustness]") {
+    // Broken platform hooks: the time never changes and sleeping does nothing.
+    auto frozenClock = []() -> uint32_t { return 1000; };
+    auto noSleep = [](uint32_t) {};
+
+    MockRadio radioA, radioB;
+    MockRadio::clearChannel();
+    LoRaBasicLink link(&radioA, frozenClock, noSleep);
+    link.setLocalId(1);
+
+    // Waiting for an ACK that never comes returns instead of spinning forever.
+    REQUIRE(link.sendPacket(1, 2, (const uint8_t*)"x", 1, true, 3) == false);
+
+    uint16_t src = 0;
+    uint8_t buf[16];
+    REQUIRE(link.receivePacket(&src, buf, 16, 1000) == 0);
+
+    RollCall rollCall(&link, "frozen", frozenClock, noSleep, []() -> uint16_t { return 77; });
+    REQUIRE(rollCall.begin() == true);
+    REQUIRE(rollCall.whoIs("nobody", 1000) == 0);
+    REQUIRE(rollCall.whereIs(1234, 1000) == "");
+    REQUIRE(rollCall.processMessages(1000) == false);
 }

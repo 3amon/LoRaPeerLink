@@ -1,21 +1,37 @@
 /**
  * @file RollCall.h
- * @brief Node naming and discovery layer for LoRa peer-to-peer networks
+ * @brief RollCall protocol: node naming, ID assignment and discovery
  * @author LoRaPeerLink Project
- * @version 1.0
- * 
- * This file implements a decentralized node discovery and naming system
- * that operates over any ILoRaLink implementation. It provides:
- * - Human-readable node names mapped to short numeric IDs
- * - Decentralized name resolution without central authority
- * - Collision detection and automatic ID reassignment
- * - Periodic announcements for network maintenance
- * 
- * The protocol supports several message types:
- * - HELLOIAM: Node introduction broadcasts
- * - WHOIS: Name-to-ID resolution queries
- * - WHEREIS: ID-to-name resolution queries
- * - RESP: Response messages for queries
+ * @version 2.0
+ *
+ * RollCall lets nodes find each other by name. Every node picks a random
+ * 16-bit ID, announces "I am NAME at ID" and keeps a table of the names and
+ * IDs it has heard. Collisions (two nodes with the same ID or the same name)
+ * are detected from the announcements and resolved.
+ *
+ * Messages (plain text, carried as link payloads):
+ *
+ *   HELLOIAM|<name> AT <id> #<nonce>   periodic announcement (broadcast)
+ *   WHOIS|<name>                       who has this name?   (broadcast)
+ *   WHEREIS|<id>                       who has this ID?     (broadcast)
+ *   RESP|<name> AT <id>                answer to WHOIS / WHEREIS (broadcast)
+ *
+ * <id> and <nonce> are decimal. The nonce is a random number chosen at
+ * begin(); it lets two nodes that picked the same name AND the same ID tell
+ * each other apart. Receivers accept announcements without a nonce.
+ *
+ * Collision rules. Both nodes apply the same rule, so exactly one of them
+ * changes:
+ *   - Same ID, different names: the node whose name sorts later picks a new ID.
+ *   - Same name, different IDs: the node with the larger ID appends a random
+ *     suffix to its name ("name-1234").
+ *   - Same name and same ID: the node with the larger nonce changes both.
+ * The node that keeps its identity re-announces soon afterwards so that the
+ * other one notices the collision even if it has not heard an announcement
+ * yet.
+ *
+ * Malformed or oversized messages from the radio are ignored. They can never
+ * crash the node.
  */
 
 #ifndef ROLLCALL_H
@@ -23,291 +39,185 @@
 
 #include "ILoRaLink.h"
 
+#include <stddef.h>
 #include <stdint.h>
+#include <random>
 #include <string>
 #include <unordered_map>
-#include <queue>
-#include <random>
 
-/**
- * @class RollCall
- * @brief Node naming and discovery layer for LoRa peer-to-peer networks
- * 
- * This class implements a decentralized node discovery system that maps
- * human-readable node names (e.g., "sensor-1", "gateway-main") to short
- * 2-byte node IDs for efficient over-the-air transmission. It provides:
- * 
- * **Key Features:**
- * - **Decentralized Operation**: No central naming authority required
- * - **Collision Detection**: Automatic handling of ID conflicts
- * - **Dynamic Discovery**: Real-time node discovery and mapping
- * - **Periodic Maintenance**: Automatic network announcements
- * - **Efficient Protocol**: Minimal overhead for name resolution
- * 
- * **Protocol Messages:**
- * - `HELLOIAM <name> AT <id>`: Broadcast node introduction
- * - `WHOIS <name>`: Query for node ID by name
- * - `WHEREIS <id>`: Query for node name by ID
- * - `RESP <data>`: Response to queries
- * 
- * **Collision Handling:**
- * When multiple nodes choose the same ID, the protocol detects conflicts
- * and automatically reassigns IDs using exponential backoff to prevent
- * synchronized retries.
- * 
- * **Usage Pattern:**
- * 1. Initialize with link layer and node name
- * 2. Call begin() to generate ID and announce presence
- * 3. Regularly call processMessages() to handle incoming requests
- * 4. Use whoIs()/whereIs() for name resolution as needed
- * 5. Optional: Enable message logging for debugging protocol traffic
- * 
- * @par Example:
- * @code
- * LoRaBasicLink link(&radio, 0, getTime, sleep);
- * RollCall rollCall(&link, "sensor-1", getTime, sleep);
- * 
- * rollCall.begin();
- * 
- * // In main loop:
- * rollCall.processMessages();
- * 
- * // Look up another node:
- * uint16_t gatewayId = rollCall.whoIs("gateway-main");
- * @endcode
- * 
- * @par Example with Debug Logging:
- * @code
- * // Enable logging to see all protocol messages
- * RollCall rollCall(&link, "sensor-1", getTime, sleep, nullptr, RollCall::consoleLog);
- * @endcode
- */
+/** Longest node name RollCall accepts, in bytes. */
+#ifndef ROLLCALL_MAX_NAME_LEN
+#define ROLLCALL_MAX_NAME_LEN 48
+#endif
+
+/** Largest number of nodes kept in the name/ID tables (this node included). */
+#ifndef ROLLCALL_MAX_PEERS
+#define ROLLCALL_MAX_PEERS 64
+#endif
+
 class RollCall {
 public:
     using time_ms_fn = uint32_t (*)();
     using sleep_ms_fn = void (*)(uint32_t);
+
+    /**
+     * Source of random 16-bit numbers for IDs, name suffixes and timing
+     * jitter. On real hardware pass a function backed by a hardware random
+     * number generator (for example esp_random() on ESP32): nodes running
+     * identical firmware must not produce identical sequences.
+     */
     using random_fn = uint16_t (*)();
+
     using log_fn = void (*)(const char*);
 
     /**
-     * Constructor
-     * @param link Pointer to ILoRaLink for communication
-     * @param nodeName Human-readable name for this node
-     * @param getTime Function to get current time in milliseconds
-     * @param sleep Function to sleep for specified milliseconds
-     * @param getRandom Function to generate random uint16_t values (optional)
-     * @param logMessage Function to log debug messages (optional, for debugging only)
+     * Called for every received payload that is not a RollCall message, so
+     * that an application layer sharing the link (for example PeerMessenger)
+     * does not lose data while RollCall is listening.
      */
-    RollCall(ILoRaLink* link, const std::string& nodeName, 
+    using data_fn = void (*)(void* context, uint16_t srcId, const uint8_t* data, size_t len);
+
+    /**
+     * @param link       Link layer to use (must outlive this object)
+     * @param nodeName   Requested name, 1..ROLLCALL_MAX_NAME_LEN bytes, without '|'
+     * @param getTime    Millisecond clock
+     * @param sleep      Blocking delay
+     * @param getRandom  Random source, or nullptr for the built-in default
+     * @param logMessage Optional log sink
+     */
+    RollCall(ILoRaLink* link, const std::string& nodeName,
              time_ms_fn getTime, sleep_ms_fn sleep, random_fn getRandom = nullptr,
              log_fn logMessage = nullptr);
 
     /**
-     * Initialize the RollCall layer
-     * - Generates random node ID
-     * - Broadcasts HELLOIAM message
-     * - Listens for collisions
-     * @return true if initialization successful
+     * @brief Pick an ID, announce this node and listen for collisions
+     * @return false if the name is invalid or the announcement could not be sent
+     *
+     * Blocks for about COLLISION_LISTEN_MS while listening for other nodes.
      */
     bool begin();
 
     /**
-     * Process incoming messages and handle discovery requests
-     * Should be called regularly to handle incoming packets
-     * @param timeoutMs Maximum time to wait for a packet
-     * @return true if a message was processed
+     * @brief Receive and handle one message, and send announcements that are due
+     * @param timeoutMs How long to listen for a message
+     * @return true if a RollCall message was handled
+     *
+     * Call this regularly. The radio only needs to listen while this (or
+     * another receiving call) runs, so prefer long timeouts over calling it
+     * with a short timeout and sleeping in between.
      */
     bool processMessages(uint32_t timeoutMs = 100);
 
     /**
-     * Look up node ID by name
-     * @param name Node name to look up
-     * @param timeoutMs Maximum time to wait for response
-     * @return Node ID if found, 0 if not found or timeout
+     * @brief Resolve a node name to its ID
+     * @return The ID, or 0 if nobody answered within @p timeoutMs
+     *
+     * Answers from the local table when possible; otherwise broadcasts a
+     * WHOIS query, QUERY_SENDS times spread over the timeout.
      */
     uint16_t whoIs(const std::string& name, uint32_t timeoutMs = 1000);
 
     /**
-     * Look up node name by ID
-     * @param nodeId Node ID to look up
-     * @param timeoutMs Maximum time to wait for response
-     * @return Node name if found, empty string if not found or timeout
+     * @brief Resolve a node ID to its name
+     * @return The name, or an empty string if nobody answered within @p timeoutMs
      */
     std::string whereIs(uint16_t nodeId, uint32_t timeoutMs = 1000);
 
-    /**
-     * Get current node ID
-     * @return Current node ID
-     */
     uint16_t getNodeId() const { return _nodeId; }
-
-    /**
-     * Get current node name
-     * @return Current node name
-     */
     const std::string& getNodeName() const { return _nodeName; }
 
-    /**
-     * Get all known name-to-ID mappings
-     * @return Reference to internal mapping table
-     */
     const std::unordered_map<std::string, uint16_t>& getNameToIdMap() const { return _nameToId; }
-
-    /**
-     * Get all known ID-to-name mappings
-     * @return Reference to internal mapping table
-     */
     const std::unordered_map<uint16_t, std::string>& getIdToNameMap() const { return _idToName; }
 
-    /**
-     * Get access to the underlying link layer
-     * @return Reference to ILoRaLink instance
-     */
     ILoRaLink& getLink() { return *_link; }
 
-    /**
-     * Check if a message is a RollCall protocol message
-     * @param message Message content to check
-     * @return true if the message is a RollCall protocol message
-     */
+    /** Register the receiver for non-RollCall payloads (see data_fn). */
+    void setDataHandler(data_fn handler, void* context) { _dataHandler = handler; _dataContext = context; }
+    void* dataHandlerContext() const { return _dataContext; }
+
+    /** True if @p message starts with one of the RollCall prefixes. */
     bool isRollCallMessage(const std::string& message) const;
 
     /**
-     * Process a RollCall protocol message
-     * @param message Message content
-     * @param srcId Source node ID from transport layer
-     * @return true if message was processed successfully
+     * @brief Handle one RollCall message
+     * @return true if the message was well formed and handled
      */
     bool processRollCallMessage(const std::string& message, uint16_t srcId);
 
+    /** True if @p name is acceptable as a node name. */
+    static bool isValidName(const std::string& name);
+
     /**
-     * Default console logging function for debugging
-     * @param message Message to log to console
+     * @brief Parse a decimal node ID
+     * @return true and the value in @p out if @p text is 1-5 digits in the range 1..65534
      */
+    static bool parseNodeId(const std::string& text, uint16_t& out);
+
     static void consoleLog(const char* message);
+
+    static constexpr uint32_t COLLISION_LISTEN_MS = 1000;           ///< begin() listens this long
+    static constexpr uint32_t PERIODIC_ANNOUNCE_INTERVAL_MS = 30000; ///< Nominal announcement period
+    static constexpr uint32_t ANNOUNCE_JITTER_MS = 3000;             ///< Period is randomised by +/- this much
+    static constexpr uint32_t QUERY_SENDS = 3;                       ///< Times a WHOIS/WHEREIS is sent per call
 
 private:
     ILoRaLink* _link;
     std::string _nodeName;
     uint16_t _nodeId;
+    uint16_t _nonce;
     time_ms_fn _getTime;
     sleep_ms_fn _sleep;
     random_fn _getRandom;
     log_fn _logMessage;
+    data_fn _dataHandler;
+    void* _dataContext;
 
-    // Timing for periodic announcements
-    uint32_t _lastAnnouncementTime;
+    bool _started;
+    uint8_t _holdAnnouncements;   ///< >0 while a query is waiting for its answer
+    uint32_t _nextAnnounceAt;   ///< Time of the next announcement
 
-    // Mapping tables
     std::unordered_map<std::string, uint16_t> _nameToId;
     std::unordered_map<uint16_t, std::string> _idToName;
 
-    // Protocol constants
     static constexpr const char* HELLOIAM_PREFIX = "HELLOIAM|";
     static constexpr const char* WHOIS_PREFIX = "WHOIS|";
     static constexpr const char* WHEREIS_PREFIX = "WHEREIS|";
     static constexpr const char* RESPONSE_PREFIX = "RESP|";
-    static constexpr uint32_t COLLISION_BACKOFF_MS = 1000;
-    static constexpr uint32_t DISCOVERY_TIMEOUT_MS = 1000;
-    static constexpr uint32_t PERIODIC_ANNOUNCE_INTERVAL_MS = 30000; // 30 seconds
-    static constexpr int MAX_RETRIES = 3;
 
-    /**
-     * Generate a random 2-byte node ID
-     * @return Random node ID (avoiding 0 and 0xFFFF)
-     */
+    struct Announcement {
+        std::string name;
+        uint16_t id = 0;
+        bool hasNonce = false;
+        uint16_t nonce = 0;
+    };
+
     uint16_t generateRandomId();
+    std::string generateSuffixedName(const std::string& base);
 
-    /**
-     * Broadcast HELLOIAM message
-     * @return true if message sent successfully
-     */
+    bool send(uint16_t destId, const std::string& message);
     bool broadcastHelloIam();
+    void announceIfDue();
+    void scheduleAnnouncement(uint32_t minDelayMs, uint32_t spanMs);
+    void expediteAnnouncement();
+    void listenFor(uint32_t ms);
+    void queryAndWait(const std::string& query, uint32_t timeoutMs, const std::string* name, uint16_t nodeId);
 
-    /**
-     * Handle incoming HELLOIAM message
-     * @param message Full message content
-     * @param srcId Source node ID
-     * @return true if message processed successfully
-     */
     bool handleHelloIam(const std::string& message, uint16_t srcId);
-
-    /**
-     * Handle incoming WHOIS message
-     * @param message Full message content
-     * @param srcId Source node ID
-     * @return true if message processed successfully
-     */
     bool handleWhois(const std::string& message, uint16_t srcId);
-
-    /**
-     * Handle incoming WHEREIS message
-     * @param message Full message content
-     * @param srcId Source node ID
-     * @return true if message processed successfully
-     */
     bool handleWhereis(const std::string& message, uint16_t srcId);
-
-    /**
-     * Handle incoming RESP message
-     * @param message Full message content
-     * @param srcId Source node ID
-     * @return true if message processed successfully
-     */
     bool handleResponse(const std::string& message, uint16_t srcId);
 
-    /**
-     * Send response message
-     * @param destId Destination node ID
-     * @param response Response content
-     * @return true if message sent successfully
-     */
-    bool sendResponse(uint16_t destId, const std::string& response);
+    void changeId();
+    void changeName();
+    void learn(const std::string& name, uint16_t nodeId);
+    void registerSelf();
 
-    /**
-     * Update mapping tables with new name-ID pair
-     * @param name Node name
-     * @param nodeId Node ID
-     */
-    void updateMapping(const std::string& name, uint16_t nodeId);
+    static bool parseAnnouncement(const std::string& content, Announcement& out);
+    static bool startsWith(const std::string& message, const char* prefix);
+    void log(const std::string& text);
 
-    /**
-     * Check for ID collision and reassign if necessary
-     * @param name Node name that might be conflicting
-     * @param nodeId Node ID that might be conflicting
-     * @return true if collision detected and handled
-     */
-    bool handleCollision(const std::string& name, uint16_t nodeId);
-
-    /**
-     * Check for name collision and reassign name if necessary
-     * @param conflictingName Node name that is conflicting
-     * @param conflictingNodeId Node ID of the conflicting node
-     * @return true if collision detected and handled
-     */
-    bool handleNameCollision(const std::string& conflictingName, uint16_t conflictingNodeId);
-
-    /**
-     * Handle complete collision where both name and ID match but from different transport source
-     * @param conflictingName Node name that is conflicting (same as ours)
-     * @param conflictingNodeId Node ID that is conflicting (same as ours)
-     * @return true if collision detected and handled
-     */
-    bool handleCompleteCollision(const std::string& conflictingName, uint16_t conflictingNodeId);
-
-    /**
-     * Parse message content after prefix
-     * @param message Full message
-     * @param prefix Expected prefix
-     * @return Content after prefix, or empty string if prefix doesn't match
-     */
-    std::string parseMessage(const std::string& message, const char* prefix);
-
-    // Static random number generator for default case
-    static uint32_t createSeedValue(time_ms_fn getTime);
-    
-    // Static wrapper for default random function
     static uint16_t staticDefaultRandom();
+    static uint32_t createSeedValue();
     static std::mt19937 _staticRng;
 };
 

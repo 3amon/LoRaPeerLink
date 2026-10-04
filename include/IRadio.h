@@ -68,6 +68,16 @@ public:
      * Attempts to receive data from the radio within the specified timeout.
      * The method should return immediately if data is available, or wait
      * up to timeoutMs milliseconds for data to arrive.
+     *
+     * Contract the link layer relies on:
+     * - Block until a frame has been received or timeoutMs has passed. A
+     *   return value of 0 means "nothing arrived in this window".
+     * - Do not abort a frame that is already being received when the timeout
+     *   expires, if the hardware allows it.
+     * - Ideally keep the receiver running between calls (continuous receive)
+     *   and return a frame that completed since the previous call. A driver
+     *   that only listens inside this call still works, but every frame that
+     *   arrives outside a call is lost.
      */
     virtual int receive(uint8_t* buffer, size_t maxLength, unsigned long timeoutMs = 1000) = 0;
 
@@ -88,6 +98,18 @@ public:
      * This provides additional information about the quality of the radio link.
      */
     virtual float packetSnr() = 0;
+
+    /**
+     * @brief Time on air of a frame of @p length bytes with the current modem settings
+     * @param length Frame length in bytes
+     * @return Time on air in milliseconds, or 0 if the driver does not know
+     *
+     * Optional. The link layer uses it to make sure the ACK timeout is long
+     * enough for slow settings (an ACK takes about 50 ms at SF7/125 kHz but
+     * well over a second at SF12). Drivers that return 0 leave the timeout
+     * exactly as configured with LoRaLinkCore::setAckTimeoutMs().
+     */
+    virtual uint32_t timeOnAirMs(size_t length) { (void)length; return 0; }
 };
 
 #endif // IRADIO_H
