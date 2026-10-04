@@ -21,7 +21,19 @@ SemtechRadio::SemtechRadio(uint32_t frequency, uint8_t spreadingFactor, int8_t t
     _instance = this;
 }
 
+// Define SEMTECH_RADIO_TRACE to print each bring-up step with its duration.
+// Useful on a new board: a step that takes seconds means the radio is not
+// answering on SPI (wrong pins, held in reset, not powered).
+#ifdef SEMTECH_RADIO_TRACE
+#define RADIO_TRACE(step) do { Serial.printf("[radio] %-14s +%lu ms\n", step, static_cast<unsigned long>(millis() - traceStart)); Serial.flush(); traceStart = millis(); } while (0)
+#else
+#define RADIO_TRACE(step) do { } while (0)
+#endif
+
 bool SemtechRadio::begin() {
+#ifdef SEMTECH_RADIO_TRACE
+    uint32_t traceStart = millis();
+#endif
     memset(&_events, 0, sizeof(_events));
     _events.TxDone = &SemtechRadio::onTxDoneStatic;
     _events.TxTimeout = &SemtechRadio::onTxTimeoutStatic;
@@ -29,26 +41,45 @@ bool SemtechRadio::begin() {
     _events.RxTimeout = &SemtechRadio::onRxTimeoutStatic;
     _events.RxError = &SemtechRadio::onRxErrorStatic;
 
+    RADIO_TRACE("start");
     Mcu.begin();
+    RADIO_TRACE("Mcu.begin");
 
     Radio.Init(&_events);
+    RADIO_TRACE("Radio.Init");
     Radio.SetChannel(_frequency);
+    RADIO_TRACE("SetChannel");
     Radio.SetModem(MODEM_LORA);
+    RADIO_TRACE("SetModem");
 
     Radio.SetTxConfig(MODEM_LORA, _txPowerDbm, 0, LORA_BANDWIDTH,
                       _spreadingFactor, LORA_CODINGRATE,
                       LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
                       true, 0, 0, LORA_IQ_INVERSION_ON, 3000);
+    // The vendor stack aborts a transmission that takes longer than the
+    // timeout given to SetTxConfig. Three seconds is enough at SF7 but not
+    // for a long frame at SF11 or SF12, so set it from the longest frame's
+    // time on air (which is only known once the modem is configured).
+    const uint32_t longestFrameMs = Radio.TimeOnAir(MODEM_LORA, 255);
+    if (longestFrameMs + 1000 > 3000) {
+        Radio.SetTxConfig(MODEM_LORA, _txPowerDbm, 0, LORA_BANDWIDTH,
+                          _spreadingFactor, LORA_CODINGRATE,
+                          LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                          true, 0, 0, LORA_IQ_INVERSION_ON, longestFrameMs + 1000);
+    }
+    RADIO_TRACE("SetTxConfig");
 
     // Last argument: continuous receive.
     Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, _spreadingFactor,
                       LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                       LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                       0, true, 0, 0, LORA_IQ_INVERSION_ON, true);
+    RADIO_TRACE("SetRxConfig");
 
     _begun = true;
     _rxReady = false;
     startReceiving();
+    RADIO_TRACE("Rx");
     return true;
 }
 
@@ -131,6 +162,12 @@ int SemtechRadio::packetRssi() {
 
 float SemtechRadio::packetSnr() {
     return _lastSnr;
+}
+
+int SemtechRadio::channelRssi() {
+    if (!_begun) return 0;
+    if (!_receiving) startReceiving();
+    return Radio.Rssi(MODEM_LORA);
 }
 
 uint32_t SemtechRadio::timeOnAirMs(size_t length) {

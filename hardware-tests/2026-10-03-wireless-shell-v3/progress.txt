@@ -1,0 +1,11 @@
+18:18:04 START 1-soak-sf7
+19:18:16 DONE 1-soak-sf7
+19:18:16 START 2-same-name
+19:22:31 DONE 2-same-name
+19:22:31 START 3-sf10
+19:37:45 DONE 3-sf10
+19:37:45 START 4-sf12
+19:48:00 DONE 4-sf12
+19:48:00 START 5-encrypted-sf7
+20:08:14 DONE 5-encrypted-sf7
+20:08:14 ALL_DONE

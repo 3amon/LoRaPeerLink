@@ -5,7 +5,7 @@
     "keywords": [
         "lora",
         "p2p",
-        "peer-to-peer", 
+        "peer-to-peer",
         "communication",
         "radio",
         "wireless",
@@ -41,9 +41,10 @@
         "ststm32"
     ],
     "build": {
+        "srcDir": "src",
+        "includeDir": "include",
         "srcFilter": [
-            "+<src/>",
-            "-<examples/>"
+            "+<*>"
         ],
         "libArchive": false
     },
@@ -65,7 +66,7 @@
             ]
         },
         {
-            "name": "ESP32 PlatformIO Application", 
+            "name": "ESP32 PlatformIO Application",
             "base": "examples/esp32_platformio",
             "files": [
                 "main.cpp",
