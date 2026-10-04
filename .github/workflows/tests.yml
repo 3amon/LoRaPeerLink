@@ -17,12 +17,26 @@ jobs:
 
     - name: Configure and Build
       run: |
-        mkdir build && cd build
-        cmake ..
-        make
+        cmake -S . -B build
+        cmake --build build -j
 
     - name: Run C++ Tests
       run: ./build/tests/test_all
+
+    - name: Run seed sweeps (simulated radio, 200 seeds per scenario)
+      run: ./build/tests/test_all "[.stress]"
+
+    - name: Library builds with embedded-style flags
+      run: |
+        for f in src/*.cpp; do
+          g++ -std=c++11 -fno-exceptions -fno-rtti -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Werror -I include -c "$f" -o /dev/null
+        done
+
+    - name: Run C++ Tests under AddressSanitizer and UBSan
+      run: |
+        cmake -S . -B build-asan -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=undefined"
+        cmake --build build-asan -j
+        ./build-asan/tests/test_all
 
     - name: Run Python-C++ Cross-Validation Tests
       run: python3 validate_encryption.py

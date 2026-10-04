@@ -1,437 +1,190 @@
 #!/usr/bin/env python3
 """
-Python validation script for LoRaPeerLink encryption compatibility
+Cross-validate LoRaPeerLink's C++ cryptography against an independent
+implementation (Python's hashlib and the "cryptography" package).
 
-This script validates that the C++ EncryptedLoRaLink implementation
-is compatible with standard Python cryptography libraries using the
-same encryption parameters.
+The C++ library ships its own AES-128, SHA-256, HMAC and PBKDF2 so that it
+builds on a microcontroller without dependencies. This script checks, with
+random inputs, that every one of them and the EncryptedLoRaLink packet format
+produce exactly the bytes a standard library produces.
 
-Requirements:
-    pip install cryptography
+Packet format (see include/EncryptedLoRaLink.h):
+
+    keys = PBKDF2-HMAC-SHA256(password, salt=network name, iterations, 32 bytes)
+    wire = IV(16) || AES-128-CBC(keys[:16], IV, PKCS7(plaintext))
+                  || HMAC-SHA256(keys[16:], srcId(2, big-endian) || IV || ciphertext)[:8]
 
 Usage:
-    python3 validate_encryption.py
+    cmake -S . -B build && cmake --build build
+    python3 validate_encryption.py            (needs: pip install cryptography)
+    uv run --with cryptography validate_encryption.py
 """
 
-import os
 import hashlib
-from cryptography.hazmat.primitives import hashes, padding
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import hmac
+import os
+import random
+import subprocess
+import sys
+
+from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
+
+TOOL_CANDIDATES = ["build/tests/encryption_cli_tool", "build/encryption_cli_tool"]
+TAG_SIZE = 8
 
 
-class LoRaEncryptionValidator:
-    """
-    Python implementation of the LoRaPeerLink encryption algorithm for validation
-    """
-    
-    def __init__(self, network_name: str, password: str, iterations: int = 4096):
-        """
-        Initialize the encryption validator with the same parameters as C++
-        
-        Args:
-            network_name: Network name used as salt
-            password: Password for key derivation
-            iterations: PBKDF2 iterations (default: 4096)
-        """
-        self.network_name = network_name
-        self.password = password
-        self.iterations = iterations
-        self.key = self._derive_key()
-    
-    def _derive_key(self) -> bytes:
-        """
-        Derive encryption key using PBKDF2-SHA256 (compatible with C++ implementation)
-        
-        Returns:
-            16-byte AES key
-        """
-        # Note: This is a simplified implementation for testing
-        # The C++ implementation uses a basic hash function
-        # In production, use proper PBKDF2
-        
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=16,  # AES-128 key size
-            salt=self.network_name.encode('utf-8'),
-            iterations=self.iterations,
-            backend=default_backend()
-        )
-        return kdf.derive(self.password.encode('utf-8'))
-    
-    def _simple_hash_derive_key(self) -> bytes:
-        """
-        Simple key derivation matching the C++ test implementation
-        
-        Returns:
-            16-byte key derived using simple hash (for testing compatibility)
-        """
-        # This matches the simplified implementation in the C++ code
-        combined = self.password.encode('utf-8') + self.network_name.encode('utf-8')
-        
-        # Apply simple iterations (matching C++ pbkdf2_simple)
-        data = combined
-        for _ in range(self.iterations):
-            data = hashlib.sha256(data).digest()
-        
-        return data[:16]  # Take first 16 bytes for AES-128
-    
-    def encrypt(self, plaintext: bytes) -> bytes:
-        """
-        Encrypt data using AES-128 with random IV (compatible with C++ implementation)
-        
-        Args:
-            plaintext: Data to encrypt
-            
-        Returns:
-            IV (16 bytes) + encrypted data
-        """
-        # Generate random IV
-        iv = os.urandom(16)
-        
-        # Apply PKCS7 padding
-        padder = padding.PKCS7(128).padder()  # 128 bits = 16 bytes
-        padded_data = padder.update(plaintext)
-        padded_data += padder.finalize()
-        
-        # Encrypt using AES-128 CBC
-        cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv), backend=default_backend())
-        encryptor = cipher.encryptor()
-        ciphertext = encryptor.update(padded_data) + encryptor.finalize()
-        
-        # Return IV + ciphertext (same format as C++)
-        return iv + ciphertext
-    
-    def simple_encrypt(self, plaintext: bytes) -> bytes:
-        """
-        Simple encryption matching the C++ test implementation (for validation)
-        
-        Args:
-            plaintext: Data to encrypt
-            
-        Returns:
-            IV (16 bytes) + encrypted data
-        """
-        # Generate IV
-        iv = os.urandom(16)
-        
-        # Apply PKCS7 padding manually
-        padding_needed = 16 - (len(plaintext) % 16)
-        padded = plaintext + bytes([padding_needed] * padding_needed)
-        
-        # Simple XOR encryption (matching C++ test implementation)
-        encrypted = bytearray()
-        key = self._simple_hash_derive_key()
-        
-        for i, byte in enumerate(padded):
-            encrypted.append(byte ^ key[i % 16] ^ iv[i % 16])
-        
-        return iv + bytes(encrypted)
-    
-    def decrypt(self, encrypted_data: bytes) -> bytes:
-        """
-        Decrypt data using AES-128 CBC (compatible with C++ implementation)
-        
-        Args:
-            encrypted_data: IV (16 bytes) + encrypted data
-            
-        Returns:
-            Decrypted plaintext
-        """
-        if len(encrypted_data) < 16:
-            raise ValueError("Encrypted data too short (no IV)")
-        
-        # Extract IV and ciphertext
-        iv = encrypted_data[:16]
-        ciphertext = encrypted_data[16:]
-        
-        # Decrypt using AES-128 CBC
-        cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv), backend=default_backend())
-        decryptor = cipher.decryptor()
-        padded_plaintext = decryptor.update(ciphertext) + decryptor.finalize()
-        
-        # Remove PKCS7 padding
-        unpadder = padding.PKCS7(128).unpadder()
-        plaintext = unpadder.update(padded_plaintext)
-        plaintext += unpadder.finalize()
-        
-        return plaintext
-    
-    def simple_decrypt(self, encrypted_data: bytes) -> bytes:
-        """
-        Simple decryption matching the C++ test implementation (for validation)
-        
-        Args:
-            encrypted_data: IV (16 bytes) + encrypted data
-            
-        Returns:
-            Decrypted plaintext
-        """
-        if len(encrypted_data) < 16:
-            raise ValueError("Encrypted data too short (no IV)")
-        
-        # Extract IV and ciphertext
-        iv = encrypted_data[:16]
-        ciphertext = encrypted_data[16:]
-        
-        # Simple XOR decryption (matching C++ test implementation)
-        decrypted = bytearray()
-        key = self._simple_hash_derive_key()
-        
-        for i, byte in enumerate(ciphertext):
-            decrypted.append(byte ^ key[i % 16] ^ iv[i % 16])
-        
-        # Remove PKCS7 padding manually
-        if len(decrypted) == 0:
-            return b''
-        
-        padding_bytes = decrypted[-1]
-        if padding_bytes > 16 or padding_bytes == 0:
-            return b''  # Invalid padding
-        
-        # Verify padding
-        for i in range(len(decrypted) - padding_bytes, len(decrypted)):
-            if decrypted[i] != padding_bytes:
-                return b''  # Invalid padding
-        
-        return bytes(decrypted[:-padding_bytes])
+def find_tool():
+    here = os.path.dirname(os.path.abspath(__file__))
+    for candidate in TOOL_CANDIDATES:
+        path = os.path.join(here, candidate)
+        if os.path.exists(path):
+            return path
+    sys.exit("encryption_cli_tool not found; build the project first (cmake -S . -B build && cmake --build build)")
 
 
-def test_python_cpp_cross_validation():
-    """
-    Test Python encryption against C++ implementation using CLI tool
-    """
-    print("=== Python-C++ Cross-Validation Tests ===\n")
-    
-    import subprocess
-    import os
-    
-    # Check if CLI tool exists
-    cli_tool_path = "./build/tests/encryption_cli_tool"
-    if not os.path.exists(cli_tool_path):
-        print("Error: C++ CLI tool not found. Please build the project first.")
-        print("Run: mkdir build && cd build && cmake .. && make")
-        return False
-    
-    # Test parameters (same as used in C++ tests)
-    network_name = "TestNetwork"  
-    password = "SecurePassword123"
-    
-    validator = LoRaEncryptionValidator(network_name, password)
-    
-    # Test messages
-    test_messages = [
-        b"Hello, encrypted world!",
-        b"Short",
-        b"This is a longer message to test encryption with multiple blocks",
-        b"\x00\x01\x02\xff\xfe\x00\x42",  # Binary data
-        b"A" * 50,  # Larger message (keeping under 200 bytes for CLI tool buffer)
-    ]
-    
-    print("Cross-validating Python vs C++ encryption:")
-    print("-" * 60)
-    
-    all_tests_passed = True
-    
-    for i, message in enumerate(test_messages):
-        print(f"Test {i+1}: {message[:20]}{'...' if len(message) > 20 else ''}")
-        
-        try:
-            # Convert message to hex for CLI tool
-            hex_message = message.hex()
-            
-            # Test C++ round-trip first
-            result = subprocess.run([
-                cli_tool_path, "test", network_name, password, hex_message
-            ], capture_output=True, text=True)
-            
-            if result.returncode != 0:
-                print(f"  ✗ C++ round-trip test failed:")
-                print(f"    Error: {result.stderr.strip()}")
-                all_tests_passed = False
-                continue
-                
-            print(f"  ✓ C++ round-trip test passed")
-            
-            # Test Python encryption against C++ decryption
-            # Since we can't easily extract just the encrypted payload from the CLI tool
-            # (it creates full packets), we'll focus on round-trip validation
-            # and verify both implementations work consistently
-            
-            # Test Python round-trip
-            python_encrypted = validator.encrypt(message)
-            python_decrypted = validator.decrypt(python_encrypted)
-            
-            if python_decrypted == message:
-                print(f"  ✓ Python round-trip test passed")
-            else:
-                print(f"  ✗ Python round-trip test failed")
-                print(f"    Expected: {message}")
-                print(f"    Got:      {python_decrypted}")
-                all_tests_passed = False
-                continue
-                
-            # Both implementations passed their round-trip tests
-            print(f"  ✓ Both C++ and Python implementations are working correctly")
-            
-        except Exception as e:
-            print(f"  ✗ Error during cross-validation: {e}")
-            all_tests_passed = False
-        
-        print()
-    
-    # Test key derivation consistency
-    print("Testing key derivation consistency:")
-    print("-" * 60)
-    
-    # We'll use the simple hash method for comparison since the CLI tool uses the same approach
-    test_cases = [
-        ("TestNetwork", "Password123"),
-        ("DifferentNetwork", "Password123"), 
-        ("TestNetwork", "DifferentPassword"),
-    ]
-    
-    for network, passwd in test_cases:
-        v = LoRaEncryptionValidator(network, passwd)
-        key = v._simple_hash_derive_key()
-        print(f"  Network: '{network}', Password: '{passwd}'")
-        print(f"  Key (first 8 bytes): {key[:8].hex()}")
-    
-    print()
-    
-    if all_tests_passed:
-        print("=== All Cross-Validation Tests Passed ===")
-        return True
-    else:
-        print("=== Some Cross-Validation Tests Failed ===")
-        return False
+TOOL = find_tool()
 
 
-def test_encryption_compatibility():
-    """
-    Test encryption compatibility between Python and C++ implementations
-    """
-    print("=== LoRaPeerLink Encryption Validation ===\n")
-    
-    # Test parameters (same as used in C++ tests)
-    network_name = "TestNetwork"
-    password = "SecurePassword123"
-    
-    validator = LoRaEncryptionValidator(network_name, password)
-    
-    # Test messages
-    test_messages = [
-        b"Hello, encrypted world!",
-        b"Short",
-        b"This is a longer message to test encryption with multiple blocks",
-        b"\x00\x01\x02\xff\xfe\x00\x42",  # Binary data
-        b"A" * 100,  # Large message
-    ]
-    
-    print("Testing simple encryption (matching C++ test implementation):")
-    print("-" * 60)
-    
-    for i, message in enumerate(test_messages):
-        print(f"Test {i+1}: {message[:20]}{'...' if len(message) > 20 else ''}")
-        
-        # Encrypt using simple method (matching C++ test)
-        encrypted = validator.simple_encrypt(message)
-        print(f"  Encrypted length: {len(encrypted)} bytes (IV: 16 + data: {len(encrypted)-16})")
-        
-        # Decrypt using simple method
-        decrypted = validator.simple_decrypt(encrypted)
-        
-        if decrypted == message:
-            print(f"  ✓ Encryption/decryption successful")
+def hx(data: bytes) -> str:
+    return data.hex() if data else "-"
+
+
+def cpp(*args) -> str:
+    result = subprocess.run([TOOL, *[str(a) for a in args]], capture_output=True, text=True, timeout=60)
+    if result.returncode != 0:
+        raise RuntimeError(f"tool failed: {args}: {result.stderr.strip()}")
+    return result.stdout.strip()
+
+
+def unhx(text: str) -> bytes:
+    return b"" if text == "-" else bytes.fromhex(text)
+
+
+# ---- Independent reference implementation -----------------------------------
+
+def ref_keys(network: str, password: str, iterations: int) -> bytes:
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), network.encode(), max(iterations, 1), 32)
+
+
+def ref_seal(keys: bytes, src_id: int, iv: bytes, plaintext: bytes) -> bytes:
+    padder = padding.PKCS7(128).padder()
+    padded = padder.update(plaintext) + padder.finalize()
+    enc = Cipher(algorithms.AES(keys[:16]), modes.CBC(iv)).encryptor()
+    ciphertext = enc.update(padded) + enc.finalize()
+    tag = hmac.new(keys[16:], src_id.to_bytes(2, "big") + iv + ciphertext, hashlib.sha256).digest()[:TAG_SIZE]
+    return iv + ciphertext + tag
+
+
+def ref_open(keys: bytes, src_id: int, wire: bytes):
+    if len(wire) < 16 + 16 + TAG_SIZE or (len(wire) - 16 - TAG_SIZE) % 16 != 0:
+        return None
+    iv, ciphertext, tag = wire[:16], wire[16:-TAG_SIZE], wire[-TAG_SIZE:]
+    expected = hmac.new(keys[16:], src_id.to_bytes(2, "big") + iv + ciphertext, hashlib.sha256).digest()[:TAG_SIZE]
+    if not hmac.compare_digest(tag, expected):
+        return None
+    dec = Cipher(algorithms.AES(keys[:16]), modes.CBC(iv)).decryptor()
+    padded = dec.update(ciphertext) + dec.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    try:
+        return unpadder.update(padded) + unpadder.finalize()
+    except ValueError:
+        return None
+
+
+# ---- Checks ------------------------------------------------------------------
+
+class Checker:
+    def __init__(self):
+        self.passed = 0
+        self.failed = 0
+
+    def check(self, condition: bool, description: str):
+        if condition:
+            self.passed += 1
         else:
-            print(f"  ✗ Encryption/decryption failed!")
-            print(f"    Expected: {message}")
-            print(f"    Got:      {decrypted}")
-        
-        print()
-    
-    print("\nTesting standard AES-128 CBC encryption:")
-    print("-" * 60)
-    
-    for i, message in enumerate(test_messages):
-        print(f"Test {i+1}: {message[:20]}{'...' if len(message) > 20 else ''}")
-        
-        try:
-            # Encrypt using standard AES
-            encrypted = validator.encrypt(message)
-            print(f"  Encrypted length: {len(encrypted)} bytes (IV: 16 + data: {len(encrypted)-16})")
-            
-            # Decrypt using standard AES
-            decrypted = validator.decrypt(encrypted)
-            
-            if decrypted == message:
-                print(f"  ✓ Standard AES encryption/decryption successful")
-            else:
-                print(f"  ✗ Standard AES encryption/decryption failed!")
-                print(f"    Expected: {message}")
-                print(f"    Got:      {decrypted}")
-        except Exception as e:
-            print(f"  ✗ Error: {e}")
-        
-        print()
-    
-    print("\nTesting key derivation:")
-    print("-" * 60)
-    
-    # Test key derivation with different parameters
-    test_cases = [
-        ("TestNetwork", "Password123"),
-        ("DifferentNetwork", "Password123"),
-        ("TestNetwork", "DifferentPassword"),
-        ("", "EmptyNetwork"),
-        ("Network", ""),
-    ]
-    
-    for network, pwd in test_cases:
-        v1 = LoRaEncryptionValidator(network, pwd)
-        v2 = LoRaEncryptionValidator(network, pwd)
-        
-        # Keys should be the same for same parameters
-        if v1._simple_hash_derive_key() == v2._simple_hash_derive_key():
-            print(f"  ✓ Consistent key for ('{network}', '{pwd}')")
-        else:
-            print(f"  ✗ Inconsistent key for ('{network}', '{pwd}')")
-    
-    # Keys should be different for different parameters
-    v1 = LoRaEncryptionValidator("Net1", "Pass1")
-    v2 = LoRaEncryptionValidator("Net2", "Pass1")
-    v3 = LoRaEncryptionValidator("Net1", "Pass2")
-    
-    if (v1._simple_hash_derive_key() != v2._simple_hash_derive_key() and
-        v1._simple_hash_derive_key() != v3._simple_hash_derive_key()):
-        print(f"  ✓ Different keys for different parameters")
-    else:
-        print(f"  ✗ Keys not unique for different parameters")
-    
-    print(f"\n=== Validation Complete ===")
+            self.failed += 1
+            print(f"  FAIL: {description}")
+
+
+def check_primitives(c: Checker, rng: random.Random):
+    print("Primitives against hashlib / cryptography (random inputs)")
+    for _ in range(150):
+        data = rng.randbytes(rng.choice([0, 1, 55, 56, 63, 64, 65, 119, 120, 128, rng.randrange(0, 600)]))
+        c.check(cpp("sha256", hx(data)) == hashlib.sha256(data).hexdigest(), f"sha256 of {len(data)} bytes")
+    for _ in range(150):
+        key = rng.randbytes(rng.choice([0, 1, 16, 32, 63, 64, 65, 131]))
+        data = rng.randbytes(rng.randrange(0, 300))
+        c.check(cpp("hmac", hx(key), hx(data)) == hmac.new(key, data, hashlib.sha256).hexdigest(),
+                f"hmac key {len(key)} data {len(data)}")
+    for _ in range(150):
+        key, block = rng.randbytes(16), rng.randbytes(16)
+        enc = Cipher(algorithms.AES(key), modes.ECB()).encryptor()
+        c.check(cpp("aes", hx(key), hx(block)) == (enc.update(block) + enc.finalize()).hex(), "aes-128 block")
+    for _ in range(60):
+        password = rng.randbytes(rng.randrange(0, 90))
+        salt = rng.randbytes(rng.randrange(0, 90))
+        iterations = rng.choice([1, 2, 3, 10, 100, 1000])
+        length = rng.choice([1, 16, 31, 32, 33, 64, 80])
+        expected = hashlib.pbkdf2_hmac("sha256", password, salt, iterations, length).hex()
+        c.check(cpp("pbkdf2", hx(password), hx(salt), iterations, length) == expected,
+                f"pbkdf2 iterations {iterations} length {length}")
+
+
+def check_packets(c: Checker, rng: random.Random):
+    print("EncryptedLoRaLink packets against the reference implementation")
+    credentials = [("LoRaNet", "hunter2", 4096), ("camp", "correct horse battery staple", 4096),
+                   ("n", "p", 1), ("Ünïcödé network", "pässwörd ✓", 50), ("x" * 60, "y" * 90, 7)]
+    for network, password, iterations in credentials:
+        keys = ref_keys(network, password, iterations)
+        c.check(cpp("keys", network, password, iterations) == keys.hex(), f"key derivation for {network!r}")
+
+        for _ in range(25):
+            src = rng.randrange(1, 0xFFFF)
+            iv = rng.randbytes(16)
+            plaintext = rng.randbytes(rng.choice([0, 1, 15, 16, 17, 31, 32, 100, 207, rng.randrange(0, 208)]))
+            wire = ref_seal(keys, src, iv, plaintext)
+
+            # Same bytes from both implementations.
+            c.check(cpp("seal", network, password, iterations, src, hx(iv), hx(plaintext)) == wire.hex(),
+                    f"seal {len(plaintext)} bytes")
+            # Python's packet opens in C++ and gives the plaintext back.
+            c.check(cpp("open", network, password, iterations, src, hx(wire)) == "OK " + hx(plaintext),
+                    f"open {len(plaintext)} bytes")
+
+            # Tampering is rejected by both implementations.
+            position = rng.randrange(len(wire))
+            tampered = bytearray(wire)
+            tampered[position] ^= 1 << rng.randrange(8)
+            tampered = bytes(tampered)
+            c.check(ref_open(keys, src, tampered) is None, "reference rejects a tampered packet")
+            c.check(cpp("open", network, password, iterations, src, hx(tampered)) == "REJECTED",
+                    f"C++ rejects a bit flip at byte {position}")
+
+            # Wrong sender ID, wrong password.
+            c.check(cpp("open", network, password, iterations, (src % 0xFFFE) + 1, hx(wire)) == "REJECTED",
+                    "C++ rejects a packet attributed to another sender")
+            c.check(cpp("open", network, password + "!", iterations, src, hx(wire)) == "REJECTED",
+                    "C++ rejects a packet from a network with another password")
+
+    # A packet with a correct tag but invalid padding (cannot be produced by seal()).
+    keys = ref_keys("LoRaNet", "hunter2", 4096)
+    iv = rng.randbytes(16)
+    enc = Cipher(algorithms.AES(keys[:16]), modes.CBC(iv)).encryptor()
+    ciphertext = enc.update(bytes(15) + b"\x00") + enc.finalize()
+    tag = hmac.new(keys[16:], (7).to_bytes(2, "big") + iv + ciphertext, hashlib.sha256).digest()[:TAG_SIZE]
+    c.check(cpp("open", "LoRaNet", "hunter2", 4096, 7, hx(iv + ciphertext + tag)) == "REJECTED",
+            "C++ rejects valid tag with invalid padding")
+
+
+def main():
+    rng = random.Random(20260928)
+    c = Checker()
+    check_primitives(c, rng)
+    check_packets(c, rng)
+    print(f"\n{c.passed} checks passed, {c.failed} failed")
+    sys.exit(1 if c.failed else 0)
 
 
 if __name__ == "__main__":
-    try:
-        # Run the original compatibility tests
-        test_encryption_compatibility()
-        print("\n" + "="*80 + "\n")
-        
-        # Run the new cross-validation tests
-        cross_validation_passed = test_python_cpp_cross_validation()
-        
-        if cross_validation_passed:
-            print("\n🎉 All validation tests passed! Python and C++ implementations are compatible.")
-        else:
-            print("\n❌ Cross-validation failed! There may be differences between implementations.")
-            exit(1)
-            
-    except ImportError as e:
-        print("Error: Missing required package. Please install:")
-        print("  pip install cryptography")
-        print(f"\nDetails: {e}")
-        exit(1)
-    except Exception as e:
-        print(f"Error: {e}")
-        exit(1)
+    main()

@@ -31,12 +31,21 @@ add_executable(test_all
   tests/test_interface.cpp
   tests/test_encrypted_link.cpp
   tests/test_timeout_propagation.cpp
+  tests/test_sim_radio.cpp
+  tests/test_sim_link.cpp
+  tests/test_sim_rollcall.cpp
+  tests/test_sim_messenger.cpp
+  tests/test_crypto.cpp
+  tests/test_sim_stress.cpp
+  tests/sim/SimRadio.cpp
   tests/TestUtils.cpp
   src/RollCall.cpp
   src/PeerMessenger.cpp
+  src/LoRaLinkCore.cpp
   src/LoraBasicLink.cpp
   src/LoraBackoffLink.cpp
   src/EncryptedLoRaLink.cpp
+  src/LplCrypto.cpp
   # Note: SemtechRadio.cpp excluded from tests as it requires external dependencies
   # Add other test_*.cpp files here as needed
 )
@@ -45,8 +54,10 @@ add_executable(test_all
 add_executable(encryption_cli_tool
   tests/encryption_cli_tool.cpp
   tests/TestUtils.cpp
+  src/LoRaLinkCore.cpp
   src/LoraBasicLink.cpp
   src/EncryptedLoRaLink.cpp
+  src/LplCrypto.cpp
 )
 
 set_target_properties(test_all PROPERTIES
@@ -57,7 +68,9 @@ set_target_properties(encryption_cli_tool PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
 )
 
-target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
+find_package(Threads REQUIRED)
+target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain Threads::Threads)
+target_include_directories(test_all PRIVATE tests)
 target_include_directories(test_all PRIVATE ${catch2_SOURCE_DIR}/src)
 
 target_include_directories(encryption_cli_tool PRIVATE 

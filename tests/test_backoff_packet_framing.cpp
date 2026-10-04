@@ -20,11 +20,11 @@ TEST_CASE("LoRaBackoffLink packet framing", "[BackoffPacketFraming]") {
         int rawLen = radioB.receive(rawPacket, 256);
         REQUIRE(rawLen == 13); // 7 (PacketHeader) + 4 (payload) + 2 (CRC)
         
-        // Validate PacketHeader structure with 16-bit addressing (little-endian)
-        REQUIRE(rawPacket[0] == 2);    // dst low byte
-        REQUIRE(rawPacket[1] == 0);    // dst high byte
-        REQUIRE(rawPacket[2] == 1);    // src low byte
-        REQUIRE(rawPacket[3] == 0);    // src high byte
+        // Header with 16-bit addressing, big-endian: the same frame format as LoRaBasicLink
+        REQUIRE(rawPacket[0] == 0);    // dst high byte
+        REQUIRE(rawPacket[1] == 2);    // dst low byte
+        REQUIRE(rawPacket[2] == 0);    // src high byte
+        REQUIRE(rawPacket[3] == 1);    // src low byte
         REQUIRE(rawPacket[4] == 0);    // seq (first packet)
         REQUIRE(rawPacket[5] == 0);    // flags (no ACK requested)
         REQUIRE(rawPacket[6] == 4);    // len
@@ -95,6 +95,13 @@ TEST_CASE("LoRaBackoffLink flag handling", "[BackoffPacketFraming]") {
     int rawLen = radioB.receive(rawPacket, 256);
     REQUIRE(rawLen > 0);
     
-    uint8_t flags = rawPacket[3];
-    REQUIRE((flags & 0x02) == 0); // FLAG_NEEDS_ACK should NOT be set
+    uint8_t flags = rawPacket[5];
+    REQUIRE((flags & LoRaLinkCore::FLAG_ACK_REQUEST) == 0); // ACK request flag should NOT be set
+
+    // And with an ACK request the flag is set (nobody answers, so the send fails).
+    MockRadio::clearChannel();
+    REQUIRE(linkA.sendPacket(1, 2, msg, 5, true, 1) == false);
+    rawLen = radioB.receive(rawPacket, 256);
+    REQUIRE(rawLen > 0);
+    REQUIRE((rawPacket[5] & LoRaLinkCore::FLAG_ACK_REQUEST) != 0);
 }

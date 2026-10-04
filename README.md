@@ -1,6 +1,6 @@
 # LoRaPeerLink Library
 
-**LoRaPeerLink** is a comprehensive, standalone LoRa peer-to-peer communication library for microcontrollers. It provides multiple link layer implementations, hardware abstraction, encryption support, and device discovery protocols for building robust LoRa mesh networks without LoRaWAN overhead.
+**LoRaPeerLink** is a comprehensive, standalone LoRa peer-to-peer communication library for microcontrollers. It provides link layer implementations with acknowledgments and retries, hardware abstraction, authenticated encryption, and a device discovery protocol for building LoRa networks of nodes that talk directly to each other, without LoRaWAN overhead. (Nodes must be in radio range of each other: the library does not route or relay.)
 
 ## 🚀 Key Features
 
@@ -8,10 +8,10 @@
 - **Hardware Agnostic**: Works with any LoRa radio through the IRadio interface
 - **Multi-Layer Architecture**: Use high-level messaging or low-level link protocols as needed
 - **Automatic Device Discovery**: Find and connect to devices by name with RollCall protocol
-- **Intelligent Collision Avoidance**: Multiple backoff strategies for reliable multi-node networks
-- **Built-in Security**: AES encryption with integrity checking for secure communications
+- **Collision Handling**: Acknowledgments, retransmission with exponential backoff, and duplicate suppression
+- **Built-in Security**: AES-128 encryption with HMAC-SHA256 authentication, keys derived from a network password (PBKDF2)
 - **Flexible Link Protocols**: Choose from basic, backoff, or encrypted link implementations
-- **Production Ready**: Comprehensive test suite covering real-world scenarios
+- **Tested Against a Radio Simulator**: 190+ test cases, most of them on a simulated half-duplex LoRa channel with real time-on-air, collisions and packet loss (see [TEST_PLAN.md](TEST_PLAN.md))
 
 ---
 
@@ -41,13 +41,15 @@ With LoRaPeerLink, you can create devices that talk directly to each other over 
 // Your timing functions (platform-specific)
 uint32_t get_time_ms() { return millis(); }
 void sleep_ms(uint32_t ms) { delay(ms); }
+// A real random source, so that boards running the same firmware pick different IDs
+uint16_t random_16() { return (uint16_t)esp_random(); }
 
 // Create your radio implementation and link layer
 MyRadio radio;  // Your IRadio implementation
 LoRaBasicLink link(&radio, get_time_ms, sleep_ms);
 
 // Create discovery and messaging layers
-RollCall rollCall(&link, "sensor-01", get_time_ms, sleep_ms);
+RollCall rollCall(&link, "sensor-01", get_time_ms, sleep_ms, random_16);
 PeerMessenger messenger(&rollCall);
 
 void setup() {
@@ -65,24 +67,24 @@ void setup() {
 }
 
 void loop() {
-    // Handle network discovery and messaging
-    messenger.processMessages();
+    // Listen for up to a second: handles discovery, queues incoming messages
+    // and sends this node's periodic announcements. This is the only call the
+    // stack needs; do not add a delay() to the loop.
+    messenger.processMessages(1000);
     
-    // Send a sensor reading to the gateway
+    // Send a sensor reading to the gateway, with acknowledgment
     static uint32_t lastSend = 0;
     if (millis() - lastSend > 10000) {
-        messenger.sendMessage("gateway", "Temperature: 25.3°C");
-        Serial.println("Sensor data sent to gateway");
+        bool delivered = messenger.sendMessage("gateway", "Temperature: 25.3°C", true);
+        Serial.println(delivered ? "Sensor data delivered" : "Gateway did not answer");
         lastSend = millis();
     }
     
     // Check for incoming messages
-    if (messenger.hasMessage()) {
+    while (messenger.hasMessage()) {
         UserMessage msg = messenger.receiveMessage();
         Serial.printf("From %s: %s\n", msg.srcName.c_str(), msg.content.c_str());
     }
-    
-    delay(100);
 }
 ```
 
@@ -224,7 +226,7 @@ void loop() {
     if (gatewayId != 0) {
         // Send sensor data to gateway using link layer directly
         String data = "temperature:25.3";
-        link.sendPacket(discovery.getLocalId(), gatewayId, 
+        link.sendPacket(discovery.getNodeId(), gatewayId, 
                        (uint8_t*)data.c_str(), data.length(), true);
     }
 }
@@ -244,8 +246,9 @@ LoRaBasicLink basicLink(&radio, get_time_ms, sleep_ms);
 // OR
 LoRaBackoffLink smartLink(&radio, get_time_ms, sleep_ms);
 // OR
-const uint8_t key[16] = {0x2b, 0x7e, 0x15, 0x16, /* ... */};
-EncryptedLoRaLink secureLink(&radio, key, get_time_ms, sleep_ms);
+// Wraps another link: everyone with the same network name and password can talk
+EncryptedLoRaLink secureLink(&smartLink, "my-network", "my-password",
+                             EncryptedLoRaLink::DEFAULT_KEY_ITERATIONS, get_time_ms);
 
 void setup() {
     radio.begin();
@@ -259,8 +262,8 @@ void loop() {
     
     // Receive message
     uint16_t fromId;
-    uint8_t buffer[100];
-    int len = basicLink.receivePacket(&fromId, buffer, sizeof(buffer));
+    uint8_t buffer[MAX_PAYLOAD + 1];   // room for a terminating zero
+    int len = basicLink.receivePacket(&fromId, buffer, MAX_PAYLOAD, 1000);
     if (len > 0) {
         buffer[len] = 0;
         Serial.printf("From %d: %s\n", fromId, (char*)buffer);
@@ -362,6 +365,48 @@ For real hardware, you'll typically implement IRadio using existing libraries:
 
 ---
 
+## ✅ Testing and Project Status
+
+```bash
+cmake -S . -B build && cmake --build build -j
+./build/tests/test_all                 # unit tests and simulated-radio scenarios
+./build/tests/test_all "[.stress]"     # seed sweeps: each scenario with 200 random seeds
+python3 validate_encryption.py         # crypto cross-check (pip install cryptography)
+```
+
+Most tests run the real library code on a simulated radio channel
+(`tests/sim/`): virtual time, LoRa time-on-air, half-duplex radios, collisions,
+random loss, and both kinds of radio driver (one that only listens inside
+`receive()`, one that listens continuously). See **[TEST_PLAN.md](TEST_PLAN.md)**
+for what is covered and what is not, and **[CHANGELOG.md](CHANGELOG.md)** for
+the bugs version 2.0 fixed.
+
+**Hardware status:** the library and the ESP32 example compile for the Heltec
+WiFi LoRa 32 V3 (ESP32-S3 + SX1262). Version 2.0 has not yet been validated on
+real radios; `TEST_PLAN.md` lists the on-air checks still to do.
+
+### Things to know
+
+- **Call `processMessages()` with long timeouts and do not sleep in between.**
+  The library can only hear packets while your radio is receiving. See the
+  receive contract in `IRadio.h`; a driver that keeps the radio in continuous
+  receive (like `examples/esp32_platformio/src/SemtechRadio.cpp`) loses the fewest packets.
+- **Payload limits:** 246 bytes on a plain link, 207 bytes through
+  `EncryptedLoRaLink`, and 4 bytes less for `PeerMessenger` text. Oversized
+  sends return `false`; nothing is truncated.
+- **Slow settings need long timeouts.** At SF11/SF12 one frame takes around a
+  second. If your radio driver implements `timeOnAirMs()` the link adapts its
+  ACK timeout automatically; otherwise call `setAckTimeoutMs()`.
+- **A shared channel has limited capacity.** Nodes transmit without listening
+  first, so keep the total airtime low (a few percent); at 20% load about a
+  third of all frames collide.
+- **Encryption limits:** no replay protection and no forward secrecy; headers
+  (who talks to whom) are not encrypted. Details in `EncryptedLoRaLink.h`.
+- **All nodes must run the same major version.** The 2.0 frame format and
+  encryption are not compatible with 1.0.
+
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -394,7 +439,6 @@ This library is released under the MIT License. See `LICENSE` file for details.
 ✅ **Intuitive**: Send messages by device name, not complex IDs  
 ✅ **Flexible**: Use high-level messaging or low-level protocols as needed  
 ✅ **Hardware Agnostic**: Implement once, run on any LoRa radio  
-✅ **Battle-Tested**: Comprehensive test suite with real-world scenarios  
-✅ **Layered Design**: Clean architecture that separates concerns  
-✅ **Production Ready**: Used in real IoT deployments
+✅ **Tested**: Protocol behaviour verified on a simulated half-duplex LoRa channel; cryptography verified against standard test vectors and an independent implementation  
+✅ **Layered Design**: Clean architecture that separates concerns
 

@@ -14,6 +14,8 @@
  * by implementing the required timing functions and radio hardware interface.
  */
 
+#include <cstdio>
+#include <cstring>
 #include "IRadio.h"
 #include "LoraBasicLink.h"
 

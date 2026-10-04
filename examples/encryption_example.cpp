@@ -17,20 +17,20 @@
 #include <string>
 
 // Example timing functions (implementation depends on platform)
+// Platform hooks. This example runs on a PC without a real clock, so
+// "sleeping" simply moves a counter forward. On a microcontroller use
+// millis() and delay() (or your RTOS equivalents) instead. The clock must
+// advance: the library uses it for every timeout.
+static uint32_t exampleClockMs = 0;
+
 uint32_t getTimeMs() {
-    // Return current time in milliseconds
-    // Implementation varies by platform (Arduino: millis(), Linux: clock_gettime, etc.)
-    return 0; // Placeholder
+    return exampleClockMs;
 }
 
 void sleepMs(uint32_t ms) {
-    // Sleep for specified milliseconds
-    // Implementation varies by platform (Arduino: delay(), Linux: usleep, etc.)
+    exampleClockMs += ms;
 }
 
-/**
- * @brief Example: Basic encrypted communication
- */
 void basicEncryptedCommunication() {
     std::cout << "=== Basic Encrypted Communication Example ===" << std::endl;
     
@@ -204,8 +204,9 @@ void payloadSizeExample() {
     std::cout << "Maximum encrypted payload size: " << static_cast<int>(maxSize) << " bytes" << std::endl;
     
     // For comparison, base link maximum
-    std::cout << "Base link maximum payload: ~247 bytes" << std::endl;
-    std::cout << "Encryption overhead: ~" << (247 - maxSize) << " bytes (IV + padding + protocol overhead)" << std::endl;
+    std::cout << "Base link maximum payload: " << static_cast<int>(baseLink.maxPayloadSize()) << " bytes" << std::endl;
+    std::cout << "Encryption overhead: " << (baseLink.maxPayloadSize() - maxSize)
+              << " bytes at most (16 byte IV, 8 byte authentication tag, 1-16 bytes of padding)" << std::endl;
     
     // Example of payload size planning
     if (maxSize >= 100) {
@@ -229,7 +230,7 @@ int main() {
         payloadSizeExample();
         
         std::cout << "\n=== Examples Complete ===" << std::endl;
-        std::cout << "See ENCRYPTION_REPORT.md for detailed technical information" << std::endl;
+        std::cout << "See include/EncryptedLoRaLink.h and ENCRYPTION_REPORT.md for the details" << std::endl;
         
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;

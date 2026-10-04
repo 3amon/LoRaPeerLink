@@ -115,22 +115,28 @@ TEST_CASE("CRC edge cases", "[CRC]") {
     linkB.setLocalId(2);
     
     SECTION("Maximum size payload CRC validation") {
-        uint8_t largeData[247]; // MAX_PAYLOAD size with 16-bit addressing  
-        for (int i = 0; i < 247; i++) {
+        // The largest payload: a 255 byte LoRa frame minus 9 bytes of header and CRC.
+        REQUIRE(MAX_PAYLOAD == 246);
+        uint8_t largeData[MAX_PAYLOAD + 1];
+        for (int i = 0; i < MAX_PAYLOAD + 1; i++) {
             largeData[i] = i & 0xFF;
         }
-        
-        REQUIRE(linkA.sendPacket(1, 2, largeData, 247) == true);
-        
+
+        REQUIRE(linkA.sendPacket(1, 2, largeData, MAX_PAYLOAD) == true);
+
         uint16_t src = 0;
-        uint8_t out[247];
-        int len = linkB.receivePacket(&src, out, 247);
-        REQUIRE(len == 247);
-        
+        uint8_t out[MAX_PAYLOAD];
+        int len = linkB.receivePacket(&src, out, MAX_PAYLOAD);
+        REQUIRE(len == MAX_PAYLOAD);
+
         // Verify data integrity
-        for (int i = 0; i < 247; i++) {
+        for (int i = 0; i < MAX_PAYLOAD; i++) {
             REQUIRE(out[i] == (i & 0xFF));
         }
+
+        // One byte more would need a 256 byte frame, which no LoRa radio can send.
+        REQUIRE(linkA.sendPacket(1, 2, largeData, MAX_PAYLOAD + 1) == false);
+        REQUIRE(radioB.pending() == 0);
     }
     
     SECTION("Single byte payload CRC validation") {

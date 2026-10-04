@@ -111,10 +111,10 @@ TEST_CASE("LoRaBackoffLink broadcast handling", "[LoRaBackoffLink]") {
         uint8_t rawPacket[256];
         int rawLen = radioB.receive(rawPacket, 256);
         REQUIRE(rawLen > 0);
-        REQUIRE(rawPacket[0] == 0xFF); // Destination low byte (broadcast address)
-        REQUIRE(rawPacket[1] == 0xFF); // Destination high byte (broadcast address)
-        REQUIRE(rawPacket[2] == 1);    // Source low byte
-        REQUIRE(rawPacket[3] == 0);    // Source high byte (linkA's ID)
+        REQUIRE(rawPacket[0] == 0xFF); // Destination high byte (broadcast address)
+        REQUIRE(rawPacket[1] == 0xFF); // Destination low byte (broadcast address)
+        REQUIRE(rawPacket[2] == 0);    // Source high byte
+        REQUIRE(rawPacket[3] == 1);    // Source low byte (linkA's ID)
     }
     
     SECTION("Both receivers can process broadcast individually") {
@@ -153,27 +153,30 @@ TEST_CASE("LoRaBackoffLink maximum payload size", "[LoRaBackoffLink]") {
     linkB.setLocalId(2);
 
     SECTION("Maximum payload succeeds") {
-        uint8_t maxPayload[247]; // BUFFER_SIZE - HEADER_SIZE - CRC_SIZE = 256 - 7 - 2
-        for (int i = 0; i < 247; i++) {
+        // 255 byte LoRa frame - 7 byte header - 2 byte CRC
+        REQUIRE(linkA.maxPayloadSize() == 246);
+        uint8_t maxPayload[MAX_PAYLOAD];
+        for (int i = 0; i < MAX_PAYLOAD; i++) {
             maxPayload[i] = i & 0xFF;
         }
         
-        REQUIRE(linkA.sendPacket(1, 2, maxPayload, 247) == true);
+        REQUIRE(linkA.sendPacket(1, 2, maxPayload, MAX_PAYLOAD) == true);
         
         uint16_t src = 0;
-        uint8_t out[247];
-        int len = linkB.receivePacket(&src, out, 247);
-        REQUIRE(len == 247);
+        uint8_t out[MAX_PAYLOAD];
+        int len = linkB.receivePacket(&src, out, MAX_PAYLOAD);
+        REQUIRE(len == MAX_PAYLOAD);
         REQUIRE(src == 1);
         
-        for (int i = 0; i < 247; i++) {
+        for (int i = 0; i < MAX_PAYLOAD; i++) {
             REQUIRE(out[i] == (i & 0xFF));
         }
     }
     
     SECTION("Oversized payload fails") {
-        uint8_t oversized[248];
-        REQUIRE(linkA.sendPacket(1, 2, oversized, 248) == false);
+        uint8_t oversized[255] = {0};
+        REQUIRE(linkA.sendPacket(1, 2, oversized, MAX_PAYLOAD + 1) == false);
+        REQUIRE(radioB.pending() == 0);
     }
 }
 

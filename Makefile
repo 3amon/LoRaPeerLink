@@ -2,9 +2,9 @@
 # Usage: make basic_example
 
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -I include -I tests
+CXXFLAGS = -std=c++17 -Wall -Wextra -I include -I tests
 SRCDIR = src
-SOURCES = $(SRCDIR)/LoraBasicLink.cpp
+SOURCES = $(SRCDIR)/LoRaLinkCore.cpp $(SRCDIR)/LoraBasicLink.cpp
 
 # Targets
 .PHONY: all clean test
@@ -14,7 +14,7 @@ all: basic_example peer_messaging_example
 basic_example: examples/basic_communication.cpp $(SOURCES)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-encryption_example: examples/encryption_example.cpp $(SOURCES) $(SRCDIR)/EncryptedLoRaLink.cpp
+encryption_example: examples/encryption_example.cpp $(SOURCES) $(SRCDIR)/EncryptedLoRaLink.cpp $(SRCDIR)/LplCrypto.cpp $(SRCDIR)/RollCall.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 peer_messaging_example: examples/peer_messaging_example.cpp $(SOURCES) $(SRCDIR)/RollCall.cpp $(SRCDIR)/PeerMessenger.cpp tests/TestUtils.cpp

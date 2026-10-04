@@ -190,76 +190,89 @@ TEST_CASE("RollCall WHEREIS query", "[RollCall]") {
 }
 
 TEST_CASE("RollCall collision detection and resolution", "[RollCall]") {
+    // Two nodes with the same ID: both apply the same rule, so exactly one of
+    // them moves - the one whose name sorts later.
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
-    
+    fakeTime = 0;
+
     LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
-    
-    // Use a custom random function that returns the same ID initially for A, then different values
-    static int callCount = 0;
-    auto collisionRandom = []() { 
-        callCount++;
-        if (callCount == 1) {
-            return static_cast<uint16_t>(0x1234); // First call returns fixed ID
-        } else {
-            return static_cast<uint16_t>(0x5678); // Subsequent calls return different ID
-        }
-    };
-    
-    RollCall rollCallA(&linkA, "node-alpha", getTimeMock, sleepMock, collisionRandom);
-    RollCall rollCallB(&linkB, "node-beta", getTimeMock, sleepMock, getTestRandom2);
-    
-    // Initialize both nodes
+    RollCall rollCallA(&linkA, "node-mike", getTimeMock, sleepMock, getTestRandom1);
     REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallB.begin() == true);
-    
-    uint16_t idA = rollCallA.getNodeId();
-    uint16_t idB = rollCallB.getNodeId();
-    
-    // Clear messages from begin()
-    MockRadio::clearChannel();
-    
-    // Simulate collision: B announces with A's ID
-    std::string conflictMessage = "HELLOIAM|node-beta AT " + std::to_string(idA);
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
-                            conflictMessage.length()) == true);
-    
-    // A processes the conflicting message - should trigger collision handling
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // A should have changed its ID due to the collision
-    uint16_t newIdA = rollCallA.getNodeId();
-    REQUIRE(newIdA != idA); // A should have a new ID
-    
-    // Clear channel again
-    MockRadio::clearChannel();
-    
-    // Now let them properly exchange their final identities
-    std::string helloNewA = "HELLOIAM|node-alpha AT " + std::to_string(newIdA);
-    std::string helloB = "HELLOIAM|node-beta AT " + std::to_string(idB);
-    
-    // Exchange messages
-    REQUIRE(linkA.sendPacket(newIdA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloNewA.c_str()), 
-                            helloNewA.length()) == true);
-    REQUIRE(rollCallB.processMessages(100) == true);
-    
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
-                            helloB.length()) == true);
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // Both should know about each other with correct IDs
-    auto aMapping = rollCallA.getNameToIdMap();
-    auto bMapping = rollCallB.getNameToIdMap();
-    
-    REQUIRE(aMapping.count("node-beta") == 1);
-    REQUIRE(aMapping["node-beta"] == idB);
-    
-    REQUIRE(bMapping.count("node-alpha") == 1);
-    REQUIRE(bMapping["node-alpha"] == newIdA);
+    const uint16_t idA = rollCallA.getNodeId();
+    const std::string id = std::to_string(idA);
+
+    SECTION("The announcing node's name sorts earlier: we give up the ID") {
+        REQUIRE(rollCallA.processRollCallMessage("HELLOIAM|node-alpha AT " + id + " #7", idA) == true);
+
+        const uint16_t newIdA = rollCallA.getNodeId();
+        REQUIRE(newIdA != idA);
+        REQUIRE(newIdA != 0);
+        REQUIRE(newIdA != 0xFFFF);
+        REQUIRE(rollCallA.getNodeName() == "node-mike");
+
+        // Our table has us at the new ID and the other node at the old one.
+        const auto& byName = rollCallA.getNameToIdMap();
+        const auto& byId = rollCallA.getIdToNameMap();
+        REQUIRE(byName.at("node-mike") == newIdA);
+        REQUIRE(byName.at("node-alpha") == idA);
+        REQUIRE(byId.at(idA) == "node-alpha");
+        REQUIRE(byId.at(newIdA) == "node-mike");
+        REQUIRE(byId.size() == 2);
+
+        // The new identity is announced within a second.
+        MockRadio::clearChannel();
+        fakeTime += 700;
+        rollCallA.processMessages(10);
+        uint8_t raw[256];
+        int len = radioB.receive(raw, 256);
+        REQUIRE(len > 9);
+        std::string payload(reinterpret_cast<char*>(raw) + 7, len - 9);
+        REQUIRE(payload.rfind("HELLOIAM|node-mike AT " + std::to_string(newIdA), 0) == 0);
+        // And the link layer now filters on the new ID.
+        REQUIRE(((raw[2] << 8) | raw[3]) == newIdA);
+    }
+
+    SECTION("The announcing node's name sorts later: we keep the ID and say so") {
+        REQUIRE(rollCallA.processRollCallMessage("HELLOIAM|node-zulu AT " + id + " #7", idA) == true);
+        REQUIRE(rollCallA.getNodeId() == idA);
+        REQUIRE(rollCallA.getNameToIdMap().count("node-zulu") == 0);   // it does not get our ID
+
+        // We re-announce soon so that the other node notices the collision.
+        MockRadio::clearChannel();
+        fakeTime += 3100;
+        rollCallA.processMessages(10);
+        uint8_t raw[256];
+        int len = radioB.receive(raw, 256);
+        REQUIRE(len > 9);
+        std::string payload(reinterpret_cast<char*>(raw) + 7, len - 9);
+        REQUIRE(payload.rfind("HELLOIAM|node-mike AT " + id, 0) == 0);
+    }
+
+    SECTION("Two live nodes resolve an ID collision between themselves") {
+        // B is forced to pick A's ID.
+        static uint16_t forcedId;
+        static int calls;
+        forcedId = idA;
+        calls = 0;
+        auto sameIdFirst = []() -> uint16_t { return calls++ == 0 ? forcedId : getTestRandom2(); };
+        LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
+        RollCall rollCallB(&linkB, "node-beta", getTimeMock, sleepMock, sameIdFirst);
+        REQUIRE(rollCallB.begin() == true);
+
+        for (int i = 0; i < 100; ++i) {
+            rollCallA.processMessages(10);
+            rollCallB.processMessages(10);
+            fakeTime += 100;
+        }
+        // "node-beta" sorts before "node-mike": B keeps the ID, A moves.
+        REQUIRE(rollCallB.getNodeId() == idA);
+        REQUIRE(rollCallA.getNodeId() != idA);
+        REQUIRE(rollCallA.getNameToIdMap().at("node-beta") == idA);
+        REQUIRE(rollCallB.getNameToIdMap().at("node-mike") == rollCallA.getNodeId());
+        REQUIRE(rollCallA.getIdToNameMap().size() == 2);
+        REQUIRE(rollCallB.getIdToNameMap().size() == 2);
+    }
 }
 
 TEST_CASE("RollCall local cache lookup", "[RollCall]") {
@@ -312,26 +325,41 @@ TEST_CASE("RollCall message parsing", "[RollCall]") {
     RollCall rollCallB(&linkB, "target-node", getTimeMock, sleepMock, getTestRandom2);
     
     REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallB.begin() == true);
+    REQUIRE(rollCallB.begin() == true);   // B hears A's announcement while starting
     
-    // Test that malformed messages are ignored
-    std::string badMsg1 = "INVALID|test";
-    std::string badMsg2 = "HELLOIAM|"; // Empty content
-    std::string badMsg3 = "HELLOIAM|name"; // Missing AT clause
+    // Malformed messages, sent as proper link frames by A, are ignored by B
+    const std::string bad[] = {
+        "INVALID|test",                 // not a RollCall message at all
+        "HELLOIAM|",                    // empty content
+        "HELLOIAM|name",                // missing AT clause
+        "HELLOIAM|name AT ",            // missing ID
+        "HELLOIAM|name AT abc",         // ID is not a number (crashed version 1)
+        "HELLOIAM|name AT 99999999999", // ID out of range (crashed version 1)
+        "HELLOIAM|name AT 0",           // reserved ID
+        "HELLOIAM|name AT 65535",       // broadcast address
+        "WHEREIS|not-a-number",         // (crashed version 1)
+        "RESP|name AT",
+    };
+    for (const auto& text : bad) {
+        INFO(text);
+        REQUIRE(linkA.sendPacket(rollCallA.getNodeId(), BROADCAST_ADDR,
+                                 reinterpret_cast<const uint8_t*>(text.data()),
+                                 static_cast<uint8_t>(text.size())) == true);
+        REQUIRE(rollCallB.processMessages(100) == false);
+    }
     
-    radioA.send(reinterpret_cast<const uint8_t*>(badMsg1.c_str()), badMsg1.length());
-    radioA.send(reinterpret_cast<const uint8_t*>(badMsg2.c_str()), badMsg2.length());
-    radioA.send(reinterpret_cast<const uint8_t*>(badMsg3.c_str()), badMsg3.length());
-    
-    // These should not crash and should return false
-    REQUIRE(rollCallB.processMessages(100) == false);
-    REQUIRE(rollCallB.processMessages(100) == false);
-    REQUIRE(rollCallB.processMessages(100) == false);
-    
-    // The mapping should still only contain the target node's own entry
-    auto mapping = rollCallB.getNameToIdMap();
-    REQUIRE(mapping.size() == 1);
+    // B knows itself and A, and nothing from the malformed messages
+    const auto& mapping = rollCallB.getNameToIdMap();
+    REQUIRE(mapping.size() == 2);
     REQUIRE(mapping.count("target-node") == 1);
+    REQUIRE(mapping.count("parser-test") == 1);
+    REQUIRE(mapping.count("name") == 0);
+
+    // Well formed announcements are accepted with or without the nonce
+    REQUIRE(rollCallB.processRollCallMessage("HELLOIAM|old-style AT 4242", 4242) == true);
+    REQUIRE(rollCallB.processRollCallMessage("HELLOIAM|new-style AT 4243 #17", 4243) == true);
+    REQUIRE(rollCallB.getNameToIdMap().at("old-style") == 4242);
+    REQUIRE(rollCallB.getNameToIdMap().at("new-style") == 4243);
 }
 
 TEST_CASE("RollCall timeout handling", "[RollCall]") {
@@ -417,35 +445,35 @@ TEST_CASE("RollCall message logging", "[RollCall]") {
     RollCall rollCallA(&linkA, "log-test-a", getTimeMock, sleepMock, getTestRandom1, testLogger);
     RollCall rollCallB(&linkB, "log-test-b", getTimeMock, sleepMock, getTestRandom2, testLogger);
     
-    // Initialize both nodes - this should generate HELLOIAM messages
+    // Initialize both nodes - this generates HELLOIAM messages
     REQUIRE(rollCallA.begin() == true);
     REQUIRE(rollCallB.begin() == true);
+
+    bool hasHelloSent = false;
+    bool hasHelloReceived = false;
+    for (const auto& msg : testLogMessages) {
+        if (msg.find("[RollCall] Sending: HELLOIAM|log-test-a AT ") == 0) hasHelloSent = true;
+        if (msg.find("[RollCall] Received: HELLOIAM|log-test-a AT ") == 0 && msg.find(" from ID ") != std::string::npos) hasHelloReceived = true;
+    }
+    REQUIRE(hasHelloSent == true);
+    REQUIRE(hasHelloReceived == true);
     
     // Clear log messages after initialization to focus on query/response
     testLogMessages.clear();
+    MockRadio::clearChannel();
     
-    // Let A learn about B first (this is important for the test to work)
-    rollCallA.processMessages(100);  // A processes B's announcement
-    
-    // Now test a WHOIS query - A should know about B and can query for it  
-    uint16_t result = rollCallA.whoIs("log-test-b", 100);
-    
-    // Process any remaining messages
+    // A asks for a name it does not know; B hears the question
+    uint16_t result = rollCallA.whoIs("log-test-c", 100);
+    REQUIRE(result == 0);
     rollCallB.processMessages(100);
-    rollCallA.processMessages(100);
     
-    // Check that we have log messages
-    REQUIRE(testLogMessages.size() > 0);
-    
-    // Check for specific message types in logs
     bool hasWhoisSent = false;
     bool hasWhoisReceived = false;
-    
     for (const auto& msg : testLogMessages) {
-        if (msg.find("WHOIS|") != std::string::npos && msg.find("Sending:") != std::string::npos) {
+        if (msg == "[RollCall] Sending: WHOIS|log-test-c") {
             hasWhoisSent = true;
         }
-        if (msg.find("WHOIS|") != std::string::npos && msg.find("Received:") != std::string::npos) {
+        if (msg.find("[RollCall] Received: WHOIS|log-test-c from ID " + std::to_string(rollCallA.getNodeId())) == 0) {
             hasWhoisReceived = true;
         }
     }
@@ -471,76 +499,64 @@ TEST_CASE("RollCall logging disabled by default", "[RollCall]") {
 }
 
 TEST_CASE("RollCall name deconfliction", "[RollCall]") {
+    // Two nodes with the same name: exactly one of them renames itself - the
+    // one with the larger ID. (Version 1 renamed whichever node heard the
+    // other first, and often both.)
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
+    fakeTime = 0;
     
     LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
-    
-    // Nodes will have the same name initially, but different IDs
     RollCall rollCallA(&linkA, "node-alpha", getTimeMock, sleepMock, getTestRandom1);
-    RollCall rollCallB(&linkB, "node-alpha", getTimeMock, sleepMock, getTestRandom2);
-    
-    // Initialize both nodes
     REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallB.begin() == true);
-    
-    uint16_t idA = rollCallA.getNodeId();
-    uint16_t idB = rollCallB.getNodeId();
-    
-    // Clear messages from begin()
-    MockRadio::clearChannel();
-    
-    // Simulate collision: B announces with A's name but B's own ID
-    std::string conflictMessage = "HELLOIAM|node-alpha AT " + std::to_string(idB);
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(conflictMessage.c_str()), 
-                            conflictMessage.length()) == true);
-    
-    // A processes the conflicting message - should trigger collision handling
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // A should have changed its name due to the collision but not its ID
-    uint16_t newIdA = rollCallA.getNodeId();
-    REQUIRE(newIdA == idA); // A should not have a new ID
-    
-    REQUIRE(rollCallA.getNodeName() != "node-alpha"); // A should have a new name
+    const uint16_t idA = rollCallA.getNodeId();
+    REQUIRE(idA > 1);
+    REQUIRE(idA < 0xFFFE);
 
-    // Clear channel and now let A announce its new name to B
-    MockRadio::clearChannel();
-    
-    // A announces its new name, which should trigger B to also change its name
-    std::string newHelloA = "HELLOIAM|" + rollCallA.getNodeName() + " AT " + std::to_string(idA);
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(newHelloA.c_str()), 
-                            newHelloA.length()) == true);
-    
-    // B should still have the original name at this point
-    REQUIRE(rollCallB.getNodeName() == "node-alpha");
-    
-    // But when A announces with the original name that B still has, B should also change
-    // First, let's simulate this by having someone else announce with B's current name
-    MockRadio::clearChannel();
-    std::string conflictForB = "HELLOIAM|node-alpha AT " + std::to_string(idA); // A claims the name B still has
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(conflictForB.c_str()), 
-                            conflictForB.length()) == true);
-    
-    // B processes this and should change its name too
-    REQUIRE(rollCallB.processMessages(100) == true);
-    REQUIRE(rollCallB.getNodeName() != "node-alpha"); // B should have a new name
-    
-    // Both names should be unique
-    REQUIRE(rollCallA.getNodeName() != rollCallB.getNodeName());
-    
-    // Both should still have their original IDs
-    REQUIRE(rollCallA.getNodeId() == idA);
-    REQUIRE(rollCallB.getNodeId() == idB);
+    SECTION("The other node has the smaller ID: we rename ourselves") {
+        const uint16_t other = static_cast<uint16_t>(idA - 1);
+        REQUIRE(rollCallA.processRollCallMessage("HELLOIAM|node-alpha AT " + std::to_string(other), other) == true);
+
+        REQUIRE(rollCallA.getNodeId() == idA);                         // ID unchanged
+        const std::string newName = rollCallA.getNodeName();
+        REQUIRE(newName != "node-alpha");
+        REQUIRE(newName.rfind("node-alpha-", 0) == 0);                 // base name plus a random suffix
+        REQUIRE(RollCall::isValidName(newName));
+
+        const auto& byName = rollCallA.getNameToIdMap();
+        REQUIRE(byName.at("node-alpha") == other);                     // the name now belongs to the other node
+        REQUIRE(byName.at(newName) == idA);
+        REQUIRE(byName.size() == 2);
+        REQUIRE(rollCallA.getIdToNameMap().size() == 2);
+    }
+
+    SECTION("The other node has the larger ID: we keep the name") {
+        const uint16_t other = static_cast<uint16_t>(idA + 1);
+        REQUIRE(rollCallA.processRollCallMessage("HELLOIAM|node-alpha AT " + std::to_string(other), other) == true);
+        REQUIRE(rollCallA.getNodeName() == "node-alpha");
+        REQUIRE(rollCallA.getNodeId() == idA);
+        REQUIRE(rollCallA.getNameToIdMap().at("node-alpha") == idA);
+        REQUIRE(rollCallA.getNameToIdMap().size() == 1);
+    }
+
+    SECTION("A very long name is shortened to make room for the suffix") {
+        MockRadio radioC;
+        LoRaBasicLink linkC(&radioC, getTimeMock, sleepMock);
+        const std::string longName(ROLLCALL_MAX_NAME_LEN, 'n');
+        RollCall rollCallC(&linkC, longName, getTimeMock, sleepMock, getTestRandom2);
+        REQUIRE(rollCallC.begin() == true);
+        const uint16_t other = static_cast<uint16_t>(rollCallC.getNodeId() - 1);
+        REQUIRE(rollCallC.processRollCallMessage("HELLOIAM|" + longName + " AT " + std::to_string(other), other) == true);
+        REQUIRE(rollCallC.getNodeName() != longName);
+        REQUIRE(rollCallC.getNodeName().size() <= ROLLCALL_MAX_NAME_LEN);
+        REQUIRE(RollCall::isValidName(rollCallC.getNodeName()));
+    }
 }
 
 TEST_CASE("RollCall bidirectional name collision resolution", "[RollCall]") {
     MockRadio radioA, radioB;
     MockRadio::clearChannel();
+    fakeTime = 0;
     
     LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
     LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
@@ -549,67 +565,36 @@ TEST_CASE("RollCall bidirectional name collision resolution", "[RollCall]") {
     RollCall rollCallA(&linkA, "duplicate-name", getTimeMock, sleepMock, getTestRandom1);
     RollCall rollCallB(&linkB, "duplicate-name", getTimeMock, sleepMock, getTestRandom2);
     
-    // Initialize both nodes
     REQUIRE(rollCallA.begin() == true);
     REQUIRE(rollCallB.begin() == true);
     
     uint16_t idA = rollCallA.getNodeId();
     uint16_t idB = rollCallB.getNodeId();
+    REQUIRE(idA != idB);
+
+    // Let the two nodes run for a while
+    for (int i = 0; i < 100; ++i) {
+        rollCallA.processMessages(10);
+        rollCallB.processMessages(10);
+        fakeTime += 100;
+    }
     
-    // Clear initial announcements
-    MockRadio::clearChannel();
+    // Exactly one of them renamed itself: the one with the larger ID
+    RollCall& keeper = (idA < idB) ? rollCallA : rollCallB;
+    RollCall& renamed = (idA < idB) ? rollCallB : rollCallA;
+    REQUIRE(keeper.getNodeName() == "duplicate-name");
+    REQUIRE(renamed.getNodeName() != "duplicate-name");
+    REQUIRE(renamed.getNodeName().rfind("duplicate-name-", 0) == 0);
     
-    // First: A discovers B has the same name
-    std::string helloB = "HELLOIAM|duplicate-name AT " + std::to_string(idB);
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloB.c_str()), 
-                            helloB.length()) == true);
-    
-    // A processes B's message and should detect name collision
-    REQUIRE(rollCallA.processMessages(100) == true);
-    REQUIRE(rollCallA.getNodeName() != "duplicate-name");
-    
-    // Clear channel
-    MockRadio::clearChannel();
-    
-    // Second: B discovers A has the same name (using A's original name)
-    std::string helloA = "HELLOIAM|duplicate-name AT " + std::to_string(idA);
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(helloA.c_str()), 
-                            helloA.length()) == true);
-    
-    // B processes A's message and should also detect name collision
-    REQUIRE(rollCallB.processMessages(100) == true);
-    REQUIRE(rollCallB.getNodeName() != "duplicate-name");
-    
-    // Names should be different from each other
-    REQUIRE(rollCallA.getNodeName() != rollCallB.getNodeName());
-    
-    // IDs should remain the same
+    // IDs remain the same
     REQUIRE(rollCallA.getNodeId() == idA);
     REQUIRE(rollCallB.getNodeId() == idB);
     
-    // Verify both nodes can exchange their new names successfully
-    MockRadio::clearChannel();
-    
-    std::string newHelloA = "HELLOIAM|" + rollCallA.getNodeName() + " AT " + std::to_string(idA);
-    std::string newHelloB = "HELLOIAM|" + rollCallB.getNodeName() + " AT " + std::to_string(idB);
-    
-    // A tells B its new name
-    REQUIRE(linkA.sendPacket(idA, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(newHelloA.c_str()), 
-                            newHelloA.length()) == true);
-    REQUIRE(rollCallB.processMessages(100) == true);
-    
-    // B tells A its new name
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(newHelloB.c_str()), 
-                            newHelloB.length()) == true);
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // Both should know about each other's new names
+    // Both know each other's final names, from the table (no query needed)
     REQUIRE(rollCallA.whoIs(rollCallB.getNodeName(), 10) == idB);
     REQUIRE(rollCallB.whoIs(rollCallA.getNodeName(), 10) == idA);
+    REQUIRE(rollCallA.getNameToIdMap().size() == 2);
+    REQUIRE(rollCallB.getNameToIdMap().size() == 2);
 }
 
 TEST_CASE("RollCall random number generation uniqueness", "[RollCall]") {
@@ -649,96 +634,101 @@ TEST_CASE("RollCall random number generation uniqueness", "[RollCall]") {
 }
 
 TEST_CASE("RollCall complete collision detection and resolution", "[RollCall]") {
-    MockRadio radioA, radioB;
+    // "Complete collision": another node announces our name AND our ID. The
+    // link layer source ID is the same as ours too, so the only thing that
+    // tells the two nodes apart is the random nonce in the announcement.
+    MockRadio radioA;
     MockRadio::clearChannel();
-    
+    fakeTime = 0;
+
     LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
-    
-    // Use a deterministic random function for A that returns known values
-    static uint16_t fixedValues[] = {0x1234, 0x5678, 0x9ABC}; // First call returns 0x1234, then 0x5678, etc.
-    static int valueIndex = 0;
-    auto deterministicRandom = []() { 
-        uint16_t result = fixedValues[valueIndex % 3];
-        valueIndex++;
-        return result;
-    };
-    
-    // Reset the index for this test
+
+    // First value is the node ID, second the nonce, the rest varies.
+    static int valueIndex;
     valueIndex = 0;
-    
+    auto deterministicRandom = []() -> uint16_t {
+        int i = valueIndex++;
+        if (i == 0) return 0x1234;
+        if (i == 1) return 0x0100;       // nonce = 256
+        return static_cast<uint16_t>(0x5000 + i * 37);
+    };
+
     RollCall rollCallA(&linkA, "duplicate-node", getTimeMock, sleepMock, deterministicRandom);
-    RollCall rollCallB(&linkB, "other-node", getTimeMock, sleepMock, getTestRandom2);
-    
-    // Initialize both nodes
     REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallB.begin() == true);
-    
-    uint16_t idA = rollCallA.getNodeId();
-    uint16_t idB = rollCallB.getNodeId();
-    std::string nameA = rollCallA.getNodeName();
-    
-    // Verify A got the expected ID (first call to deterministicRandom)
-    REQUIRE(idA == 0x1234);
-    
-    // Clear messages from begin()
-    MockRadio::clearChannel();
-    
-    // Simulate complete collision: B announces with A's exact name and ID, but different transport source
-    std::string completeCollisionMessage = "HELLOIAM|duplicate-node AT " + std::to_string(idA);
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(completeCollisionMessage.c_str()), 
-                            completeCollisionMessage.length()) == true);
-    
-    // A processes the complete collision message - should trigger complete collision handling
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // A should have changed both its name and its ID due to the complete collision
-    uint16_t newIdA = rollCallA.getNodeId();
-    std::string newNameA = rollCallA.getNodeName();
-    
-    REQUIRE(newIdA != idA); // A should have a new ID (should be 0x5678 from second call)
-    REQUIRE(newIdA == 0x5678); // Verify it's the expected new ID
-    REQUIRE(newNameA != nameA); // A should have a new name
-    REQUIRE(newNameA.find("duplicate-node-") == 0); // New name should be based on original with suffix
-    
-    // The original conflicting identity should be mapped to the other node
-    auto aMapping = rollCallA.getNameToIdMap();
-    REQUIRE(aMapping.count("duplicate-node") == 1);
-    REQUIRE(aMapping["duplicate-node"] == idA); // Should map to the original ID (now owned by the other node)
+    REQUIRE(rollCallA.getNodeId() == 0x1234);
+    const std::string claim = "HELLOIAM|duplicate-node AT " + std::to_string(0x1234);
+
+    SECTION("The other node has the smaller nonce: we change both name and ID") {
+        REQUIRE(rollCallA.processRollCallMessage(claim + " #255", 0x1234) == true);
+        REQUIRE(rollCallA.getNodeId() != 0x1234);
+        REQUIRE(rollCallA.getNodeName() != "duplicate-node");
+        REQUIRE(rollCallA.getNodeName().find("duplicate-node-") == 0);
+
+        // The original identity now belongs to the other node.
+        const auto& byName = rollCallA.getNameToIdMap();
+        REQUIRE(byName.at("duplicate-node") == 0x1234);
+        REQUIRE(byName.at(rollCallA.getNodeName()) == rollCallA.getNodeId());
+        REQUIRE(byName.size() == 2);
+        REQUIRE(rollCallA.getIdToNameMap().size() == 2);
+    }
+
+    SECTION("The other node has the larger nonce: we keep our identity") {
+        REQUIRE(rollCallA.processRollCallMessage(claim + " #257", 0x1234) == true);
+        REQUIRE(rollCallA.getNodeId() == 0x1234);
+        REQUIRE(rollCallA.getNodeName() == "duplicate-node");
+        REQUIRE(rollCallA.getNameToIdMap().size() == 1);
+    }
+
+    SECTION("Our own nonce: it is our own announcement coming back, nothing changes") {
+        REQUIRE(rollCallA.processRollCallMessage(claim + " #256", 0x1234) == true);
+        REQUIRE(rollCallA.getNodeId() == 0x1234);
+        REQUIRE(rollCallA.getNodeName() == "duplicate-node");
+        REQUIRE(rollCallA.getNameToIdMap().size() == 1);
+    }
+
+    SECTION("No nonce (a version 1 node): we give way") {
+        REQUIRE(rollCallA.processRollCallMessage(claim, 0x0777) == true);
+        REQUIRE(rollCallA.getNodeId() != 0x1234);
+        REQUIRE(rollCallA.getNodeName() != "duplicate-node");
+        REQUIRE(rollCallA.getNameToIdMap().at("duplicate-node") == 0x1234);
+    }
 }
 
-TEST_CASE("RollCall collision detection with transport layer source checking", "[RollCall]") {
-    MockRadio radioA, radioB;
+TEST_CASE("RollCall survives a random source that is stuck", "[RollCall]") {
+    // A broken random number generator must not hang the node in an endless
+    // "pick another ID" loop.
+    MockRadio radioA;
     MockRadio::clearChannel();
-    
+    fakeTime = 0;
     LoRaBasicLink linkA(&radioA, getTimeMock, sleepMock);
-    LoRaBasicLink linkB(&radioB, getTimeMock, sleepMock);
-    
-    RollCall rollCallA(&linkA, "test-node", getTimeMock, sleepMock, getTestRandom1);
-    RollCall rollCallB(&linkB, "test-node", getTimeMock, sleepMock, getTestRandom2);
-    
-    // Initialize both nodes
-    REQUIRE(rollCallA.begin() == true);
-    REQUIRE(rollCallB.begin() == true);
-    
-    uint16_t idA = rollCallA.getNodeId();
-    uint16_t idB = rollCallB.getNodeId();
-    
-    // Clear messages from begin()
-    MockRadio::clearChannel();
-    
-    // Test case 1: Different transport source with same announced name and ID as ours
-    // This should trigger complete collision detection
-    std::string sameNameAndId = "HELLOIAM|test-node AT " + std::to_string(idA);
-    REQUIRE(linkB.sendPacket(idB, BROADCAST_ADDR, 
-                            reinterpret_cast<const uint8_t*>(sameNameAndId.c_str()), 
-                            sameNameAndId.length()) == true);
-    
-    // A processes the message - transport source (idB) != announced ID (idA)
-    REQUIRE(rollCallA.processMessages(100) == true);
-    
-    // A should have detected complete collision and changed identity
-    REQUIRE(rollCallA.getNodeId() != idA);
-    REQUIRE(rollCallA.getNodeName() != "test-node");
+
+    SECTION("Always the same value") {
+        auto stuck = []() -> uint16_t { return 0x4242; };
+        RollCall rollCall(&linkA, "stuck", getTimeMock, sleepMock, stuck);
+        REQUIRE(rollCall.begin() == true);
+        REQUIRE(rollCall.getNodeId() == 0x4242);
+        // ID collision with a name that sorts earlier: we must still get a different, valid ID.
+        REQUIRE(rollCall.processRollCallMessage("HELLOIAM|aaa AT " + std::to_string(0x4242), 0x4242) == true);
+        REQUIRE(rollCall.getNodeId() != 0x4242);
+        REQUIRE(rollCall.getNodeId() != 0);
+        REQUIRE(rollCall.getNodeId() != 0xFFFF);
+        // Name collision: the suffix generator also terminates.
+        uint16_t other = static_cast<uint16_t>(rollCall.getNodeId() - 1);
+        REQUIRE(rollCall.processRollCallMessage("HELLOIAM|stuck AT " + std::to_string(other), other) == true);
+        REQUIRE(rollCall.getNodeName() != "stuck");
+    }
+
+    SECTION("Always a reserved value") {
+        auto zero = []() -> uint16_t { return 0; };
+        RollCall rollCall(&linkA, "zero", getTimeMock, sleepMock, zero);
+        REQUIRE(rollCall.begin() == true);
+        REQUIRE(rollCall.getNodeId() != 0);
+        REQUIRE(rollCall.getNodeId() != 0xFFFF);
+
+        auto ones = []() -> uint16_t { return 0xFFFF; };
+        RollCall rollCall2(&linkA, "ones", getTimeMock, sleepMock, ones);
+        REQUIRE(rollCall2.begin() == true);
+        REQUIRE(rollCall2.getNodeId() != 0);
+        REQUIRE(rollCall2.getNodeId() != 0xFFFF);
+    }
 }

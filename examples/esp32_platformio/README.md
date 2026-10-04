@@ -40,12 +40,15 @@ This example demonstrates how to use the LoRaPeerLink library with an ESP32-base
 
 ## Code Structure
 
-- `src/main.cpp`: Main application logic demonstrating LoRaPeerLink usage
-- `src/ScreenHandler.cpp`: OLED display management
-- `include/ScreenHandler.h`: Display interface definitions
-- `include/LoraHandler.h`: High-level LoRa communication wrapper (legacy)
-- `lib/`: Hardware-specific libraries for display and LoRa hardware
-- `platformio.ini`: Project configuration with LoRaPeerLink Git dependency
+- `src/main.cpp`: Application: radio, link, RollCall and PeerMessenger wired together
+- `src/SemtechRadio.cpp`, `include/SemtechRadio.h`: `IRadio` driver for the SX1262 using the vendor radio stack in `lib/`. It keeps the radio in continuous receive; read the header before changing how it listens
+- `src/ScreenHandler.cpp`, `include/ScreenHandler.h`: OLED display
+- `lib/`: Vendor libraries for the display and the LoRa radio
+- `platformio.ini`: Project configuration with the LoRaPeerLink Git dependency
+
+> **Status:** this example builds for the Heltec WiFi LoRa 32 V3. The 2.0
+> driver has not been run on hardware yet; the checklist in
+> [TEST_PLAN.md](../../TEST_PLAN.md) section 4 describes how to verify it.
 
 ## Usage
 

@@ -1,242 +1,137 @@
 /**
  * @file encryption_cli_tool.cpp
- * @brief CLI tool for testing encryption compatibility between Python and C++
- * @author LoRaPeerLink Project
- * @version 1.0
- * 
- * This tool provides a command-line interface to the EncryptedLoRaLink encryption
- * functionality for cross-language validation testing.
+ * @brief Command line access to the library's cryptography, for cross-validation
+ *
+ * validate_encryption.py drives this tool and compares every result with an
+ * independent implementation (Python's hashlib and "cryptography" package).
+ *
+ * Usage (all binary values are hex strings; use "-" for an empty value):
+ *   encryption_cli_tool keys   <network> <password> <iterations>
+ *   encryption_cli_tool seal   <network> <password> <iterations> <srcId> <iv> <plaintext>
+ *   encryption_cli_tool open   <network> <password> <iterations> <srcId> <wire>
+ *   encryption_cli_tool sha256 <data>
+ *   encryption_cli_tool hmac   <key> <data>
+ *   encryption_cli_tool aes    <key> <block>
+ *   encryption_cli_tool pbkdf2 <password> <salt> <iterations> <length>
+ *
+ * "open" prints "OK <plaintext>" or "REJECTED". Exit status is 0 unless the
+ * arguments are malformed.
  */
 
-#include <iostream>
+#include "EncryptedLoRaLink.h"
+#include "LplCrypto.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
-#include <iomanip>
-#include <sstream>
-#include "EncryptedLoRaLink.h"
-#include "LoraBasicLink.h"
-#include "TestUtils.h"
 
-// Helper function to convert hex string to bytes
-std::vector<uint8_t> hexToBytes(const std::string& hex) {
-    std::vector<uint8_t> bytes;
-    if (hex.length() % 2 != 0) {
-        std::cerr << "Error: Hex string must have even length" << std::endl;
-        return bytes;
+namespace {
+
+class NullLink : public ILoRaLink {
+public:
+    bool sendPacket(uint16_t, uint16_t, const uint8_t*, uint8_t, bool, int) override { return true; }
+    int receivePacket(uint16_t*, uint8_t*, uint8_t, uint32_t) override { return 0; }
+    void setLocalId(uint16_t) override {}
+};
+
+bool unhex(const std::string& text, std::vector<uint8_t>& out) {
+    out.clear();
+    if (text == "-") return true;
+    if (text.size() % 2 != 0) return false;
+    for (size_t i = 0; i < text.size(); i += 2) {
+        char* end = nullptr;
+        const std::string byte = text.substr(i, 2);
+        const long v = strtol(byte.c_str(), &end, 16);
+        if (end != byte.c_str() + 2) return false;
+        out.push_back(static_cast<uint8_t>(v));
     }
-    
-    for (size_t i = 0; i < hex.length(); i += 2) {
-        std::string byteString = hex.substr(i, 2);
-        uint8_t byte = static_cast<uint8_t>(strtol(byteString.c_str(), nullptr, 16));
-        bytes.push_back(byte);
-    }
-    return bytes;
+    return true;
 }
 
-// Helper function to convert bytes to hex string
-std::string bytesToHex(const uint8_t* data, size_t length) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (size_t i = 0; i < length; ++i) {
-        ss << std::setw(2) << static_cast<unsigned>(data[i]);
-    }
-    return ss.str();
+void printHex(const uint8_t* data, size_t len) {
+    if (len == 0) printf("-");
+    for (size_t i = 0; i < len; ++i) printf("%02x", data[i]);
+    printf("\n");
 }
 
-void printUsage(const char* programName) {
-    std::cout << "Usage: " << programName << " <command> [options]\n"
-              << "\nCommands:\n"
-              << "  encrypt <network_name> <password> <hex_data>\n"
-              << "    - Encrypts the given hex data and outputs encrypted hex\n"
-              << "  decrypt <network_name> <password> <hex_encrypted_data>\n"
-              << "    - Decrypts the given hex data and outputs decrypted hex\n"
-              << "  test <network_name> <password> <hex_data>\n"
-              << "    - Round-trip test: encrypt then decrypt, verify integrity\n"
-              << "\nExamples:\n"
-              << "  " << programName << " encrypt TestNetwork Password123 48656c6c6f\n"
-              << "  " << programName << " decrypt TestNetwork Password123 <encrypted_hex>\n"
-              << "  " << programName << " test TestNetwork Password123 48656c6c6f\n"
-              << std::endl;
+int usage() {
+    fprintf(stderr, "usage: encryption_cli_tool keys|seal|open|sha256|hmac|aes|pbkdf2 ... (see the source file)\n");
+    return 2;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        printUsage(argv[0]);
-        return 1;
+} // namespace
+
+int main(int argc, char** argv) {
+    if (argc < 2) return usage();
+    const std::string cmd = argv[1];
+    std::vector<uint8_t> a, b;
+
+    if (cmd == "sha256" && argc == 3) {
+        if (!unhex(argv[2], a)) return usage();
+        uint8_t digest[32];
+        lpl::sha256(a.data(), a.size(), digest);
+        printHex(digest, 32);
+        return 0;
+    }
+    if (cmd == "hmac" && argc == 4) {
+        if (!unhex(argv[2], a) || !unhex(argv[3], b)) return usage();
+        uint8_t mac[32];
+        lpl::hmacSha256(a.data(), a.size(), b.data(), b.size(), mac);
+        printHex(mac, 32);
+        return 0;
+    }
+    if (cmd == "aes" && argc == 4) {
+        if (!unhex(argv[2], a) || !unhex(argv[3], b) || a.size() != 16 || b.size() != 16) return usage();
+        lpl::Aes128 aes(a.data());
+        uint8_t out[16];
+        aes.encryptBlock(b.data(), out);
+        printHex(out, 16);
+        return 0;
+    }
+    if (cmd == "pbkdf2" && argc == 6) {
+        if (!unhex(argv[2], a) || !unhex(argv[3], b)) return usage();
+        const size_t len = static_cast<size_t>(atoi(argv[5]));
+        if (len == 0 || len > 256) return usage();
+        std::vector<uint8_t> out(len);
+        lpl::pbkdf2HmacSha256(a.data(), a.size(), b.data(), b.size(), static_cast<uint32_t>(strtoul(argv[4], nullptr, 10)), out.data(), len);
+        printHex(out.data(), len);
+        return 0;
     }
 
-    std::string command = argv[1];
-    
-    if (command == "encrypt" && argc == 5) {
-        std::string networkName = argv[2];
-        std::string password = argv[3];
-        std::string hexData = argv[4];
-        
-        // Convert hex input to bytes
-        std::vector<uint8_t> inputData = hexToBytes(hexData);
-        if (inputData.empty() && !hexData.empty()) {
-            std::cerr << "Error: Invalid hex input data" << std::endl;
-            return 1;
+    if ((cmd == "keys" && argc == 5) || (cmd == "seal" && argc == 8) || (cmd == "open" && argc == 7)) {
+        NullLink null;
+        EncryptedLoRaLink link(&null, argv[2], argv[3], static_cast<uint32_t>(strtoul(argv[4], nullptr, 10)));
+        if (cmd == "keys") {
+            uint8_t keys[32];
+            link.exportKeysForTesting(keys);
+            printHex(keys, 32);
+            return 0;
         }
-        
-        // Create mock radio and basic link for encryption
-        MockRadio mockRadio;
-        LoRaBasicLink basicLink(&mockRadio, getTimeMock, sleepMock);
-        EncryptedLoRaLink encryptedLink(&basicLink, networkName, password);
-        
-        // Set up IDs
-        encryptedLink.setLocalId(1);
-        
-        // Encrypt by sending a packet and capturing the raw encrypted data
-        bool sent = encryptedLink.sendPacket(1, 2, inputData.data(), inputData.size());
-        if (!sent) {
-            std::cerr << "Error: Failed to encrypt data" << std::endl;
-            return 1;
+        const uint16_t srcId = static_cast<uint16_t>(strtoul(argv[5], nullptr, 10));
+        if (cmd == "seal") {
+            if (!unhex(argv[6], a) || !unhex(argv[7], b) || a.size() != 16) return usage();
+            uint8_t wire[512];
+            const size_t n = link.seal(srcId, a.data(), b.data(), b.size(), wire, sizeof(wire));
+            if (n == 0) {
+                printf("FAILED\n");
+            } else {
+                printHex(wire, n);
+            }
+            return 0;
         }
-        
-        // Get the raw encrypted packet from the mock radio
-        uint8_t rawPacket[256];
-        int rawLen = mockRadio.receive(rawPacket, sizeof(rawPacket));
-        if (rawLen <= 0) {
-            std::cerr << "Error: No encrypted data received" << std::endl;
-            return 1;
+        if (!unhex(argv[6], a)) return usage();
+        uint8_t plain[512];
+        size_t plainLen = 0;
+        if (link.open(srcId, a.data(), a.size(), plain, sizeof(plain), plainLen)) {
+            printf("OK ");
+            printHex(plain, plainLen);
+        } else {
+            printf("REJECTED\n");
         }
-        
-        // Extract the encrypted payload (skip headers: dst(2) + src(2) + seq(1) + flags(1) + len(1) = 7 bytes, then CRC at end)
-        // Payload starts at offset 7 and goes until 2 bytes before the end (CRC)
-        if (rawLen < 9) { // At least header + 2 bytes payload + CRC
-            std::cerr << "Error: Encrypted packet too short" << std::endl;
-            return 1;
-        }
-        
-        int payloadStart = 7;
-        int payloadLen = rawLen - payloadStart - 2; // Subtract CRC size
-        
-        if (payloadLen <= 0) {
-            std::cerr << "Error: No payload in encrypted packet" << std::endl;
-            return 1;
-        }
-        
-        // Output the encrypted payload as hex
-        std::cout << bytesToHex(rawPacket + payloadStart, payloadLen) << std::endl;
-        
-    } else if (command == "decrypt" && argc == 5) {
-        std::string networkName = argv[2];
-        std::string password = argv[3];
-        std::string hexEncrypted = argv[4];
-        
-        // Convert hex input to bytes
-        std::vector<uint8_t> encryptedData = hexToBytes(hexEncrypted);
-        if (encryptedData.empty()) {
-            std::cerr << "Error: Invalid hex encrypted data" << std::endl;
-            return 1;
-        }
-        
-        // Create mock radios and basic links for decryption
-        MockRadio radioA, radioB;
-        MockRadio::clearChannel();
-        
-        LoRaBasicLink basicLinkA(&radioA, getTimeMock, sleepMock);
-        LoRaBasicLink basicLinkB(&radioB, getTimeMock, sleepMock);
-        
-        EncryptedLoRaLink encryptedLinkA(&basicLinkA, networkName, password);
-        EncryptedLoRaLink encryptedLinkB(&basicLinkB, networkName, password);
-        
-        encryptedLinkA.setLocalId(1);
-        encryptedLinkB.setLocalId(2);
-        
-        // Create a proper packet structure and inject it
-        // Format: [dst(2)][src(2)][seq(1)][flags(1)][len(1)][encrypted_payload][crc(2)]
-        std::vector<uint8_t> packet;
-        
-        // Header: dst=2, src=1, seq=1, flags=0, len=encryptedData.size()
-        packet.push_back(0x00); packet.push_back(0x02); // dst = 2
-        packet.push_back(0x00); packet.push_back(0x01); // src = 1  
-        packet.push_back(0x01); // seq = 1
-        packet.push_back(0x00); // flags = 0
-        packet.push_back(static_cast<uint8_t>(encryptedData.size())); // payload length
-        
-        // Add encrypted payload
-        packet.insert(packet.end(), encryptedData.begin(), encryptedData.end());
-        
-        // Add dummy CRC (2 bytes)
-        packet.push_back(0x00);
-        packet.push_back(0x00);
-        
-        // Inject packet into radio B's receive buffer
-        radioB.injectPacket(packet.data(), packet.size());
-        
-        // Try to receive and decrypt
-        uint16_t srcId;
-        uint8_t buffer[200];
-        int receivedLen = encryptedLinkB.receivePacket(&srcId, buffer, 200);
-        
-        if (receivedLen <= 0) {
-            std::cerr << "Error: Failed to decrypt data" << std::endl;
-            return 1;
-        }
-        
-        // Output the decrypted data as hex
-        std::cout << bytesToHex(buffer, receivedLen) << std::endl;
-        
-    } else if (command == "test" && argc == 5) {
-        std::string networkName = argv[2];
-        std::string password = argv[3];
-        std::string hexData = argv[4];
-        
-        // Convert hex input to bytes
-        std::vector<uint8_t> inputData = hexToBytes(hexData);
-        if (inputData.empty() && !hexData.empty()) {
-            std::cerr << "Error: Invalid hex input data" << std::endl;
-            return 1;
-        }
-        
-        // Create mock radios for round-trip test
-        MockRadio radioA, radioB;
-        MockRadio::clearChannel();
-        
-        LoRaBasicLink basicLinkA(&radioA, getTimeMock, sleepMock);  
-        LoRaBasicLink basicLinkB(&radioB, getTimeMock, sleepMock);
-        
-        EncryptedLoRaLink encryptedLinkA(&basicLinkA, networkName, password);
-        EncryptedLoRaLink encryptedLinkB(&basicLinkB, networkName, password);
-        
-        encryptedLinkA.setLocalId(1);
-        encryptedLinkB.setLocalId(2);
-        
-        // Encrypt by sending from A
-        bool sent = encryptedLinkA.sendPacket(1, 2, inputData.data(), inputData.size());
-        if (!sent) {
-            std::cerr << "Error: Failed to send encrypted packet" << std::endl;
-            return 1;
-        }
-        
-        // Decrypt by receiving on B
-        uint16_t srcId;
-        uint8_t buffer[200];
-        int receivedLen = encryptedLinkB.receivePacket(&srcId, buffer, 200);
-        
-        if (receivedLen != static_cast<int>(inputData.size())) {
-            std::cerr << "Error: Round-trip test failed - length mismatch" << std::endl;
-            std::cerr << "Expected length: " << inputData.size() << ", got: " << receivedLen << std::endl;
-            return 1;
-        }
-        
-        if (memcmp(buffer, inputData.data(), inputData.size()) != 0) {
-            std::cerr << "Error: Round-trip test failed - data mismatch" << std::endl;
-            std::cerr << "Expected: " << bytesToHex(inputData.data(), inputData.size()) << std::endl;
-            std::cerr << "Got:      " << bytesToHex(buffer, receivedLen) << std::endl;
-            return 1;
-        }
-        
-        std::cout << "SUCCESS: Round-trip test passed" << std::endl;
-        std::cout << "Data: " << bytesToHex(buffer, receivedLen) << std::endl;
-        
-    } else {
-        std::cerr << "Error: Invalid command or arguments" << std::endl;
-        printUsage(argv[0]);
-        return 1;
+        return 0;
     }
-    
-    return 0;
+
+    return usage();
 }

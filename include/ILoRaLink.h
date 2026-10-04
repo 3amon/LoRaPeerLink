@@ -63,13 +63,14 @@ public:
      * @param payload Pointer to data to transmit
      * @param len Length of payload data in bytes
      * @param requestAck Whether to request acknowledgment from receiver (default: false)
-     * @param maxRetries Maximum number of retry attempts if ACK requested (default: 3)
+     * @param maxRetries Maximum number of transmissions if ACK requested (default: 3, minimum 1)
      * @return true if packet was sent successfully (and ACK received if requested), false otherwise
      * 
      * Transmits a packet to the specified destination. If acknowledgment is requested,
-     * the method will wait for an ACK response and retry transmission up to maxRetries
-     * times if no ACK is received. Broadcast packets (destId = 0xFFFF) typically do not
-     * use acknowledgments.
+     * the method waits for an ACK and transmits the packet up to maxRetries times in
+     * total until one arrives. Broadcast packets (destId = 0xFFFF) are never
+     * acknowledged: requestAck is ignored for them and the call returns as soon as
+     * the packet has been transmitted.
      * 
      * The exact behavior depends on the implementation:
      * - Basic links: Simple transmission with optional ACK
@@ -107,6 +108,15 @@ public:
      * Packets addressed to this ID or to the broadcast address (0xFFFF) will be accepted.
      */
     virtual void setLocalId(uint16_t localId) = 0;
+
+    /**
+     * @brief Largest payload sendPacket() accepts on this link, in bytes
+     *
+     * A LoRa frame holds at most 255 bytes; the link header and CRC take 9,
+     * leaving 246. Layers that add their own overhead (for example
+     * EncryptedLoRaLink) report a smaller number.
+     */
+    virtual uint8_t maxPayloadSize() const { return 246; }
 };
 
 #endif // ILORA_LINK_H
